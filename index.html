@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>signaturesi · responsive</title>
+  <!-- favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* ---------- RESET ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ---------- LIGHT / DARK VARIABLES ---------- */
+    body.light {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --text-soft: #4a4a4a;
+      --card-bg: #f9f9f9;
+      --border: #eaeaea;
+      --primary: #000000;
+      --primary-light: #333333;
+      --error-bg: #ffeeee;
+      --error-text: #cc0000;
+      --error-border: #ffaaaa;
+    }
+
+    body.dark {
+      --bg: #1a1a1a;
+      --text: #f0f0f0;
+      --text-soft: #b0b0b0;
+      --card-bg: #2a2a2a;
+      --border: #3a3a3a;
+      --primary: #ffffff;
+      --primary-light: #cccccc;
+      --error-bg: #2a1a1a;
+      --error-text: #ff9999;
+      --error-border: #aa5555;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      transition: background-color 0.2s, color 0.2s;
+      min-height: 100vh;
+    }
+
+    /* ---------- TOP NAV (fully responsive) ---------- */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1.5rem;
+      z-index: 100;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.8rem 1.5rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .logo img {
+      width: 28px;
+      height: 28px;
+    }
+    .logo span {
+      font-weight: 600;
+      font-size: 1.2rem;
+      white-space: nowrap;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-soft);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .nav-links a.active,
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    /* right section: theme toggle + login */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .theme-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .theme-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: 0.2s;
+    }
+    .theme-btn.active {
+      background: var(--card-bg);
+      color: var(--text);
+      border-color: var(--text);
+    }
+    .theme-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+    }
+    .login-btn {
+      background: var(--primary);
+      color: var(--bg);
+      border: 1px solid var(--primary);
+      border-radius: 30px;
+      padding: 0.4rem 1.2rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .login-btn:hover {
+      background: var(--primary-light);
+    }
+
+    /* ---------- MAIN CONTENT ---------- */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 120px 24px 60px;
+    }
+
+    /* card with subtle diagonal line background */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      transition: transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><line x1="0" y1="20" x2="20" y2="0" stroke="%23cccccc" stroke-width="0.3" opacity="0.2"/></svg>');
+      pointer-events: none;
+      opacity: 0.3;
+    }
+    body.dark .card::before {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><line x1="0" y1="20" x2="20" y2="0" stroke="%23ffffff" stroke-width="0.3" opacity="0.15"/></svg>');
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+    .hero .gradient {
+      background: linear-gradient(145deg, var(--primary), var(--primary-light));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-soft);
+      max-width: 650px;
+      margin: 1.5rem auto;
+    }
+
+    .cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary, .btn-outline {
+      display: inline-block;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--bg);
+      border-color: var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--primary-light);
+    }
+    .btn-outline {
+      border-color: var(--border);
+      color: var(--text);
+      background: transparent;
+    }
+    .btn-outline:hover {
+      background: var(--card-bg);
+    }
+
+    /* feature grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      margin: 4rem 0;
+    }
+    .feature-card {
+      padding: 2rem;
+      border-radius: 24px;
+      text-align: center;
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      color: var(--primary);
+    }
+    .feature-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: currentColor;
+      fill: none;
+    }
+    .feature-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .feature-card p {
+      color: var(--text-soft);
+      font-size: 0.95rem;
+    }
+
+    /* reasoning showcase */
+    .showcase {
+      margin: 5rem 0;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .reasoning-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .reasoning-card {
+      padding: 1.8rem;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .user-bubble {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.95rem;
+      max-width: 90%;
+    }
+    .thought-process {
+      font-family: 'SF Mono', 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      border-left: 2px solid var(--border);
+      padding-left: 1rem;
+      line-height: 1.5;
+    }
+    .conclusion h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+    .conclusion p {
+      color: var(--text-soft);
+    }
+
+    /* code block */
+    .code-wrapper {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-top: 0.8rem;
+    }
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 1rem;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .code-copy {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem;
+      color: var(--text-soft);
+    }
+    .code-copy:hover {
+      color: var(--text);
+    }
+    .code-block {
+      background: var(--bg);
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .code-block code {
+      white-space: pre;
+    }
+
+    /* quote */
+    .callout {
+      max-width: 700px;
+      margin: 4rem auto 0;
+      padding: 2.5rem;
+      text-align: center;
+      position: relative;
+    }
+    .quote-icon {
+      font-size: 4rem;
+      color: var(--border);
+      position: absolute;
+      top: 0.5rem;
+      left: 1.5rem;
+      opacity: 0.5;
+    }
+    .quote-text {
+      font-size: 1.6rem;
+      font-weight: 500;
+    }
+
+    /* footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+
+    /* ---------- FULL-SCREEN MODAL (theme‑aware) ---------- */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg);  /* now matches theme */
+      z-index: 2000;
+    }
+    .modal.show {
+      display: block;
+    }
+    .modal-content {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .experiment-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .experiment-frame.loaded {
+      opacity: 1;
+    }
+    .iframe-error {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--error-bg);
+      color: var(--error-text);
+      padding: 2rem;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      z-index: 10;
+      flex-direction: column;
+      border: 1px solid var(--error-border);
+    }
+    .iframe-error.show {
+      display: flex;
+    }
+
+    /* simple fade animations */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeUp 0.6s forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .delay-1 { animation-delay: 0.2s; }
+    .delay-2 { animation-delay: 0.4s; }
+
+    /* responsive extra tweaks */
+    @media (max-width: 700px) {
+      .nav-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-links {
+        justify-content: center;
+      }
+      .nav-right {
+        justify-content: center;
+      }
+      .card { padding: 1.8rem; }
+      .hero h1 { font-size: 2.5rem; }
+      .quote-text { font-size: 1.3rem; }
+    }
+    @media (max-width: 480px) {
+      .theme-btn span { display: none; } /* hide text, keep icon */
+      .theme-btn svg { margin-right: 0; }
+      .login-btn { padding: 0.4rem 1rem; }
+    }
+  </style>
+</head>
+<body class="light">
+  <!-- navigation -->
+  <nav class="nav">
+    <div class="nav-container">
+      <div class="logo">
+        <img src="favicon.png" alt="logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
+        <span>signaturesi</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="active">Home</a>
+        <a href="#">Reasoning</a>
+        <a href="#">Neo</a>
+        <a href="#" id="docsLink">Docs</a> <!-- Docs link with handler -->
+      </div>
+      <div class="nav-right">
+        <div class="theme-toggle">
+          <button class="theme-btn" id="btnLight">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span>Light</span>
+          </button>
+          <button class="theme-btn" id="btnDark">
+            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <span>Dark</span>
+          </button>
+        </div>
+        <button class="login-btn" id="loginBtn">Login</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- hero -->
+    <section class="card hero">
+      <h1 class="fade-up">Think <span class="gradient">deeper</span> with Neo</h1>
+      <p class="fade-up delay-1">An intelligent reasoning engine that shows every step. Transparent, adaptive, and beautifully minimal.</p>
+      <div class="cta fade-up delay-2">
+        <button id="getStartedBtn" class="btn-primary">Get started</button>
+        <a href="#" class="btn-outline">Watch demo</a>
+      </div>
+    </section>
+
+    <!-- features -->
+    <section class="features">
+      <div class="feature-card card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+        <h3>Step‑by‑step reasoning</h3>
+        <p>Every conclusion is broken down into transparent thought processes.</p>
+      </div>
+      <div class="feature-card card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 2v20M16 2v20M2 8h20M2 16h20"/></svg></div>
+        <h3>Multi‑format output</h3>
+        <p>Tables, code blocks, lists – always beautifully formatted.</p>
+      </div>
+      <div class="feature-card card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Lightning fast</h3>
+        <p>Optimized inference, delivered with minimal latency.</p>
+      </div>
+    </section>
+
+    <!-- reasoning examples -->
+    <section class="showcase">
+      <h2 class="section-title">Reasoning in action</h2>
+      <div class="reasoning-grid">
+        <div class="reasoning-card card">
+          <div class="user-bubble">What is the capital of France?</div>
+          <div class="thought-process">⚡ User asks about capital of France. Need to recall geography.<br>⚡ France is a country in Europe. Its capital is Paris.</div>
+          <div class="conclusion"><h3>Conclusion</h3><p>The capital of France is <strong>Paris</strong>.</p></div>
+        </div>
+        <div class="reasoning-card card">
+          <div class="user-bubble">Show a quick sort in Python.</div>
+          <div class="thought-process">⚡ Request: quicksort implementation in Python.</div>
+          <div class="conclusion">
+            <h3>Python quicksort</h3>
+            <div class="code-wrapper">
+              <div class="code-header"><span class="code-lang">python</span><button class="code-copy" onclick="copyCode(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+              <pre class="code-block"><code>def quicksort(arr):
+    if len(arr) <= 1: return arr
+    pivot = arr[len(arr)//2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- quote -->
+    <div class="callout card">
+      <span class="quote-icon">“</span>
+      <p class="quote-text">Technology should expand human potential — not replace it.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
+  </footer>
+
+  <!-- full‑screen modal (theme‑aware background) -->
+  <div id="experimentModal" class="modal">
+    <div class="modal-content">
+      <iframe id="experimentFrame" class="experiment-frame"></iframe>
+      <div id="iframeFallback" class="iframe-error">
+        ⚠️ Could not load the file.<br><br>
+        <strong>Fix:</strong> Move the file into the same folder and use a relative path.
+      </div>
+    </div>
+  </div>
+
+<script>
+  (function() {
+    // ---------- THEME SWITCHER ----------
+    const body = document.body;
+    const btnLight = document.getElementById('btnLight');
+    const btnDark = document.getElementById('btnDark');
+
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        body.classList.add('dark');
+        body.classList.remove('light');
+        btnLight?.classList.remove('active');
+        btnDark?.classList.add('active');
+      } else {
+        body.classList.add('light');
+        body.classList.remove('dark');
+        btnDark?.classList.remove('active');
+        btnLight?.classList.add('active');
+      }
+      localStorage.setItem('theme', theme);
+    }
+
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || saved === 'light') setTheme(saved);
+    else setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    btnLight?.addEventListener('click', () => setTheme('light'));
+    btnDark?.addEventListener('click', () => setTheme('dark'));
+
+    // ---------- COPY CODE ----------
+    window.copyCode = function(btn) {
+      const code = btn.closest('.code-wrapper')?.querySelector('.code-block code')?.innerText;
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(() => btn.innerHTML = orig, 1500);
+      });
+    };
+
+    // ---------- MODAL with multiple triggers ----------
+const modal = document.getElementById('experimentModal');
+const getStarted = document.getElementById('getStartedBtn');
+const docsLink = document.getElementById('docsLink');
+const iframe = document.getElementById('experimentFrame');
+const fallback = document.getElementById('iframeFallback');
+
+// Vercel-friendly paths
+const getStartedPath = "https://rito3.netlify.app/";
+const docsPath = "/docs/preview.html";
+
+function openModal(filePath) {
+  iframe.classList.remove('loaded');
+  fallback.classList.remove('show');
+  iframe.src = filePath;
+  modal.classList.add('show');
+}
+
+getStarted?.addEventListener('click', () => openModal(getStartedPath));
+docsLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal(docsPath);
+});
+
+// close with Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modal.classList.contains('show')) {
+    modal.classList.remove('show');
+    iframe.src = 'about:blank';
+    iframe.classList.remove('loaded');
+    fallback.classList.remove('show');
+  }
+});
+
+// iframe events
+iframe.addEventListener('load', () => {
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc || doc.URL === 'about:blank' || doc.body?.innerHTML === '') fallback.classList.add('show');
+    else iframe.classList.add('loaded');
+  } catch { iframe.classList.add('loaded'); } // cross‑origin
+});
+iframe.addEventListener('error', () => fallback.classList.add('show'));
+
+// fallback timer
+setTimeout(() => {
+  if (modal.classList.contains('show') && !iframe.classList.contains('loaded') && !fallback.classList.contains('show'))
+    fallback.classList.add('show');
+}, 5000);
+
+    // ---------- LOGIN BUTTON (placeholder) ----------
+    document.getElementById('loginBtn')?.addEventListener('click', () => {
+      alert('Login functionality would go here.');
+    });
+  })();
+</script>
+</body>
+</html>
