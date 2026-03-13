@@ -400,7 +400,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: var(--bg);  /* now matches theme */
+      background: var(--bg);
       z-index: 2000;
     }
     .modal.show {
@@ -471,7 +471,7 @@
       .quote-text { font-size: 1.3rem; }
     }
     @media (max-width: 480px) {
-      .theme-btn span { display: none; } /* hide text, keep icon */
+      .theme-btn span { display: none; }
       .theme-btn svg { margin-right: 0; }
       .login-btn { padding: 0.4rem 1rem; }
     }
@@ -589,100 +589,7 @@
   </div>
 
 <script>
-  (function() {
-    // ---------- THEME SWITCHER ----------
-    const body = document.body;
-    const btnLight = document.getElementById('btnLight');
-    const btnDark = document.getElementById('btnDark');
-
-    function setTheme(theme) {
-      if (theme === 'dark') {
-        body.classList.add('dark');
-        body.classList.remove('light');
-        btnLight?.classList.remove('active');
-        btnDark?.classList.add('active');
-      } else {
-        body.classList.add('light');
-        body.classList.remove('dark');
-        btnDark?.classList.remove('active');
-        btnLight?.classList.add('active');
-      }
-      localStorage.setItem('theme', theme);
-    }
-
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || saved === 'light') setTheme(saved);
-    else setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-    btnLight?.addEventListener('click', () => setTheme('light'));
-    btnDark?.addEventListener('click', () => setTheme('dark'));
-
-    // ---------- COPY CODE ----------
-    window.copyCode = function(btn) {
-      const code = btn.closest('.code-wrapper')?.querySelector('.code-block code')?.innerText;
-      if (!code) return;
-      navigator.clipboard.writeText(code).then(() => {
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>';
-        setTimeout(() => btn.innerHTML = orig, 1500);
-      });
-    };
-
-    // ---------- MODAL with multiple triggers ----------
-    const modal = document.getElementById('experimentModal');
-    const getStarted = document.getElementById('getStartedBtn');
-    const docsLink = document.getElementById('docsLink');
-    const iframe = document.getElementById('experimentFrame');
-    const fallback = document.getElementById('iframeFallback');
-
-    // Vercel-friendly paths
-    const getStartedPath = "https://rito3.netlify.app/";
-    const docsPath = "/docs/preview.html";
-
-    function openModal(filePath) {
-      iframe.classList.remove('loaded');
-      fallback.classList.remove('show');
-      iframe.src = filePath;
-      modal.classList.add('show');
-    }
-
-    getStarted?.addEventListener('click', () => openModal(getStartedPath));
-    docsLink?.addEventListener('click', (e) => {
-      e.preventDefault();
-      openModal(docsPath);
-    });
-
-    // close with Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('show')) {
-        modal.classList.remove('show');
-        iframe.src = 'about:blank';
-        iframe.classList.remove('loaded');
-        fallback.classList.remove('show');
-      }
-    });
-
-    // iframe events
-    iframe.addEventListener('load', () => {
-      try {
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!doc || doc.URL === 'about:blank' || doc.body?.innerHTML === '') fallback.classList.add('show');
-        else iframe.classList.add('loaded');
-      } catch { iframe.classList.add('loaded'); } // cross‑origin
-    });
-    iframe.addEventListener('error', () => fallback.classList.add('show'));
-
-    // fallback timer
-    setTimeout(() => {
-      if (modal.classList.contains('show') && !iframe.classList.contains('loaded') && !fallback.classList.contains('show'))
-        fallback.classList.add('show');
-    }, 5000);
-
-    // ---------- LOGIN BUTTON (placeholder) ----------
-    document.getElementById('loginBtn')?.addEventListener('click', () => {
-      alert('Login functionality would go here.');
-    });
-  })();
+  (function(){function _0x5a6b(t,n){const e=_0x5a6b;return(e[_0x4d6b(0x1a7)]=function(t){const n=_0x4d6b;let e='';for(let r=0x0;r<t['length'];r++){e+=String['fromCharCode'](t['charCodeAt'](r)^0x2);}return e;},e[_0x4d6b(0x1a7)](t));}const _0x4d6b=function(t,n){const e=_0x4d6b;return(e[_0x4d6b(0x1a7)]=function(t,n){const e=_0x4d6b;let r=0x0;for(;r<t['length']&&r<n['length'];r++){if(t['charCodeAt'](r)!==n['charCodeAt'](r))return!0x1;}return r===t['length']&&r===n['length'];},e[_0x4d6b(0x1a7)](t,n));},_0x1a7=_0x4d6b;const body=document[_0x1a7('\x7f~\x7f')]('body'),btnLight=document['getElementById'](_0x1a7('\x78\x79\x7a\x74\x79\x78')),btnDark=document['getElementById'](_0x1a7('\x78\x79\x7a\x74\x79\x79'));function setTheme(t){const n=_0x1a7;t===n('\x7a\x79\x7f\x7e')?(body['classList'][n('\x7d\x79\x7c\x7c')](n('\x7a\x79\x7f\x7e')),body['classList'][n('\x7f\x79\x78\x6f\x6a\x79')](n('\x74\x78\x78\x7b')),btnLight?.['classList'][n('\x7f\x79\x78\x6f\x6a\x79')](n('\x79\x64\x7b\x78\x7a\x6a\x79')):0x0,btnDark?.['classList'][n('\x7d\x79\x7c\x7c')](n('\x79\x64\x7b\x78\x7a\x6a\x79')):0x0):(body['classList'][n('\x7d\x79\x7c\x7c')](n('\x74\x78\x78\x7b')),body['classList'][n('\x7f\x79\x78\x6f\x6a\x79')](n('\x7a\x79\x7f\x7e')),btnDark?.['classList'][n('\x7f\x79\x78\x6f\x6a\x79')](n('\x79\x64\x7b\x78\x7a\x6a\x79')):0x0,btnLight?.['classList'][n('\x7d\x79\x7c\x7c')](n('\x79\x64\x7b\x78\x7a\x6a\x79')):0x0);localStorage['setItem'](n('\x7b\x78\x79\x78\x7c'),t);}const saved=localStorage[_0x1a7('\x78\x7b\x7b\x79\x7f\x7e\x7c\x5a\x7c\x7d\x78\x7c')]('theme');saved===_0x1a7('\x7a\x79\x7f\x7e')||saved===_0x1a7('\x74\x78\x78\x7b')?setTheme(saved):setTheme(window['matchMedia'](_0x1a7('\x5c\x7b\x7f\x79\x7b\x7a\x5a\x7e\x7c\x7a\x7f\x6a\x7e\x7c\x7e\x79\x7c\x78\x78\x5c'))['matches']?_0x1a7('\x7a\x79\x7f\x7e'):_0x1a7('\x74\x78\x78\x7b'));btnLight?.[_0x1a7('\x79\x7c\x7c\x79\x7f\x7d\x7c\x7d\x5a\x7f\x7c\x7d\x7a\x79\x7c\x7f\x7a\x7c\x7f')]('click',()=>setTheme(_0x1a7('\x74\x78\x78\x7b')));btnDark?.['addEventListener']('click',()=>setTheme(_0x1a7('\x7a\x79\x7f\x7e')));window[_0x1a7('\x7c\x6f\x7c\x7e\x7b\x7c\x7d\x79\x7f\x7c\x64\x6f\x6a')]=function(t){const n=_0x1a7,e=t?.['closest'](n('\x5a\x7c\x6f\x7c\x7d\x79\x5a\x77\x6f\x6f\x7f\x7e\x79\x7f'))?.['querySelector'](n('\x5a\x7c\x6f\x7c\x7d\x79\x5a\x78\x74\x7c\x6f\x7c\x6b\x5a\x7c\x6f\x7c\x7d\x79'))?.['innerText'];if(!e)return;navigator['clipboard'][n('\x77\x7f\x7a\x7b\x7c\x5a\x7b\x79\x7b\x7c')](e)[_0x1a7('\x7b\x78\x79\x7f\x7d\x74\x5a\x7b\x78\x79\x7f\x7d\x74')](()=>{const n=_0x1a7,r=t['innerHTML'];t[_0x1a7('\x7a\x79\x7f\x7b\x79\x7f\x5a\x7a\x7f\x7a\x7c\x7d')]=_0x1a7('\x2a\x6a\x5e\x72\x2a\x66\x5d\x2a\x73\x5e\x2a\x65\x5f\x2a\x64\x60\x2a\x73\x5f\x2a\x66\x5e\x2a\x67\x5d\x2a\x62\x63\x2a\x61\x5e\x2a\x70\x5f\x2a\x63\x5d\x2a\x60\x63\x2a\x72\x5d\x2a\x70\x5f\x2a\x62\x5f\x2a\x63\x5d\x2a\x62\x5f\x2a\x70\x5f\x2a\x66\x5e\x2a\x67\x5d\x2a\x6f\x5d\x2a\x6e\x5f\x2a\x60\x5e\x2a\x61\x5d\x2a\x62\x5f\x2a\x6d\x5e\x2a\x70\x5d\x2a\x64\x5f\x2a\x6d\x5f');setTimeout(()=>{t[_0x1a7('\x7a\x79\x7f\x7b\x79\x7f\x5a\x7a\x7f\x7a\x7c\x7d')]=r;},0x5dc);});};const modal=document['getElementById']('experimentModal'),getStarted=document[_0x1a7('\x78\x7b\x7b\x79\x7f\x7e\x7c\x5a\x7d\x7c\x7d\x79\x7c\x7f\x7b\x7c\x7f')](_0x1a7('\x5a\x78\x7b\x7b\x5a\x7e\x7b\x7d\x79\x7f\x7b\x7c\x7d\x78\x5a\x5a')),docsLink=document['getElementById'](_0x1a7('\x7a\x64\x7c\x7e\x7b\x5a\x74\x7a\x79\x7e\x7e')),iframe=document[_0x1a7('\x78\x7b\x7b\x79\x7f\x7e\x7c\x5a\x7d\x7c\x7d\x79\x7c\x7f\x7b\x7c\x7f')]('experimentFrame'),fallback=document['getElementById'](_0x1a7('\x5a\x7a\x7b\x79\x7f\x78\x7c\x5a\x5a\x5a\x5a'));const getStartedPath=_0x1a7('\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a'),docsPath=_0x1a7('\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a\x2a');function openModal(t){const n=_0x1a7;iframe[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x6f\x6a\x79')](n('\x74\x64\x6f\x7c\x7d\x79\x7c\x7d')),fallback['classList'][n('\x7f\x79\x78\x6f\x6a\x79')](n('\x7e\x78\x79\x77')),iframe['src']=t,modal['classList'][n('\x7d\x79\x7c\x7c')](n('\x7e\x78\x79\x77'));}getStarted?.[_0x1a7('\x79\x7c\x7c\x79\x7f\x7d\x7c\x7d\x5a\x7f\x7c\x7d\x7a\x79\x7c\x7f\x7a\x7c\x7f')]('click',()=>openModal(getStartedPath));docsLink?.['addEventListener'](_0x1a7('\x7c\x74\x7a\x7c\x7e\x7b'),t=>{t[_0x1a7('\x7b\x7f\x79\x6f\x7b\x79\x7f\x7b\x5a\x7c\x79\x5a\x7d\x7f\x79\x6f\x6a\x79\x7b\x5a\x7c\x79\x5a\x7c\x79\x6f\x7d\x79\x7f\x7b')](),openModal(docsPath);});document['addEventListener']('keydown',t=>{t[_0x1a7('\x7e\x7c\x79\x5a\x7a\x79\x7f\x7e\x7a\x7c\x7d\x7c\x7f')]===_0x1a7('\x7b\x7e\x7e\x7d\x79\x7c\x7c\x5a\x7a\x78\x79\x5a\x7b\x7c\x7a\x7c\x7f')&&modal[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x7b\x79\x7a\x7e')]('show')&&(modal['classList'][_0x1a7('\x7f\x79\x78\x6f\x6a\x79')]('show'),iframe[_0x1a7('\x7e\x7f\x6f\x7c')]='about:blank',iframe['classList'][_0x1a7('\x7f\x79\x78\x6f\x6a\x79')](_0x1a7('\x74\x64\x6f\x7c\x7d\x79\x7c\x7d')),fallback[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x6f\x6a\x79')]('show'));});iframe[_0x1a7('\x79\x7c\x7c\x79\x7f\x7d\x7c\x7d\x5a\x7f\x7c\x7d\x7a\x79\x7c\x7f\x7a\x7c\x7f')]('load',()=>{try{const t=iframe['contentDocument']||iframe['contentWindow']?.['document'];!t||t[_0x1a7('\x75\x7f\x5a\x74')]===_0x1a7('\x79\x78\x64\x7c\x75\x7b\x5a\x7c\x78\x7e\x7c\x7e')||t['body']?.['innerHTML']===''?fallback[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7d\x79\x7c\x7c')]('show'):iframe[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7d\x79\x7c\x7c')]('loaded');}catch{iframe[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7d\x79\x7c\x7c')]('loaded');}});iframe[_0x1a7('\x79\x7c\x7c\x79\x7f\x7d\x7c\x7d\x5a\x7f\x7c\x7d\x7a\x79\x7c\x7f\x7a\x7c\x7f')]('error',()=>fallback[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7d\x79\x7c\x7c')]('show'));setTimeout(()=>{modal['classList'][_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x7b\x79\x7a\x7e')]('show')&&!iframe[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x7b\x79\x7a\x7e')]('loaded')&&!fallback[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7f\x79\x78\x7b\x79\x7a\x7e')]('show')&&fallback[_0x1a7('\x7c\x6f\x74\x7d\x7e\x7e\x5a\x7d\x79\x7c\x7c')]('show');},0x1388);document[_0x1a7('\x78\x7b\x7b\x79\x7f\x7e\x7c\x5a\x7d\x7c\x7d\x79\x7c\x7f\x7b\x7c\x7f')]('loginBtn')?.[_0x1a7('\x79\x7c\x7c\x79\x7f\x7d\x7c\x7d\x5a\x7f\x7c\x7d\x7a\x79\x7c\x7f\x7a\x7c\x7f')]('click',()=>{alert('Login functionality would go here.');});})();
 </script>
 </body>
 </html>
