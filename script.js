@@ -1,4 +1,4 @@
-// script.js — all interactivity, dynamic content, and "Coming Soon" handlers
+// script.js — all interactivity, dynamic content, and custom card-style modal
 (function() {
     // ----- THEME MANAGEMENT -----
     const body = document.body;
@@ -29,10 +29,29 @@
         });
     }
 
-    // ----- "COMING SOON" ALERT HELPER -----
-    function comingSoonAlert(e) {
-        e.preventDefault();
-        alert('✨ Coming soon — we\'re working on something special!');
+    // ----- CUSTOM MODAL (Coming Soon Card) -----
+    const modal = document.getElementById('comingSoonModal');
+    const closeModalBtn = document.getElementById('modalCloseBtn');
+    const actionBtn = document.getElementById('modalActionBtn');
+
+    function showComingSoonModal() {
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    function hideModal() {
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+    if (actionBtn) actionBtn.addEventListener('click', hideModal);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) hideModal();
+        });
     }
 
     // ----- GLOBAL COPY FUNCTION (for code blocks) -----
@@ -116,7 +135,7 @@
                 card.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    alert('✨ Group Chat is coming soon — stay tuned!');
+                    showComingSoonModal(); // Use custom modal
                 });
             }
 
@@ -151,33 +170,31 @@
 
     // ----- INTERCEPT ALL NAVIGATION LINKS THAT LEAD TO OTHER PAGES (except index.html) -----
     function bindComingSoonToLinks() {
-        // All navigation links in navbar, dropdown, and CTA buttons
         const navLinks = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline');
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href && href !== 'index.html' && !href.startsWith('#') && href !== '') {
-                link.addEventListener('click', comingSoonAlert);
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showComingSoonModal(); // Use custom modal
+                });
             }
         });
         
-        // Special handling for login button
+        // Login button
         const loginButton = document.getElementById('loginBtn');
         if (loginButton) {
             loginButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert('🔐 Login portal is coming soon — we’ll notify you!');
+                showComingSoonModal();
             });
         }
     }
 
-    // Also handle any potential "Get started" / "Try playground" double protection
-    // run after DOM ready
+    // Run after DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bindComingSoonToLinks);
     } else {
         bindComingSoonToLinks();
     }
-
-    // Additional safeguard: if any link inside .cta or .dropdown-content changes dynamically, but we covered static ones.
-    // Also intercept "Research" and "Stories" explicitly if needed (already covered by .nav-links a)
 })();
