@@ -866,6 +866,71 @@ main {
     white-space: pre;
 }
 
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+    margin: 4rem 0;
+}
+
+.feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.feature-card {
+    width: 100%;
+    padding: 2rem;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+    background-color: var(--card-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
+    cursor: default;
+}
+
+.feature-card.clickable-card {
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.feature-icon {
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.feature-text {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.feature-text h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.feature-text p {
+    color: var(--text-soft);
+    font-size: 0.95rem;
+}
+
 .callout {
     max-width: 700px;
     margin: 4rem auto 0;
