@@ -20,8 +20,8 @@
             </div>
             <div class="nav-links">
                 <a href="index.html" class="active">Home</a>
-                <a href="#" id="researchLink">Research</a>
-                <a href="#" id="storiesLink">Stories</a>
+                <a href="#" id="researchLink" class="coming-soon-link">Research</a>
+                <a href="#" id="storiesLink" class="coming-soon-link">Stories</a>
                 <div class="dropdown">
                     <button class="dropbtn">
                         Developers 
@@ -71,23 +71,192 @@
         <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
     </footer>
 
-    <!-- Coming Soon Modal (Glassmorphism) -->
-    <div id="comingSoonModal" class="modal">
-        <div class="modal-content glass-panel">
+    <!-- Coming Soon Modal -->
+    <div id="comingSoonModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
             <div class="modal-header">
-                <h2>✨ Coming Soon</h2>
-                <button class="modal-close" id="closeModalBtn">&times;</button>
+                <h3>✨ Coming Soon</h3>
+                <button class="modal-close-btn" id="closeModalBtn">&times;</button>
             </div>
             <div class="modal-body">
+                <p>This feature is under development. We're crafting something extraordinary — stay tuned!</p>
                 <div class="modal-icon">
-                    <i data-lucide="construction" style="width: 48px; height: 48px;"></i>
+                    <i data-lucide="sparkles" style="width: 48px; height: 48px; stroke-width: 1.2;"></i>
                 </div>
-                <p>This feature is under development.<br>We're crafting something extraordinary — stay tuned!</p>
-                <button class="btn-primary modal-action-btn" id="modalConfirmBtn">Got it</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary modal-action-btn" id="modalGotItBtn">Got it</button>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // ---------- COMING SOON MODAL ----------
+        function showComingSoonModal() {
+            const modal = document.getElementById('comingSoonModal');
+            if (modal) modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeComingSoonModal() {
+            const modal = document.getElementById('comingSoonModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // ---------- THEME TOGGLE ----------
+        function initTheme() {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            let theme = storedTheme;
+            if (!theme) theme = prefersDark ? 'dark' : 'light';
+            document.body.classList.remove('light', 'dark');
+            document.body.classList.add(theme);
+            const sunIcon = document.querySelector('.theme-toggle .sun');
+            const moonIcon = document.querySelector('.theme-toggle .moon');
+            if (sunIcon && moonIcon) {
+                if (theme === 'dark') {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'inline';
+                } else {
+                    sunIcon.style.display = 'inline';
+                    moonIcon.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.body.classList.remove('light', 'dark');
+            document.body.classList.add(newTheme);
+            localStorage.setItem('theme', newTheme);
+            const sunIcon = document.querySelector('.theme-toggle .sun');
+            const moonIcon = document.querySelector('.theme-toggle .moon');
+            if (sunIcon && moonIcon) {
+                if (newTheme === 'dark') {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'inline';
+                } else {
+                    sunIcon.style.display = 'inline';
+                    moonIcon.style.display = 'none';
+                }
+            }
+        }
+
+        // ---------- COPY CODE HELPER ----------
+        window.copyCode = function(btn) {
+            const code = btn.closest('.code-wrapper')?.querySelector('.code-block code')?.innerText;
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(() => {
+                const icon = btn.querySelector('i');
+                icon.setAttribute('data-lucide', 'check');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => {
+                    icon.setAttribute('data-lucide', 'copy');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }, 1500);
+            });
+        };
+
+        // ---------- POPULATE DYNAMIC CONTENT ----------
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            const themeToggleBtn = document.getElementById('themeToggle');
+            if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+
+            // Modal handlers
+            const modal = document.getElementById('comingSoonModal');
+            const closeBtn = document.getElementById('closeModalBtn');
+            const gotItBtn = document.getElementById('modalGotItBtn');
+            if (closeBtn) closeBtn.addEventListener('click', closeComingSoonModal);
+            if (gotItBtn) gotItBtn.addEventListener('click', closeComingSoonModal);
+            if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeComingSoonModal(); });
+
+            // Coming Soon links
+            const researchLink = document.getElementById('researchLink');
+            const storiesLink = document.getElementById('storiesLink');
+            if (researchLink) researchLink.addEventListener('click', (e) => { e.preventDefault(); showComingSoonModal(); });
+            if (storiesLink) storiesLink.addEventListener('click', (e) => { e.preventDefault(); showComingSoonModal(); });
+
+            // Features data
+            const featuresData = [
+                { icon: 'brain', title: 'Step‑by‑step reasoning', description: 'Every conclusion is broken down into transparent thought processes.', bgImage: 'card.png' },
+                { icon: 'layout', title: 'Multi‑format output', description: 'Tables, code blocks, lists – always beautifully formatted.', bgImage: 'card1.png' },
+                { icon: 'zap', title: 'Lightning fast', description: 'Optimized inference, delivered with minimal latency.', bgImage: 'card3.png' },
+                { icon: 'users', title: 'Group Chat', description: 'Collaborate with your team in real‑time. Click to join.', bgImage: 'card4.png', link: 'group-chat.html' }
+            ];
+
+            const reasoningData = [
+                {
+                    userBubble: 'What is the capital of France?',
+                    thoughtProcess: '⚡ User asks about capital of France. Need to recall geography.<br>⚡ France is a country in Europe. Its capital is Paris.',
+                    conclusion: '<h3>Conclusion</h3><p>The capital of France is <strong>Paris</strong>.</p>'
+                },
+                {
+                    userBubble: 'Show a quick sort in Python.',
+                    thoughtProcess: '⚡ Request: quicksort implementation in Python.',
+                    conclusion: `<h3>Python quicksort</h3>
+                        <div class="code-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">python</span>
+                                <button class="code-copy" onclick="copyCode(this)">
+                                    <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            </div>
+                            <pre class="code-block"><code>def quicksort(arr):
+    if len(arr) <= 1: return arr
+    pivot = arr[len(arr)//2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)</code></pre>
+                        </div>`
+                }
+            ];
+
+            const featuresContainer = document.getElementById('dynamic-features');
+            const reasoningContainer = document.getElementById('dynamic-reasoning');
+            
+            if (featuresContainer) {
+                featuresContainer.innerHTML = '';
+                featuresData.forEach(f => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'feature-item';
+
+                    const card = document.createElement('div');
+                    card.className = 'feature-card';
+                    if (f.bgImage) card.style.backgroundImage = `url('${f.bgImage}')`;
+                    if (f.link) card.addEventListener('click', () => window.location.href = f.link);
+                    card.innerHTML = `<div class="feature-icon"><i data-lucide="${f.icon}" style="width: 48px; height: 48px; stroke-width: 1.5;"></i></div>`;
+
+                    const textBlock = document.createElement('div');
+                    textBlock.className = 'feature-text';
+                    textBlock.innerHTML = `<h3>${f.title}</h3><p>${f.description}</p>`;
+
+                    wrapper.appendChild(card);
+                    wrapper.appendChild(textBlock);
+                    featuresContainer.appendChild(wrapper);
+                });
+            }
+
+            if (reasoningContainer) {
+                reasoningContainer.innerHTML = '';
+                reasoningData.forEach(r => {
+                    const card = document.createElement('div');
+                    card.className = 'reasoning-card';
+                    card.innerHTML = `
+                        <div class="user-bubble">${r.userBubble}</div>
+                        <div class="thought-process">${r.thoughtProcess}</div>
+                        <div class="conclusion">${r.conclusion}</div>
+                    `;
+                    reasoningContainer.appendChild(card);
+                });
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
 </body>
 </html>
