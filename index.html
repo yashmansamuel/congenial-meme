@@ -10,60 +10,6 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .feature-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        .feature-card {
-            width: 100%;
-            padding: 2rem;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            transition: transform 0.25s ease, box-shadow 0.3s ease;
-            background-color: var(--card-bg);
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            min-height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            will-change: transform;
-            cursor: pointer;
-        }
-        .feature-card:hover {
-            transform: scale(1.02);
-            box-shadow: var(--card-hover-shadow);
-        }
-        .feature-icon {
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        .feature-card:hover .feature-icon {
-            transform: scale(1.1) rotate(5deg);
-        }
-        .feature-text {
-            margin-top: 1rem;
-            width: 100%;
-        }
-        .feature-text h3 {
-            font-size: 1.4rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        .feature-text p {
-            color: var(--text-soft);
-            font-size: 0.95rem;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 2rem;
-            margin: 4rem 0;
-        }
-    </style>
 </head>
 <body class="light">
     <nav class="nav">
@@ -74,8 +20,8 @@
             </div>
             <div class="nav-links">
                 <a href="index.html" class="active">Home</a>
-                <a href="research.html">Research</a>
-                <a href="stories.html">Stories</a>
+                <a href="#" id="researchLink">Research</a>
+                <a href="#" id="storiesLink">Stories</a>
                 <div class="dropdown">
                     <button class="dropbtn">
                         Developers 
@@ -125,107 +71,23 @@
         <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
     </footer>
 
-    <script src="theme.js"></script>
-    <script>
-        function copyCode(btn) {
-            const code = btn.closest('.code-wrapper')?.querySelector('.code-block code')?.innerText;
-            if (!code) return;
-            navigator.clipboard.writeText(code).then(() => {
-                const icon = btn.querySelector('i');
-                icon.setAttribute('data-lucide', 'check');
-                lucide.createIcons();
-                setTimeout(() => {
-                    icon.setAttribute('data-lucide', 'copy');
-                    lucide.createIcons();
-                }, 1500);
-            });
-        }
+    <!-- Coming Soon Modal (Glassmorphism) -->
+    <div id="comingSoonModal" class="modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>✨ Coming Soon</h2>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon">
+                    <i data-lucide="construction" style="width: 48px; height: 48px;"></i>
+                </div>
+                <p>This feature is under development.<br>We're crafting something extraordinary — stay tuned!</p>
+                <button class="btn-primary modal-action-btn" id="modalConfirmBtn">Got it</button>
+            </div>
+        </div>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const featuresData = [
-                { icon: 'brain', title: 'Step‑by‑step reasoning', description: 'Every conclusion is broken down into transparent thought processes.', bgImage: 'card.png' },
-                { icon: 'layout', title: 'Multi‑format output', description: 'Tables, code blocks, lists – always beautifully formatted.', bgImage: 'card1.png' },
-                { icon: 'zap', title: 'Lightning fast', description: 'Optimized inference, delivered with minimal latency.', bgImage: 'card3.png' },
-                { icon: 'users', title: 'Group Chat', description: 'Collaborate with your team in real‑time. Click to join.', bgImage: 'card4.png', link: 'group-chat.html' }
-            ];
-
-            const reasoningData = [
-                {
-                    userBubble: 'What is the capital of France?',
-                    thoughtProcess: '⚡ User asks about capital of France. Need to recall geography.<br>⚡ France is a country in Europe. Its capital is Paris.',
-                    conclusion: '<h3>Conclusion</h3><p>The capital of France is <strong>Paris</strong>.</p>'
-                },
-                {
-                    userBubble: 'Show a quick sort in Python.',
-                    thoughtProcess: '⚡ Request: quicksort implementation in Python.',
-                    conclusion: `<h3>Python quicksort</h3>
-                        <div class="code-wrapper">
-                            <div class="code-header">
-                                <span class="code-lang">python</span>
-                                <button class="code-copy" onclick="copyCode(this)">
-                                    <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code>def quicksort(arr):
-    if len(arr) <= 1: return arr
-    pivot = arr[len(arr)//2]
-    left = [x for x in arr if x < pivot]
-    middle = [x for x in arr if x == pivot]
-    right = [x for x in arr if x > pivot]
-    return quicksort(left) + middle + quicksort(right)</code></pre>
-                        </div>`
-                }
-            ];
-
-            const featuresContainer = document.getElementById('dynamic-features');
-            const reasoningContainer = document.getElementById('dynamic-reasoning');
-            
-            if (featuresContainer) {
-                featuresContainer.innerHTML = '';
-                featuresData.forEach(f => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'feature-item';
-
-                    const card = document.createElement('div');
-                    card.className = 'feature-card';
-                    if (f.bgImage) {
-                        card.style.backgroundImage = `url('${f.bgImage}')`;
-                    }
-                    if (f.link) {
-                        card.addEventListener('click', () => window.location.href = f.link);
-                    }
-                    card.innerHTML = `
-                        <div class="feature-icon">
-                            <i data-lucide="${f.icon}" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
-                        </div>
-                    `;
-
-                    const textBlock = document.createElement('div');
-                    textBlock.className = 'feature-text';
-                    textBlock.innerHTML = `<h3>${f.title}</h3><p>${f.description}</p>`;
-
-                    wrapper.appendChild(card);
-                    wrapper.appendChild(textBlock);
-                    featuresContainer.appendChild(wrapper);
-                });
-            }
-
-            if (reasoningContainer) {
-                reasoningContainer.innerHTML = '';
-                reasoningData.forEach(r => {
-                    const card = document.createElement('div');
-                    card.className = 'reasoning-card';
-                    card.innerHTML = `
-                        <div class="user-bubble">${r.userBubble}</div>
-                        <div class="thought-process">${r.thoughtProcess}</div>
-                        <div class="conclusion">${r.conclusion}</div>
-                    `;
-                    reasoningContainer.appendChild(card);
-                });
-            }
-
-            lucide.createIcons();
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
