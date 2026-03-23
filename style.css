@@ -26,6 +26,7 @@ body.light {
     --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.05);
     --chat-own-bg: rgba(0,0,0,0.05);
     --chat-other-bg: rgba(255,255,255,0.8);
+    --modal-bg: rgba(0, 0, 0, 0.4);
 }
 
 body.dark {
@@ -48,6 +49,7 @@ body.dark {
     --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.4);
     --chat-own-bg: rgba(255,255,255,0.1);
     --chat-other-bg: rgba(42,42,42,0.8);
+    --modal-bg: rgba(0, 0, 0, 0.6);
 }
 
 ::selection {
@@ -256,6 +258,93 @@ body.dark .theme-toggle .moon {
 .btn-small {
     padding: 0.4rem 1.2rem !important;
     font-size: 0.9rem !important;
+}
+
+/* ---------- MODAL (Coming Soon Card) ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--modal-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s;
+}
+
+.modal-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.modal-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    padding: 2rem 2rem 2rem 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--card-hover-shadow);
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-soft);
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--text);
+}
+
+.modal-icon {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.modal-icon svg {
+    stroke: currentColor;
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.modal-message {
+    color: var(--text-soft);
+    margin-bottom: 1.8rem;
+    font-size: 1rem;
+}
+
+.modal-action {
+    margin-top: 0.5rem;
+    padding: 0.6rem 2rem;
+    cursor: pointer;
 }
 
 /* ---------- APP LAYOUT (sidebar + main) ---------- */
