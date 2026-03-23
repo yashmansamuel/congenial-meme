@@ -917,6 +917,107 @@ main {
 .delay-1 { animation-delay: 0.2s; }
 .delay-2 { animation-delay: 0.4s; }
 
+/* ---------- MODAL (Coming Soon) ---------- */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    max-width: 450px;
+    width: 90%;
+    border-radius: 32px;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.glass-panel {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.8rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--text-soft);
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--text);
+}
+
+.modal-body {
+    padding: 2rem 1.8rem;
+    text-align: center;
+}
+
+.modal-icon {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.modal-body p {
+    font-size: 1rem;
+    margin-bottom: 1.8rem;
+    color: var(--text-soft);
+}
+
+.modal-action-btn {
+    background: var(--primary);
+    color: var(--bg);
+    border: none;
+    padding: 0.6rem 1.8rem;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.modal-action-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.02);
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 /* ---------- RESPONSIVE (general) ---------- */
 @media (max-width: 900px) {
     .app-container {
