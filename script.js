@@ -1,5 +1,6 @@
+// script.js — all interactivity, dynamic content, and "Coming Soon" handlers
 (function() {
-    // ---------- Theme handling ----------
+    // ----- THEME MANAGEMENT -----
     const body = document.body;
     const toggleBtn = document.getElementById('themeToggle');
 
@@ -14,9 +15,9 @@
         localStorage.setItem('theme', theme);
     }
 
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || saved === 'light') {
-        setTheme(saved);
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+        setTheme(savedTheme);
     } else {
         setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     }
@@ -28,40 +29,38 @@
         });
     }
 
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            alert('Login functionality coming soon!');
-        });
+    // ----- "COMING SOON" ALERT HELPER -----
+    function comingSoonAlert(e) {
+        e.preventDefault();
+        alert('✨ Coming soon — we\'re working on something special!');
     }
 
-    // ---------- Global "Coming soon" for all navigation links ----------
-    function showComingSoon(event) {
-        event.preventDefault();
-        alert('Coming soon! This feature is under development.');
-    }
+    // ----- GLOBAL COPY FUNCTION (for code blocks) -----
+    window.copyCode = function(btn) {
+        const codeWrapper = btn.closest('.code-wrapper');
+        const codeBlock = codeWrapper?.querySelector('.code-block code');
+        const codeText = codeBlock?.innerText;
+        if (!codeText) return;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                const originalIcon = icon.getAttribute('data-lucide');
+                icon.setAttribute('data-lucide', 'check');
+                lucide.createIcons();
+                setTimeout(() => {
+                    icon.setAttribute('data-lucide', originalIcon || 'copy');
+                    lucide.createIcons();
+                }, 1500);
+            }
+        }).catch(() => {});
+    };
 
-    // Intercept all internal links that point to .html pages (except index.html)
-    document.addEventListener('click', function(e) {
-        let target = e.target.closest('a');
-        if (!target) return;
-
-        const href = target.getAttribute('href');
-        if (!href) return;
-
-        // Block any .html link that is not index.html
-        if (href.includes('.html') && !href.includes('index.html')) {
-            e.preventDefault();
-            alert('Coming soon! This feature is under development.');
-        }
-    });
-
-    // ---------- Dynamic content generation ----------
+    // ----- DYNAMIC CONTENT: FEATURES & REASONING EXAMPLES -----
     const featuresData = [
-        { icon: 'brain', title: 'Step‑by‑step reasoning', description: 'Every conclusion is broken down into transparent thought processes.', bgImage: 'card.png' },
-        { icon: 'layout', title: 'Multi‑format output', description: 'Tables, code blocks, lists – always beautifully formatted.', bgImage: 'card1.png' },
-        { icon: 'zap', title: 'Lightning fast', description: 'Optimized inference, delivered with minimal latency.', bgImage: 'card3.png' },
-        { icon: 'users', title: 'Group Chat', description: 'Collaborate with your team in real‑time. Click to join.', bgImage: 'card4.png', link: 'group-chat.html' }
+        { icon: 'brain', title: 'Step‑by‑step reasoning', description: 'Every conclusion is broken down into transparent thought processes.', bgImage: 'card.png', clickable: false },
+        { icon: 'layout', title: 'Multi‑format output', description: 'Tables, code blocks, lists – always beautifully formatted.', bgImage: 'card1.png', clickable: false },
+        { icon: 'zap', title: 'Lightning fast', description: 'Optimized inference, delivered with minimal latency.', bgImage: 'card3.png', clickable: false },
+        { icon: 'users', title: 'Group Chat', description: 'Collaborate with your team in real‑time. Click to join.', bgImage: 'card4.png', clickable: true }
     ];
 
     const reasoningData = [
@@ -103,23 +102,23 @@
 
             const card = document.createElement('div');
             card.className = 'feature-card';
+            if (f.clickable) card.classList.add('clickable-card');
             if (f.bgImage) {
                 card.style.backgroundImage = `url('${f.bgImage}')`;
             }
-
-            // For Group Chat: show coming soon alert on click
-            if (f.link === 'group-chat.html') {
-                card.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    alert('Coming soon! Group chat is under development.');
-                });
-            }
-
             card.innerHTML = `
                 <div class="feature-icon">
                     <i data-lucide="${f.icon}" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
                 </div>
             `;
+            
+            if (f.clickable) {
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('✨ Group Chat is coming soon — stay tuned!');
+                });
+            }
 
             const textBlock = document.createElement('div');
             textBlock.className = 'feature-text';
@@ -145,23 +144,40 @@
         });
     }
 
-    // Re-initialize Lucide icons after dynamic content
+    // ----- LUCIDE ICONS INIT (after dynamic content) -----
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 
-    // ---------- Helper: copyCode ----------
-    window.copyCode = function(btn) {
-        const code = btn.closest('.code-wrapper')?.querySelector('.code-block code')?.innerText;
-        if (!code) return;
-        navigator.clipboard.writeText(code).then(() => {
-            const icon = btn.querySelector('i');
-            icon.setAttribute('data-lucide', 'check');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            setTimeout(() => {
-                icon.setAttribute('data-lucide', 'copy');
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            }, 1500);
+    // ----- INTERCEPT ALL NAVIGATION LINKS THAT LEAD TO OTHER PAGES (except index.html) -----
+    function bindComingSoonToLinks() {
+        // All navigation links in navbar, dropdown, and CTA buttons
+        const navLinks = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== 'index.html' && !href.startsWith('#') && href !== '') {
+                link.addEventListener('click', comingSoonAlert);
+            }
         });
-    };
+        
+        // Special handling for login button
+        const loginButton = document.getElementById('loginBtn');
+        if (loginButton) {
+            loginButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('🔐 Login portal is coming soon — we’ll notify you!');
+            });
+        }
+    }
+
+    // Also handle any potential "Get started" / "Try playground" double protection
+    // run after DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindComingSoonToLinks);
+    } else {
+        bindComingSoonToLinks();
+    }
+
+    // Additional safeguard: if any link inside .cta or .dropdown-content changes dynamically, but we covered static ones.
+    // Also intercept "Research" and "Stories" explicitly if needed (already covered by .nav-links a)
 })();
