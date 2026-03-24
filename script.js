@@ -1,4 +1,4 @@
-// script.js — all interactivity, dynamic content, and custom card-style modal
+// script.js — all interactivity, mobile menu, modal, and dynamic content
 (function() {
     // ----- THEME MANAGEMENT -----
     const body = document.body;
@@ -26,6 +26,50 @@
         toggleBtn.addEventListener('click', () => {
             const newTheme = body.classList.contains('dark') ? 'light' : 'dark';
             setTheme(newTheme);
+        });
+    }
+
+    // ----- MOBILE HAMBURGER MENU -----
+    const hamburger = document.getElementById('hamburgerBtn');
+    const navLinks = document.getElementById('navLinks');
+    const menuIcon = hamburger?.querySelector('i:first-child');
+    const closeIcon = hamburger?.querySelector('i:last-child');
+
+    function toggleMenu() {
+        if (!navLinks) return;
+        navLinks.classList.toggle('active');
+        hamburger?.classList.toggle('active');
+        // Update icons
+        if (navLinks.classList.contains('active')) {
+            menuIcon?.setAttribute('data-lucide', 'x');
+        } else {
+            menuIcon?.setAttribute('data-lucide', 'menu');
+        }
+        lucide.createIcons();
+    }
+
+    if (hamburger) {
+        hamburger.addEventListener('click', toggleMenu);
+    }
+
+    // Close menu when clicking outside (optional)
+    document.addEventListener('click', (e) => {
+        if (navLinks && navLinks.classList.contains('active') && !navLinks.contains(e.target) && !hamburger?.contains(e.target)) {
+            toggleMenu();
+        }
+    });
+
+    // For mobile dropdowns inside nav: toggle open/close
+    const dropdowns = document.querySelectorAll('.dropdown');
+    if (window.innerWidth <= 768) {
+        dropdowns.forEach(dropdown => {
+            const btn = dropdown.querySelector('.dropbtn');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    dropdown.classList.toggle('open');
+                });
+            }
         });
     }
 
@@ -135,7 +179,7 @@
                 card.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    showComingSoonModal(); // Use custom modal
+                    showComingSoonModal();
                 });
             }
 
@@ -170,18 +214,17 @@
 
     // ----- INTERCEPT ALL NAVIGATION LINKS THAT LEAD TO OTHER PAGES (except index.html) -----
     function bindComingSoonToLinks() {
-        const navLinks = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline');
-        navLinks.forEach(link => {
+        const navLinksSelectors = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline');
+        navLinksSelectors.forEach(link => {
             const href = link.getAttribute('href');
             if (href && href !== 'index.html' && !href.startsWith('#') && href !== '') {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    showComingSoonModal(); // Use custom modal
+                    showComingSoonModal();
                 });
             }
         });
         
-        // Login button
         const loginButton = document.getElementById('loginBtn');
         if (loginButton) {
             loginButton.addEventListener('click', (e) => {
@@ -197,4 +240,6 @@
     } else {
         bindComingSoonToLinks();
     }
+
+    // Also re-bind after dynamic content if needed (already covered)
 })();
