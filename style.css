@@ -65,9 +65,10 @@ body {
     transition: background-color 0.3s, color 0.3s;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
-/* ---------- NAVIGATION (glass + mobile hamburger) ---------- */
+/* ---------- NAVIGATION (glass) ---------- */
 .nav {
     position: sticky;
     top: 0;
@@ -81,13 +82,20 @@ body {
     z-index: 100;
 }
 
+@media (min-width: 768px) {
+    .nav {
+        padding: 0.6rem 2rem;
+    }
+}
+
 .nav-container {
     max-width: 1400px;
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: relative;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .logo {
@@ -108,34 +116,27 @@ body {
     letter-spacing: -0.02em;
 }
 
-/* Hamburger button */
-.hamburger {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.4rem;
-    display: none;
-    color: var(--text-soft);
-    transition: color 0.2s;
-}
-.hamburger:hover {
-    color: var(--text);
-}
-.hamburger i {
-    display: block;
-}
-.hamburger.active i:first-child {
-    display: none;
-}
-.hamburger.active i:last-child {
-    display: block !important;
-}
-
 .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: center;
-    transition: all 0.3s ease;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 550px) {
+    .nav-links {
+        gap: 0.8rem;
+    }
 }
 
 .nav-links > a {
@@ -176,7 +177,6 @@ body {
     align-items: center;
     gap: 0.3rem;
     transition: color 0.2s;
-    white-space: nowrap;
 }
 
 .dropbtn:hover {
@@ -190,7 +190,7 @@ body {
     background: var(--dropdown-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    min-width: 180px;
+    min-width: 160px;
     box-shadow: var(--dropdown-shadow);
     border-radius: 12px;
     border: 1px solid var(--border);
@@ -209,6 +209,10 @@ body {
     visibility: visible;
     transform: translateY(0);
     pointer-events: auto;
+}
+
+.dropdown:not(:hover) .dropdown-content {
+    transition-delay: 0.15s;
 }
 
 .dropdown-content a {
@@ -278,79 +282,6 @@ body.dark .theme-toggle .moon {
     font-size: 0.9rem !important;
 }
 
-/* Mobile navigation */
-@media (max-width: 768px) {
-    .hamburger {
-        display: block;
-    }
-    .nav-links {
-        position: fixed;
-        top: 64px;
-        left: 0;
-        right: 0;
-        background: rgba(var(--bg-rgb), 0.95);
-        backdrop-filter: blur(20px);
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--border);
-        transform: translateY(-100%);
-        opacity: 0;
-        visibility: hidden;
-        transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
-        z-index: 99;
-        box-shadow: var(--card-shadow);
-    }
-    .nav-links.active {
-        transform: translateY(0);
-        opacity: 1;
-        visibility: visible;
-    }
-    .nav-links > a,
-    .dropdown {
-        padding: 0.8rem 1.5rem;
-        width: 100%;
-        border-bottom: 1px solid var(--border);
-    }
-    .nav-links > a {
-        border-bottom: none;
-        white-space: normal;
-    }
-    .dropdown {
-        position: static;
-    }
-    .dropbtn {
-        width: 100%;
-        justify-content: space-between;
-        padding: 0.8rem 0;
-    }
-    .dropdown-content {
-        position: static;
-        background: transparent;
-        backdrop-filter: none;
-        box-shadow: none;
-        border: none;
-        opacity: 1;
-        visibility: visible;
-        transform: none;
-        margin-top: 0.5rem;
-        padding-left: 1rem;
-        pointer-events: auto;
-        display: none;
-    }
-    .dropdown.open .dropdown-content {
-        display: block;
-    }
-    .dropdown-content a {
-        padding: 0.6rem 1rem;
-        margin: 0;
-    }
-    .nav-actions {
-        margin-left: auto;
-    }
-}
-
 /* ---------- MODAL (Coming Soon Card) ---------- */
 .modal-overlay {
     position: fixed;
@@ -381,14 +312,21 @@ body.dark .theme-toggle .moon {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: 32px;
-    padding: 2rem;
+    padding: 2rem 1.5rem;
     max-width: 400px;
-    width: 90%;
+    width: 85%;
     text-align: center;
     box-shadow: var(--card-hover-shadow);
     transform: scale(0.95);
     transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     position: relative;
+}
+
+@media (min-width: 480px) {
+    .modal-card {
+        padding: 2rem;
+        width: 90%;
+    }
 }
 
 .modal-overlay.active .modal-card {
@@ -398,7 +336,7 @@ body.dark .theme-toggle .moon {
 .modal-close {
     position: absolute;
     top: 1rem;
-    right: 1.5rem;
+    right: 1.2rem;
     background: none;
     border: none;
     font-size: 2rem;
@@ -439,16 +377,34 @@ body.dark .theme-toggle .moon {
     cursor: pointer;
 }
 
-/* ---------- HERO, FEATURES, REASONING ---------- */
+/* ---------- HERO, FEATURES, REASONING (landing) ---------- */
 main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 100px 20px 60px;
 }
 
+@media (min-width: 768px) {
+    main {
+        padding: 120px 24px 60px;
+    }
+}
+
+@media (max-width: 550px) {
+    main {
+        padding: 80px 16px 40px;
+    }
+}
+
 .hero {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+    .hero {
+        margin-bottom: 4rem;
+    }
 }
 
 .hero h1 {
@@ -468,8 +424,8 @@ main {
     font-size: clamp(1rem, 4vw, 1.2rem);
     color: var(--text-soft);
     max-width: 650px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
+    margin: 1rem auto;
+    padding: 0 0.5rem;
 }
 
 .cta {
@@ -477,15 +433,21 @@ main {
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
-    padding: 0 1rem;
+    margin-top: 1.5rem;
 }
 
 .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 2rem;
-    margin: 4rem 0;
-    padding: 0 1rem;
+    margin: 3rem 0;
+}
+
+@media (max-width: 640px) {
+    .features {
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
 }
 
 .feature-item {
@@ -511,6 +473,13 @@ main {
     justify-content: center;
     will-change: transform;
     cursor: default;
+}
+
+@media (max-width: 480px) {
+    .feature-card {
+        min-height: 180px;
+        padding: 1.5rem;
+    }
 }
 
 .feature-card.clickable-card {
@@ -541,28 +510,36 @@ main {
     font-weight: 600;
 }
 
-.feature-text p {
-    color: var(--text-soft);
-    font-size: 0.9rem;
+@media (max-width: 480px) {
+    .feature-text h3 {
+        font-size: 1.2rem;
+    }
+    .feature-text p {
+        font-size: 0.9rem;
+    }
 }
 
 .showcase {
-    margin: 5rem 0;
-    padding: 0 1rem;
+    margin: 4rem 0;
 }
 
 .section-title {
-    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-size: clamp(1.6rem, 5vw, 2rem);
     font-weight: 600;
     text-align: center;
-    margin-bottom: 2.5rem;
-    letter-spacing: -0.01em;
+    margin-bottom: 2rem;
 }
 
 .reasoning-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .reasoning-grid {
+        gap: 2rem;
+    }
 }
 
 .reasoning-card {
@@ -587,9 +564,10 @@ main {
     backdrop-filter: blur(4px);
     border: 1px solid var(--border);
     border-radius: 18px;
-    padding: 0.8rem 1.2rem;
+    padding: 0.8rem 1rem;
     font-size: 0.95rem;
     max-width: 90%;
+    word-break: break-word;
 }
 
 .thought-process {
@@ -599,6 +577,7 @@ main {
     border-left: 2px solid var(--border);
     padding-left: 1rem;
     line-height: 1.5;
+    word-break: break-word;
 }
 
 .conclusion h3 {
@@ -613,7 +592,7 @@ main {
 
 .code-wrapper {
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid var(--border);
     margin-top: 0.8rem;
 }
@@ -657,8 +636,8 @@ main {
 
 .callout {
     max-width: 700px;
-    margin: 4rem auto 0;
-    padding: 2rem;
+    margin: 3rem auto 0;
+    padding: 2rem 1.5rem;
     text-align: center;
     position: relative;
     border: 1px solid var(--border);
@@ -666,6 +645,13 @@ main {
     background: var(--card-bg);
     backdrop-filter: blur(12px);
     transition: box-shadow 0.3s;
+}
+
+@media (min-width: 768px) {
+    .callout {
+        margin: 4rem auto 0;
+        padding: 2.5rem;
+    }
 }
 
 .callout:hover {
@@ -676,9 +662,17 @@ main {
     font-size: 3rem;
     color: var(--border);
     position: absolute;
-    top: 0.5rem;
+    top: 0.2rem;
     left: 1rem;
     opacity: 0.5;
+}
+
+@media (min-width: 768px) {
+    .quote-icon {
+        font-size: 4rem;
+        top: 0.5rem;
+        left: 1.5rem;
+    }
 }
 
 .quote-text {
@@ -688,12 +682,19 @@ main {
 
 .footer {
     text-align: center;
-    padding: 2rem;
+    padding: 1.5rem;
     color: var(--text-soft);
     font-size: 0.85rem;
     border-top: 1px solid var(--border);
-    margin-top: 3rem;
+    margin-top: 2rem;
     width: 100%;
+}
+
+@media (min-width: 768px) {
+    .footer {
+        padding: 2rem;
+        font-size: 0.9rem;
+    }
 }
 
 .fade-up {
@@ -706,24 +707,38 @@ main {
 .delay-1 { animation-delay: 0.2s; }
 .delay-2 { animation-delay: 0.4s; }
 
-/* ---------- RESPONSIVE TOUCH FRIENDLY ---------- */
-@media (max-width: 480px) {
+/* ---------- RESPONSIVE UTILITIES ---------- */
+@media (max-width: 550px) {
     .btn-primary, .btn-outline {
         padding: 0.5rem 1.2rem;
         font-size: 0.85rem;
     }
-    .feature-card {
-        min-height: 160px;
-        padding: 1.5rem;
+    .btn-small {
+        padding: 0.3rem 0.8rem !important;
+        font-size: 0.8rem !important;
     }
-    .feature-icon i {
-        width: 36px !important;
-        height: 36px !important;
+    .theme-toggle {
+        padding: 0.3rem 0.6rem;
     }
-    .modal-card {
-        padding: 1.5rem;
+    .theme-toggle svg {
+        width: 16px;
+        height: 16px;
     }
-    .modal-title {
-        font-size: 1.5rem;
-    }
+}
+
+/* Ensure touch targets are large enough */
+button, .btn-primary, .btn-outline, .feature-card.clickable-card, .dropdown-content a, .nav-links a, .modal-close {
+    touch-action: manipulation;
+}
+
+/* Prevent overflow on small screens */
+img, svg, iframe, video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Make code blocks scrollable horizontally */
+.code-block {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
