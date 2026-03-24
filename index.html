@@ -9,9 +9,16 @@
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
     <title>signaturesi · Neo API</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
+
+    <!-- Icons for all devices -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon.png">
     <link rel="manifest" href="manifest.json">
+
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="script.js" defer></script>
@@ -55,7 +62,7 @@
             <div class="mobile-menu-container">
                 <div class="mobile-menu-header">
                     <div class="logo">
-                        <img src="favicon.png" alt="logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
+                        <img src="favicon.png" alt="logo">
                         <span>signaturesi</span>
                     </div>
                     <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
@@ -121,14 +128,11 @@
     </div>
 
     <script>
-        // Register service worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').then(reg => {
-                    console.log('Service Worker registered');
-                }).catch(err => {
-                    console.log('Service Worker registration failed:', err);
-                });
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker failed:', err));
             });
         }
     </script>
