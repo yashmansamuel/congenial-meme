@@ -1,8 +1,9 @@
-// script.js — all interactivity, dynamic content, and custom card-style modal
+// script.js — all interactivity, custom modal, mobile menu, PWA ready
 (function() {
     // ----- THEME MANAGEMENT -----
     const body = document.body;
     const toggleBtn = document.getElementById('themeToggle');
+    const toggleMobile = document.getElementById('themeToggleMobile');
 
     function setTheme(theme) {
         if (theme === 'dark') {
@@ -13,6 +14,11 @@
             body.classList.remove('dark');
         }
         localStorage.setItem('theme', theme);
+        // Update theme-color meta
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+            themeColorMeta.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#000000');
+        }
     }
 
     const savedTheme = localStorage.getItem('theme');
@@ -28,6 +34,13 @@
             setTheme(newTheme);
         });
     }
+    if (toggleMobile) {
+        toggleMobile.addEventListener('click', () => {
+            const newTheme = body.classList.contains('dark') ? 'light' : 'dark';
+            setTheme(newTheme);
+            closeMobileMenu();
+        });
+    }
 
     // ----- CUSTOM MODAL (Coming Soon Card) -----
     const modal = document.getElementById('comingSoonModal');
@@ -35,15 +48,11 @@
     const actionBtn = document.getElementById('modalActionBtn');
 
     function showComingSoonModal() {
-        if (modal) {
-            modal.classList.add('active');
-        }
+        if (modal) modal.classList.add('active');
     }
 
     function hideModal() {
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        if (modal) modal.classList.remove('active');
     }
 
     if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
@@ -54,7 +63,7 @@
         });
     }
 
-    // ----- GLOBAL COPY FUNCTION (for code blocks) -----
+    // ----- GLOBAL COPY FUNCTION -----
     window.copyCode = function(btn) {
         const codeWrapper = btn.closest('.code-wrapper');
         const codeBlock = codeWrapper?.querySelector('.code-block code');
@@ -74,7 +83,7 @@
         }).catch(() => {});
     };
 
-    // ----- DYNAMIC CONTENT: FEATURES & REASONING EXAMPLES -----
+    // ----- DYNAMIC CONTENT: FEATURES & REASONING -----
     const featuresData = [
         { icon: 'brain', title: 'Step‑by‑step reasoning', description: 'Every conclusion is broken down into transparent thought processes.', bgImage: 'card.png', clickable: false },
         { icon: 'layout', title: 'Multi‑format output', description: 'Tables, code blocks, lists – always beautifully formatted.', bgImage: 'card1.png', clickable: false },
@@ -163,25 +172,25 @@
         });
     }
 
-    // ----- LUCIDE ICONS INIT (after dynamic content) -----
+    // ----- LUCIDE ICONS INIT -----
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 
-    // ----- INTERCEPT ALL NAVIGATION LINKS THAT LEAD TO OTHER PAGES (except index.html) -----
+    // ----- INTERCEPT ALL LINKS (Coming Soon) -----
     function bindComingSoonToLinks() {
-        const navLinks = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline');
+        const navLinks = document.querySelectorAll('.nav-links a, .dropdown-content a, .cta .btn-primary, .cta .btn-outline, .mobile-menu-links a, .mobile-dropdown-content a');
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href && href !== 'index.html' && !href.startsWith('#') && href !== '') {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     showComingSoonModal();
+                    closeMobileMenu();
                 });
             }
         });
         
-        // Login button
         const loginButton = document.getElementById('loginBtn');
         if (loginButton) {
             loginButton.addEventListener('click', (e) => {
@@ -191,15 +200,51 @@
         }
     }
 
-    // Run after DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindComingSoonToLinks);
-    } else {
-        bindComingSoonToLinks();
+    // ----- MOBILE MENU FUNCTIONALITY -----
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+    const mobileMenuClose = document.getElementById('mobileMenuClose');
+    const mobileDropdownBtns = document.querySelectorAll('.mobile-dropbtn');
+
+    function openMobileMenu() {
+        mobileMenuOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 
-    // ----- PWA: Register Service Worker (optional, but good practice) -----
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.log('Service worker registration failed:', err));
+    function closeMobileMenu() {
+        mobileMenuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        // Close any open dropdowns
+        document.querySelectorAll('.mobile-dropdown.active').forEach(drop => {
+            drop.classList.remove('active');
+        });
+    }
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileMenu);
+    if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+    if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', (e) => {
+            if (e.target === mobileMenuOverlay) closeMobileMenu();
+        });
+    }
+
+    // Toggle mobile dropdowns
+    mobileDropdownBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const parent = btn.closest('.mobile-dropdown');
+            parent.classList.toggle('active');
+        });
+    });
+
+    // Run after DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            bindComingSoonToLinks();
+            lucide.createIcons(); // re-run for any new icons
+        });
+    } else {
+        bindComingSoonToLinks();
+        lucide.createIcons();
     }
 })();
