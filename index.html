@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="signaturesi – Neo API: transparent reasoning engine for developers and researchers.">
+    <meta name="keywords" content="AI, reasoning, API, Neo, signaturesi, chat, developer tools">
+    <meta name="author" content="signaturesi">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+    <title>signaturesi · Neo API</title>
+
+    <!-- Icons for all devices -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="script.js" defer></script>
+</head>
+<body class="light">
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="favicon.png" alt="logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
+                <span>signaturesi</span>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="active">Home</a>
+                <a href="research.html">Research</a>
+                <a href="stories.html">Stories</a>
+                <div class="dropdown">
+                    <button class="dropbtn">
+                        Developers 
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; vertical-align: middle; margin-left: 4px;"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="dashboard.html">Dashboard</a>
+                        <a href="playground.html">Playground</a>
+                        <a href="docs.html">Docs</a>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <i data-lucide="sun" class="sun" style="width: 20px; height: 20px;"></i>
+                    <i data-lucide="moon" class="moon" style="display:none; width: 20px; height: 20px;"></i>
+                </button>
+                <button class="btn-outline btn-small" id="loginBtn">Log in</button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+                    <i data-lucide="menu" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu Overlay -->
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+            <div class="mobile-menu-container">
+                <div class="mobile-menu-header">
+                    <div class="logo">
+                        <img src="favicon.png" alt="logo">
+                        <span>signaturesi</span>
+                    </div>
+                    <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+                </div>
+                <div class="mobile-menu-links">
+                    <a href="index.html" class="active">Home</a>
+                    <a href="research.html">Research</a>
+                    <a href="stories.html">Stories</a>
+                    <div class="mobile-dropdown">
+                        <button class="mobile-dropbtn">Developers <i data-lucide="chevron-down"></i></button>
+                        <div class="mobile-dropdown-content">
+                            <a href="dashboard.html">Dashboard</a>
+                            <a href="playground.html">Playground</a>
+                            <a href="docs.html">Docs</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-menu-footer">
+                    <button class="theme-toggle-mobile" id="themeToggleMobile">Toggle Theme</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1 class="fade-up">Think <span class="gradient">deeper</span> with Neo</h1>
+            <p class="fade-up delay-1">An intelligent reasoning engine that shows every step. Transparent, adaptive, and beautifully minimal.</p>
+            <div class="cta fade-up delay-2">
+                <a href="dashboard.html" class="btn-primary">Get started →</a>
+                <a href="playground.html" class="btn-outline">Try playground</a>
+            </div>
+        </section>
+
+        <section class="features" id="dynamic-features"></section>
+
+        <section class="showcase">
+            <h2 class="section-title">Reasoning in action</h2>
+            <div class="reasoning-grid" id="dynamic-reasoning"></div>
+        </section>
+
+        <div class="callout">
+            <span class="quote-icon">"</span>
+            <p class="quote-text">Technology should expand human potential — not replace it.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
+    </footer>
+
+    <!-- Custom Modal (Coming Soon Card) -->
+    <div id="comingSoonModal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
+            <div class="modal-icon">
+                <i data-lucide="sparkles" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
+            </div>
+            <h2 class="modal-title">✨ Coming Soon</h2>
+            <p class="modal-message">We're working hard to bring this feature to life. Stay tuned!</p>
+            <button class="btn-primary modal-action" id="modalActionBtn">Got it</button>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
