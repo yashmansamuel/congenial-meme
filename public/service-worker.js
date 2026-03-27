@@ -1,11 +1,10 @@
 const CACHE_NAME = 'signaturesi-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/favicon.png',
-  '/manifest.json'
+  '/static/style.css',
+  '/static/script.js',
+  '/static/favicon.png',
+  '/static/manifest.json'
 ];
 
 self.addEventListener('install', event => {
