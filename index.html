@@ -3,110 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="signaturesi – Neo API: transparent reasoning engine for developers and researchers. Explore the future of AI reasoning.">
-    <meta name="keywords" content="AI, reasoning, API, Neo, signaturesi, chat, developer tools, machine learning">
+    <meta name="description" content="signaturesi – Neo API: transparent reasoning engine for developers and researchers.">
+    <meta name="keywords" content="AI, reasoning, API, Neo, signaturesi, chat, developer tools">
     <meta name="author" content="signaturesi">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
-    <title>signaturesi · Neo API — Reasoning Engine</title>
+    <title>signaturesi · Neo API</title>
 
-    <!-- Preconnect to external origins for performance -->
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    
-    <!-- Icons & manifests -->
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <!-- External JavaScript -->
+    <script src="script.js" defer></script>
+
+    <!-- Favicon & manifest -->
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="favicon.png">
     <link rel="manifest" href="manifest.json">
-
-    <!-- Critical theme script: prevents FOUC (Flash of Unstyled Content) -->
-    <script>
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                let theme = 'light';
-                if (storedTheme === 'dark' || (storedTheme === null && prefersDark)) {
-                    theme = 'dark';
-                }
-                document.documentElement.classList.add(theme);
-                document.body.className = theme;
-            } catch (e) {}
-        })();
-    </script>
-    
-    <!-- External stylesheet (loaded after theme script for smooth transition) -->
-    <link rel="stylesheet" href="style.css" media="all">
-    
-    <!-- Lucide icons (deferred but loaded early for UI consistency) -->
-    <script src="https://unpkg.com/lucide@latest" defer></script>
-    
-    <!-- Main application script (deferred for non-blocking) -->
-    <script src="script.js" defer></script>
 </head>
 <body>
-    <!-- Skip to content link: accessibility best practice -->
-    <a href="#main-content" class="skip-to-content" aria-label="Skip to main content">Skip to content</a>
+    <!-- Skip to content (accessibility) -->
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
 
-    <!-- Main Navigation -->
-    <nav class="nav" aria-label="Main navigation">
+    <!-- Navigation -->
+    <nav class="nav">
         <div class="nav-container">
-            <div class="logo" aria-label="signaturesi homepage">
-                <img src="favicon.png" alt="signaturesi brand mark" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
+            <div class="logo">
+                <img src="favicon.png" alt="signaturesi" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
                 <span>signaturesi</span>
             </div>
-            
-            <!-- Desktop navigation links -->
-            <div class="nav-links" id="navLinks" role="list">
-                <a href="index.html" class="active" aria-current="page" role="listitem">Home</a>
-                <a href="research.html" role="listitem">Research</a>
-                <a href="stories.html" role="listitem">Stories</a>
-                <div class="dropdown" role="listitem">
-                    <button class="dropbtn" aria-expanded="false" aria-haspopup="true" id="developerDropdownBtn">
-                        Developers 
-                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; vertical-align: middle; margin-left: 4px;" aria-hidden="true"></i>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="active">Home</a>
+                <a href="research.html">Research</a>
+                <a href="stories.html">Stories</a>
+                <div class="dropdown">
+                    <button class="dropbtn" aria-expanded="false">
+                        Developers
+                        <i data-lucide="chevron-down" class="dropdown-icon"></i>
                     </button>
-                    <div class="dropdown-content" aria-label="Developer submenu">
+                    <div class="dropdown-content">
                         <a href="dashboard.html">Dashboard</a>
                         <a href="playground.html">Playground</a>
                         <a href="docs.html">Docs</a>
                     </div>
                 </div>
             </div>
-            
-            <!-- Right side actions: theme toggle + login -->
             <div class="nav-actions">
-                <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Switch between dark and light mode">
-                    <i data-lucide="sun" class="sun" style="width: 20px; height: 20px;" aria-hidden="true"></i>
-                    <i data-lucide="moon" class="moon" style="display:none; width: 20px; height: 20px;" aria-hidden="true"></i>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i data-lucide="sun" class="sun"></i>
+                    <i data-lucide="moon" class="moon"></i>
                 </button>
-                <button class="btn-outline btn-small" id="loginBtn" aria-label="Log into your account">Log in</button>
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open mobile menu" aria-expanded="false">
-                    <i data-lucide="menu" style="width: 24px; height: 24px;" aria-hidden="true"></i>
+                <button class="btn-outline btn-small" id="loginBtn">Log in</button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+                    <i data-lucide="menu"></i>
                 </button>
             </div>
         </div>
-        
-        <!-- Mobile menu overlay (enhanced accessibility) -->
-        <div class="mobile-menu-overlay" id="mobileMenuOverlay" aria-hidden="true" inert>
-            <div class="mobile-menu-container" role="dialog" aria-modal="true" aria-label="Mobile navigation menu">
+
+        <!-- Mobile menu overlay -->
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+            <div class="mobile-menu-container">
                 <div class="mobile-menu-header">
                     <div class="logo">
-                        <img src="favicon.png" alt="signaturesi logo">
+                        <img src="favicon.png" alt="signaturesi">
                         <span>signaturesi</span>
                     </div>
-                    <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">&times;</button>
+                    <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
                 </div>
-                <div class="mobile-menu-links" role="list">
-                    <a href="index.html" class="active" aria-current="page" role="listitem">Home</a>
-                    <a href="research.html" role="listitem">Research</a>
-                    <a href="stories.html" role="listitem">Stories</a>
+                <div class="mobile-menu-links">
+                    <a href="index.html" class="active">Home</a>
+                    <a href="research.html">Research</a>
+                    <a href="stories.html">Stories</a>
                     <div class="mobile-dropdown">
-                        <button class="mobile-dropbtn" aria-expanded="false" aria-haspopup="true">Developers <i data-lucide="chevron-down" aria-hidden="true"></i></button>
-                        <div class="mobile-dropdown-content" aria-label="Mobile developer menu">
+                        <button class="mobile-dropbtn">Developers <i data-lucide="chevron-down"></i></button>
+                        <div class="mobile-dropdown-content">
                             <a href="dashboard.html">Dashboard</a>
                             <a href="playground.html">Playground</a>
                             <a href="docs.html">Docs</a>
@@ -114,138 +88,54 @@
                     </div>
                 </div>
                 <div class="mobile-menu-footer">
-                    <button class="theme-toggle-mobile" id="themeToggleMobile" aria-label="Switch theme">Toggle Theme</button>
+                    <button class="theme-toggle-mobile" id="themeToggleMobile">Toggle Theme</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main content wrapper -->
     <main id="main-content" tabindex="-1">
-        <!-- Hero Section -->
-        <section class="hero" aria-label="Hero introduction">
-            <h1 class="fade-up">Think <span class="gradient">deeper</span> with Neo</h1>
-            <p class="fade-up delay-1">An intelligent reasoning engine that shows every step. Transparent, adaptive, and beautifully minimal.</p>
+        <!-- Hero section – enhanced copy -->
+        <section class="hero">
+            <h1 class="fade-up">Reasoning <span class="gradient">reimagined</span> with Neo</h1>
+            <p class="fade-up delay-1">Neo is a transparent reasoning engine that shows every logical step. Built for developers who demand clarity, control, and performance. Integrate reasoning into your apps with a simple, elegant API.</p>
             <div class="cta fade-up delay-2">
-                <a href="dashboard.html" class="btn-primary" aria-label="Get started with Neo API">Get started →</a>
-                <a href="playground.html" class="btn-outline" aria-label="Try the interactive playground">Try playground</a>
+                <a href="dashboard.html" class="btn-primary">Get API key →</a>
+                <a href="playground.html" class="btn-outline">Explore the playground</a>
             </div>
         </section>
 
-        <!-- Dynamic Features Section (populated by script.js) -->
-        <section class="features" id="dynamic-features" aria-label="Core platform features">
-            <!-- Feature cards will be injected dynamically by JavaScript -->
-        </section>
+        <!-- Features – dynamic container (will be populated by JS) -->
+        <section class="features" id="dynamic-features"></section>
 
-        <!-- Showcase / Reasoning in action -->
-        <section class="showcase" aria-label="Reasoning engine demonstration">
+        <!-- Reasoning showcase – dynamic container (will be populated by JS) -->
+        <section class="showcase">
             <h2 class="section-title">Reasoning in action</h2>
-            <div class="reasoning-grid" id="dynamic-reasoning">
-                <!-- Dynamic reasoning examples will appear here -->
-            </div>
+            <div class="reasoning-grid" id="dynamic-reasoning"></div>
         </section>
 
-        <!-- Callout / Brand Quote -->
-        <div class="callout" aria-label="Inspirational quote">
-            <span class="quote-icon" aria-hidden="true">"</span>
-            <p class="quote-text">Technology should expand human potential — not replace it.</p>
+        <!-- Callout quote – refined -->
+        <div class="callout">
+            <span class="quote-icon">"</span>
+            <p class="quote-text">We don't just output answers — we show you how we got there. Transparency is the foundation of trustworthy AI.</p>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer" aria-label="Copyright and legal">
+    <footer class="footer">
         <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
     </footer>
 
-    <!-- Modal: Coming Soon (enhanced accessibility) -->
-    <div id="comingSoonModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true" hidden>
+    <!-- Coming soon modal -->
+    <div id="comingSoonModal" class="modal-overlay" hidden>
         <div class="modal-card">
-            <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
-            <div class="modal-icon" aria-hidden="true">
-                <i data-lucide="sparkles" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
+            <div class="modal-icon">
+                <i data-lucide="sparkles"></i>
             </div>
-            <h2 id="modalTitle" class="modal-title">✨ Coming Soon</h2>
+            <h2 class="modal-title">✨ Coming Soon</h2>
             <p class="modal-message">We're working hard to bring this feature to life. Stay tuned!</p>
             <button class="btn-primary modal-action" id="modalActionBtn">Got it</button>
         </div>
     </div>
-
-    <!-- Service Worker Registration with error resilience -->
-    <script>
-        (function registerServiceWorker() {
-            if ('serviceWorker' in navigator && location.protocol === 'https:' || location.hostname === 'localhost') {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then(reg => console.log('Service Worker registered:', reg.scope))
-                        .catch(err => console.warn('Service Worker registration failed:', err));
-                });
-            }
-        })();
-    </script>
-    
-    <!-- High-end dev: ensure Lucide icons reinitialize after dynamic content (fallback) -->
-    <script>
-        // Utility to reinitialize Lucide icons after any dynamic injection if needed
-        if (window.lucide && typeof lucide.createIcons === 'function') {
-            const observer = new MutationObserver(function(mutations) {
-                let shouldUpdate = false;
-                for (const mutation of mutations) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                        shouldUpdate = true;
-                        break;
-                    }
-                }
-                if (shouldUpdate) {
-                    lucide.createIcons();
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-            // Initial call
-            document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
-        } else {
-            document.addEventListener('DOMContentLoaded', () => {
-                if (window.lucide) lucide.createIcons();
-            });
-        }
-    </script>
-    
-    <!-- Additional performance & defensive layout: ensures dynamic sections get minimum height -->
-    <noscript>
-        <div style="background: #f5f5f5; padding: 2rem; text-align: center; border-radius: 12px; margin: 2rem;">
-            <strong>JavaScript is disabled.</strong> Some interactive features and dynamic content require JavaScript. Please enable for full experience.
-        </div>
-    </noscript>
-    
-    <!-- Inline style for skip-to-content link only (critical UX, does not conflict with external CSS) -->
-    <style>
-        /* Critical accessibility utility — will be overridden by main style.css but ensures visible on focus */
-        .skip-to-content {
-            position: absolute;
-            left: -9999px;
-            top: auto;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            z-index: 999;
-        }
-        .skip-to-content:focus {
-            left: 1rem;
-            top: 1rem;
-            width: auto;
-            height: auto;
-            padding: 0.75rem 1.5rem;
-            background: var(--bg-surface, #ffffff);
-            color: var(--text-primary, #000000);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-decoration: none;
-            font-weight: 500;
-            outline: 2px solid var(--primary, #0066cc);
-        }
-        /* Ensure no layout shift: minimal safeguard for modal hidden state */
-        .modal-overlay[hidden] {
-            display: none;
-        }
-    </style>
 </body>
 </html>
