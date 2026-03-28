@@ -3,189 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="signaturesi – Neo API: A transparent reasoning engine that reveals every step of thought. Built for developers and researchers who demand clarity and depth.">
-    <meta name="keywords" content="AI reasoning engine, transparent AI, Neo API, signaturesi, developer tools, step-by-step reasoning, adaptive intelligence">
-    <meta name="author" content="Signaturesi">
+    <meta name="description" content="signaturesi – Neo API: transparent reasoning engine for developers and researchers.">
+    <meta name="keywords" content="AI, reasoning, API, Neo, signaturesi, chat, developer tools">
+    <meta name="author" content="signaturesi">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
-    
     <title>signaturesi · Neo API</title>
 
-    <!-- Favicon -->
+    <!-- External CSS (you will create this) -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Lucide icons (external) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <!-- Your external JavaScript (you will create this) -->
+    <script src="script.js" defer></script>
+
+    <!-- Favicon & manifest -->
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
-    
-    <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Custom Script -->
-    <script src="script.js" defer></script>
 </head>
+<body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
 
-<body class="light">
-
-    <!-- Navigation -->
-    <nav class="nav" aria-label="Main navigation">
+    <nav class="nav">
         <div class="nav-container">
-            
-            <!-- Logo -->
             <div class="logo">
-                <img src="favicon.png" 
-                     alt="Signaturesi Logo" 
-                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2745%27 fill=%27%23000%27/%3E%3Ctext x=%2750%27 y=%2770%27 font-size=%2750%27 text-anchor=%27middle%27 fill=%27%23fff%27 font-family=%27Arial%27%3ES%3C/text%3E%3C/svg%3E'">
+                <img src="favicon.png" alt="signaturesi" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23000\' /%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'%23fff\' font-family=\'Arial\'%3ES%3C/text%3E%3C/svg%3E'">
                 <span>signaturesi</span>
             </div>
-
-            <!-- Desktop Navigation -->
             <div class="nav-links" id="navLinks">
-                <a href="index.html" class="nav-link active" aria-current="page">Home</a>
-                <a href="research.html" class="nav-link">Research</a>
-                <a href="stories.html" class="nav-link">Stories</a>
-                
+                <a href="index.html" class="active">Home</a>
+                <a href="research.html">Research</a>
+                <a href="stories.html">Stories</a>
                 <div class="dropdown">
-                    <button class="dropbtn" aria-haspopup="true" aria-expanded="false">
+                    <button class="dropbtn" aria-expanded="false">
                         Developers
-                        <i data-lucide="chevron-down" aria-hidden="true"></i>
+                        <i data-lucide="chevron-down" class="dropdown-icon"></i>
                     </button>
                     <div class="dropdown-content">
                         <a href="dashboard.html">Dashboard</a>
                         <a href="playground.html">Playground</a>
-                        <a href="docs.html">Documentation</a>
+                        <a href="docs.html">Docs</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Right Side Actions -->
             <div class="nav-actions">
-                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light theme">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <i data-lucide="sun" class="sun"></i>
-                    <i data-lucide="moon" class="moon" style="display: none;"></i>
+                    <i data-lucide="moon" class="moon"></i>
                 </button>
-
                 <button class="btn-outline btn-small" id="loginBtn">Log in</button>
-
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open mobile menu" aria-expanded="false">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
                     <i data-lucide="menu"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Mobile Menu -->
-        <div class="mobile-menu-overlay" id="mobileMenuOverlay" aria-hidden="true">
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay">
             <div class="mobile-menu-container">
                 <div class="mobile-menu-header">
                     <div class="logo">
-                        <img src="favicon.png" alt="Signaturesi Logo">
+                        <img src="favicon.png" alt="signaturesi">
                         <span>signaturesi</span>
                     </div>
-                    <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">&times;</button>
+                    <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
                 </div>
-                
                 <div class="mobile-menu-links">
-                    <a href="index.html" class="mobile-nav-link active">Home</a>
-                    <a href="research.html" class="mobile-nav-link">Research</a>
-                    <a href="stories.html" class="mobile-nav-link">Stories</a>
-                    
+                    <a href="index.html" class="active">Home</a>
+                    <a href="research.html">Research</a>
+                    <a href="stories.html">Stories</a>
                     <div class="mobile-dropdown">
-                        <button class="mobile-dropbtn" aria-haspopup="true" aria-expanded="false">
-                            Developers <i data-lucide="chevron-down" aria-hidden="true"></i>
-                        </button>
+                        <button class="mobile-dropbtn">Developers <i data-lucide="chevron-down"></i></button>
                         <div class="mobile-dropdown-content">
                             <a href="dashboard.html">Dashboard</a>
                             <a href="playground.html">Playground</a>
-                            <a href="docs.html">Documentation</a>
+                            <a href="docs.html">Docs</a>
                         </div>
                     </div>
                 </div>
-
                 <div class="mobile-menu-footer">
-                    <button class="theme-toggle-mobile" id="themeToggleMobile" aria-label="Toggle theme">
-                        Toggle Theme
-                    </button>
+                    <button class="theme-toggle-mobile" id="themeToggleMobile">Toggle Theme</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main>
-        <!-- Hero Section - Improved Content -->
+    <main id="main-content" tabindex="-1">
         <section class="hero">
             <h1 class="fade-up">Think <span class="gradient">deeper</span> with Neo</h1>
-            <p class="fade-up delay-1">
-                Neo is a transparent reasoning engine that unveils every step of its thought process. 
-                Built for developers and researchers who require clarity, adaptability, and intellectual precision.
-            </p>
+            <p class="fade-up delay-1">An intelligent reasoning engine that shows every step. Transparent, adaptive, and beautifully minimal.</p>
             <div class="cta fade-up delay-2">
                 <a href="dashboard.html" class="btn-primary">Get started →</a>
-                <a href="playground.html" class="btn-outline">Explore the playground</a>
+                <a href="playground.html" class="btn-outline">Try playground</a>
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section class="features" id="dynamic-features" aria-labelledby="features-heading">
-            <h2 id="features-heading" class="section-title">Core Capabilities</h2>
-            <!-- Dynamic content will be populated by script.js -->
-        </section>
+        <section class="features" id="dynamic-features"></section>
 
-        <!-- Reasoning Showcase -->
-        <section class="showcase" aria-labelledby="showcase-heading">
-            <h2 id="showcase-heading" class="section-title">Reasoning in Action</h2>
+        <!-- Enhanced "Reasoning in action" section with animation-friendly structure -->
+        <section class="showcase">
+            <h2 class="section-title">Reasoning in action</h2>
             <div class="reasoning-grid" id="dynamic-reasoning">
-                <!-- Dynamic content populated by script.js -->
+                <!-- Each card is a reasoning example with steps that can be animated -->
+                <div class="reasoning-card animate-on-scroll" data-animation="fade-up">
+                    <div class="card-header">
+                        <i data-lucide="brain" class="card-icon"></i>
+                        <h3>Logic Puzzle: The Island of Knights & Knaves</h3>
+                    </div>
+                    <div class="reasoning-steps">
+                        <div class="step" data-step="1">
+                            <span class="step-number">1</span>
+                            <p>You meet two inhabitants: A says "B is a knight." B says "We are different types."</p>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <p>Assume A is a knight (always tells truth). Then B is a knight → B's statement "We are different" would be false → contradiction.</p>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <p>Therefore A must be a knave (always lies). Then A's statement is false → B is a knave. B's statement "We are different" is also false → consistent.</p>
+                        </div>
+                        <div class="step conclusion">
+                            <span class="step-number">✓</span>
+                            <p><strong>Conclusion:</strong> Both are knaves.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reasoning-card animate-on-scroll" data-animation="fade-up" data-delay="100">
+                    <div class="card-header">
+                        <i data-lucide="code" class="card-icon"></i>
+                        <h3>Algorithm: Binary Search Reasoning</h3>
+                    </div>
+                    <div class="reasoning-steps">
+                        <div class="step" data-step="1">
+                            <span class="step-number">1</span>
+                            <p>Sorted array [1,3,5,7,9], target = 7. Low = 0, high = 4.</p>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <p>Mid = (0+4)//2 = 2 → value 5 < 7 → discard left half, low = 3.</p>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <p>Mid = (3+4)//2 = 3 → value 7 == target → found at index 3.</p>
+                        </div>
+                        <div class="step conclusion">
+                            <span class="step-number">✓</span>
+                            <p><strong>Outcome:</strong> Element found in O(log n) steps.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reasoning-card animate-on-scroll" data-animation="fade-up" data-delay="200">
+                    <div class="card-header">
+                        <i data-lucide="flask-conical" class="card-icon"></i>
+                        <h3>Scientific: Hypothesis Testing</h3>
+                    </div>
+                    <div class="reasoning-steps">
+                        <div class="step" data-step="1">
+                            <span class="step-number">1</span>
+                            <p>Observation: Plants grow faster with Music A than with Music B.</p>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <p>Null hypothesis: No difference. Controlled experiment with 20 plants each.</p>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <p>Result: p-value = 0.03 < 0.05 → reject null → Music A has significant effect.</p>
+                        </div>
+                        <div class="step conclusion">
+                            <span class="step-number">✓</span>
+                            <p><strong>Insight:</strong> Evidence supports the alternative hypothesis.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Quote Callout - Improved -->
         <div class="callout">
-            <span class="quote-icon" aria-hidden="true">“</span>
-            <p class="quote-text">
-                True intelligence lies not in replacing human thought, but in illuminating the path of reasoning — empowering us to think further and clearer.
-            </p>
+            <span class="quote-icon">"</span>
+            <p class="quote-text">Technology should expand human potential — not replace it.</p>
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
         <p>© 2026 Signaturesi · Neo Core. All rights reserved.</p>
     </footer>
 
-    <!-- Coming Soon Modal -->
-    <div id="comingSoonModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="comingSoonModal" class="modal-overlay" hidden>
         <div class="modal-card">
-            <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
-            
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
             <div class="modal-icon">
-                <i data-lucide="sparkles" aria-hidden="true"></i>
+                <i data-lucide="sparkles"></i>
             </div>
-            
             <h2 class="modal-title">✨ Coming Soon</h2>
-            <p class="modal-message">We are actively developing this feature and will notify you as soon as it becomes available. Thank you for your patience.</p>
-            
-            <button class="btn-primary modal-action" id="modalActionBtn">Understood</button>
+            <p class="modal-message">We're working hard to bring this feature to life. Stay tuned!</p>
+            <button class="btn-primary modal-action" id="modalActionBtn">Got it</button>
         </div>
     </div>
-
-    <!-- Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => {
-                        console.log('Service Worker registered successfully');
-                    })
-                    .catch(err => {
-                        console.warn('Service Worker registration failed:', err);
-                    });
-            });
-        }
-    </script>
-
 </body>
 </html>
