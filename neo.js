@@ -2211,16 +2211,23 @@
                     data.conversationId;
             }
 
-            const reply =
-                data?.choices?.[0]
-                    ?.message?.content;
+            const replyValue =
+                data?.choices?.[0]?.message?.content ??
+                data?.reply ??
+                data?.message?.content ??
+                data?.message ??
+                data?.content ??
+                data?.text;
 
-            if (
-                typeof reply !==
-                    "string" ||
-                !reply.trim()
-            ) {
+            const reply =
+                typeof replyValue === "string"
+                    ? replyValue.trim()
+                    : "";
+
+            if (!reply) {
                 throw new Error(
+                    data?.error?.message ||
+                    data?.error ||
                     "The AI response was empty."
                 );
             }
@@ -2647,6 +2654,15 @@
 
     document.addEventListener(
         "DOMContentLoaded",
-        init
+        () => {
+            document.documentElement.dataset.neoRuntime = "ready";
+            init().catch(error => {
+                console.error("NEO initialization failed:", error);
+                const input = document.getElementById("chatInput");
+                if (input) {
+                    input.placeholder = "NEO could not initialize. Check console.";
+                }
+            });
+        }
     );
 })();
