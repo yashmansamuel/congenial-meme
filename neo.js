@@ -108,21 +108,25 @@
         setupTheme();
         configureSecurityHooks();
 
-        const authenticated = await restoreSecureSession();
-
-        if (!authenticated) {
-            return;
-        }
-
-        await renderUserProfile();
-
         setupEventListeners();
         setupFreemiumLogic();
         setupDragAndDrop();
         setupPasteUpload();
         setupSpeechRecognition();
 
-        await loadHistoryFromSupabase();
+        const authenticated = await restoreSecureSession();
+
+        if (!authenticated) {
+            return;
+        }
+
+        await renderUserProfile().catch((error) => {
+            console.warn('Profile rendering failed:', error);
+        });
+
+        await loadHistoryFromSupabase().catch((error) => {
+            console.warn('History loading failed:', error);
+        });
 
         updateBodySidebarState();
         renderAdaptiveSuggestions();
@@ -2565,8 +2569,13 @@
             );
     }
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        init
-    );
+    document.addEventListener('DOMContentLoaded', () => {
+        init().catch((error) => {
+            console.error('NEO initialization failed:', error);
+            const banner = document.createElement('div');
+            banner.className = 'neo-runtime-error';
+            banner.textContent = 'NEO could not initialize. Refresh the page or redeploy the latest build.';
+            document.body.appendChild(banner);
+        });
+    });
 })();
