@@ -11,6 +11,22 @@ const DEFAULT_MAX_INPUT_CHARACTERS = 120000;
 const DEFAULT_MAX_MESSAGE_CHARACTERS = 20000;
 const DEFAULT_TIMEOUT_MS = 60000;
 
+function normalizeModelId(value, fallback = '') {
+  const raw = String(value || '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, '-');
+
+  const aliases = {
+    'gemini-3.1-flash-lite': 'gemini-3.1-flash-lite',
+    'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite',
+    'gemini-3.5-flash': 'gemini-3.5-flash'
+  };
+
+  return aliases[raw] || raw || fallback;
+}
+
 const SUPPORTED_MIME_TYPES = new Set([
   'image/jpeg','image/png','image/webp','application/pdf','text/plain',
   'application/json','text/javascript','application/javascript','text/css','text/html',
@@ -149,7 +165,15 @@ export default async function handler(req,res) {
     const requestedId=typeof body.conversationId==='string'?body.conversationId.trim():'';
     if(requestedId && !(await verifyOwnership(supabase,requestedId,auth.userId))) return res.status(403).json({error:'You do not have access to this conversation.'});
     const deepResearch=body.isDeepResearch===true;
-    const model=pro?(process.env.GEMINI_PRO_MODEL||process.env.GEMINI_FREE_MODEL):(process.env.GEMINI_FREE_MODEL||process.env.GEMINI_MODEL);
+    const configuredModel = pro
+      ? (process.env.GEMINI_PRO_MODEL || process.env.GEMINI_FREE_MODEL)
+      : (process.env.GEMINI_FREE_MODEL || process.env.GEMINI_MODEL);
+
+    const model = normalizeModelId(
+      configuredModel,
+      pro ? 'gemini-3.5-flash-lite' : 'gemini-3.1-flash-lite'
+    );
+
     if(!model) return res.status(500).json({error:'The AI model is not configured.'});
     const ai=await callGemini({apiKey:process.env.GEMINI_API_KEY,model,contents:converted.contents,instruction:systemInstruction({username:auth.username,deepResearch}),maxOutputTokens:pro?4096:1800,timeoutMs:positiveInteger(process.env.GEMINI_TIMEOUT_MS,DEFAULT_TIMEOUT_MS),deepResearch});
     let conversationId=requestedId;
@@ -160,7 +184,21 @@ export default async function handler(req,res) {
     return res.status(200).json({success:true,conversationId,plan:pro?'pro':'free',usage:{used:pro?null:used+1,limit:pro?null:limit,windowHours:pro?null:windowHours},choices:[{message:{role:'assistant',content:ai.reply}}],research:{grounded:Boolean(ai.groundingMetadata||ai.urlContextMetadata)}});
   } catch(error) {
     console.error('Chat API error:',{message:error?.message,code:error?.code});
-    const exposed=['timed out','No AI response','Unsupported attachment','Too many attachments','exceeds the allowed size'].some(x=>String(error?.message).includes(x));
-    return res.status(exposed?400:500).json({error:exposed?error.message:'Unable to generate a response. Please try again.'});
+    const message = String(error?.message || '');
+    const exposed = [
+      'timed out',
+      'No AI response',
+      'Unsupported attachment',
+      'Too many attachments',
+      'exceeds the allowed size',
+      'models/',
+      'API key',
+      'not found',
+      'not supported'
+    ].some(x => message.includes(x));
+
+    return res.status(exposed ? 400 : 500).json({
+      error: exposed ? message : 'Unable to generate a response. Please try again.'
+    });
   }
 }
