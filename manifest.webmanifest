@@ -2,12 +2,19 @@
   "name": "NEO by Signaturesi",
   "short_name": "NEO",
   "start_url": "/neo.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f5f5f7",
-  "theme_color": "#f5f5f7",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/assets/neo.png",
+      "src": "/assets/neo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/neo-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
