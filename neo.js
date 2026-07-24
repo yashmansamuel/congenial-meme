@@ -5,6 +5,17 @@
     const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
     const MAX_ATTACHED_FILES = 5;
 
+    const SUPABASE_URL = "https://ujclhweqqifgoiscvqmd.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf";
+
+    let supabaseClient = null;
+
+    if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+    }
 
     // AUTHENTICATED USER COMES FROM SECURE SERVER COOKIE
     let currentUser = {
@@ -29,7 +40,7 @@
     let animFrameId = null;
 
     // FREEMIUM STATE
-    let selectedModel = "free";
+    let selectedModel = "l1.0";
     let userPlan = "free";
 
     // DOM ELEMENTS
@@ -96,10 +107,6 @@
     );
     const upgradeActionBtn = document.getElementById("upgradeActionBtn");
 
-    if ("serviceWorker" in navigator && location.protocol === "https:") {
-        navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
-
     async function init() {
         if (window.lucide) {
             window.lucide.createIcons();
@@ -108,11 +115,16 @@
         setupTheme();
         configureSecurityHooks();
 
+        // Initialize the visible product first. Optional network requests
+        // must never prevent the composer, sidebar, or controls from working.
+        initializeSidebarState();
         setupEventListeners();
         setupFreemiumLogic();
         setupDragAndDrop();
         setupPasteUpload();
         setupSpeechRecognition();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
 
         const authenticated = await restoreSecureSession();
 
@@ -120,17 +132,19 @@
             return;
         }
 
-        await renderUserProfile().catch((error) => {
-            console.warn('Profile rendering failed:', error);
-        });
+        try {
+            await renderUserProfile();
+        } catch (error) {
+            console.warn("Profile initialization failed:", error);
+        }
 
-        await loadHistoryFromSupabase().catch((error) => {
-            console.warn('History loading failed:', error);
-        });
+        try {
+            await loadHistoryFromSupabase();
+        } catch (error) {
+            console.warn("History initialization failed:", error);
+        }
 
-        updateBodySidebarState();
-        renderAdaptiveSuggestions();
-        updateComposerShape();
+        chatInput?.focus();
     }
 
     async function restoreSecureSession() {
@@ -258,7 +272,7 @@
                 return window.DOMPurify.sanitize(rawParsed);
             }
 
-            return sanitizeHTML(String(text || ""));
+            return rawParsed;
         }
 
         return sanitizeHTML(text);
@@ -278,9 +292,6 @@
         }
 
         if (!response.ok) {
-            if (data?.code === "FREE_LIMIT_REACHED" || data?.code === "FREE_FILE_LIMIT_REACHED") {
-                upgradeModal?.classList.add("show");
-            }
             const errorValue = data?.error;
 
             const errorMessage =
@@ -333,11 +344,11 @@
         );
 
         optL10?.addEventListener("click", () => {
-            selectedModel = "free";
+            selectedModel = "l1.0";
 
             if (currentModelDisplay) {
                 currentModelDisplay.textContent =
-                    "NEO Free";
+                    "NEO L1.0";
             }
 
             optL10.classList.add("active");
@@ -353,11 +364,11 @@
                 return;
             }
 
-            selectedModel = "pro";
+            selectedModel = "l1.2";
 
             if (currentModelDisplay) {
                 currentModelDisplay.textContent =
-                    "NEO Pro";
+                    "NEO L1.2 Pro";
             }
 
             optL12.classList.add("active");
@@ -389,21 +400,10 @@
 
         upgradeActionBtn?.addEventListener(
             "click",
-            async () => {
-                upgradeActionBtn.disabled = true;
-                const originalText = upgradeActionBtn.textContent;
-                upgradeActionBtn.textContent = "Opening secure checkout…";
-                try {
-                    const response = await fetch("/api/checkout", { method: "POST", credentials: "include", headers: { Accept: "application/json" } });
-                    const data = await readJsonResponse(response);
-                    if (!data.url) throw new Error("Checkout URL is unavailable.");
-                    window.location.assign(data.url);
-                } catch (error) {
-                    alert(error.message);
-                } finally {
-                    upgradeActionBtn.disabled = false;
-                    upgradeActionBtn.textContent = originalText;
-                }
+            () => {
+                alert(
+                    "Redirecting to Checkout / Stripe Payment Gateway..."
+                );
             }
         );
     }
@@ -751,6 +751,35 @@
         }
     }
 
+    function initializeSidebarState() {
+        if (!sidebar) {
+            return;
+        }
+
+        const mobile = window.matchMedia(
+            "(max-width: 767px)"
+        ).matches;
+
+        if (mobile) {
+            sidebar.classList.add("collapsed");
+            sidebarScrim?.classList.remove("visible");
+        } else {
+            const savedDesktopState =
+                localStorage.getItem(
+                    "neo_desktop_sidebar"
+                );
+
+            sidebar.classList.toggle(
+                "collapsed",
+                savedDesktopState === "collapsed"
+            );
+
+            sidebarScrim?.classList.remove("visible");
+        }
+
+        updateBodySidebarState();
+    }
+
     function updateBodySidebarState() {
         const isCollapsed =
             sidebar?.classList.contains(
@@ -761,6 +790,19 @@
             "sidebar-collapsed",
             Boolean(isCollapsed)
         );
+
+        if (
+            window.matchMedia(
+                "(min-width: 768px)"
+            ).matches
+        ) {
+            localStorage.setItem(
+                "neo_desktop_sidebar",
+                isCollapsed
+                    ? "collapsed"
+                    : "open"
+            );
+        }
     }
 
     // FILE PROCESSING
@@ -2147,6 +2189,8 @@
                             conversation,
                         conversationId:
                             currentConversationId,
+                        model:
+                            selectedModel,
                         isDeepResearch:
                             isDeepResearchMode,
                         memoryContext:
@@ -2407,18 +2451,27 @@
         );
 
         const toggleSidebar = () => {
-            sidebar?.classList.toggle(
+            if (!sidebar) {
+                return;
+            }
+
+            sidebar.classList.toggle(
                 "collapsed"
             );
 
             const isOpen =
-                !sidebar?.classList.contains(
+                !sidebar.classList.contains(
                     "collapsed"
                 );
 
+            const mobile =
+                window.matchMedia(
+                    "(max-width: 767px)"
+                ).matches;
+
             sidebarScrim?.classList.toggle(
                 "visible",
-                isOpen
+                mobile && isOpen
             );
 
             updateBodySidebarState();
@@ -2551,6 +2604,29 @@
             }
         );
 
+        let lastResponsiveMode =
+            window.matchMedia(
+                "(max-width: 767px)"
+            ).matches;
+
+        window.addEventListener(
+            "resize",
+            () => {
+                const mobile =
+                    window.matchMedia(
+                        "(max-width: 767px)"
+                    ).matches;
+
+                if (mobile === lastResponsiveMode) {
+                    return;
+                }
+
+                lastResponsiveMode = mobile;
+                initializeSidebarState();
+            },
+            { passive: true }
+        );
+
         document
             .getElementById("brandBtn")
             ?.addEventListener(
@@ -2569,13 +2645,8 @@
             );
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        init().catch((error) => {
-            console.error('NEO initialization failed:', error);
-            const banner = document.createElement('div');
-            banner.className = 'neo-runtime-error';
-            banner.textContent = 'NEO could not initialize. Refresh the page or redeploy the latest build.';
-            document.body.appendChild(banner);
-        });
-    });
+    document.addEventListener(
+        "DOMContentLoaded",
+        init
+    );
 })();
