@@ -1,27 +1,44 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const root = process.cwd();
 
 const htmlEntries = Object.fromEntries(
-  readdirSync(process.cwd())
+  readdirSync(root)
     .filter((file) => file.endsWith('.html'))
-    .map((file) => [file.replace(/\.html$/, ''), resolve(process.cwd(), file)])
+    .map((file) => [
+      file.replace(/\.html$/, ''),
+      resolve(root, file),
+    ])
 );
 
 export default defineConfig({
+  root,
   appType: 'mpa',
-  publicDir: 'public',
+  publicDir: resolve(root, 'public'),
+
   build: {
-    outDir: 'dist',
+    outDir: resolve(root, 'dist'),
     emptyOutDir: true,
+    sourcemap: false,
+
     rollupOptions: {
       input: htmlEntries,
+
+      output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
     },
   },
+
   server: {
     host: true,
     port: 5173,
   },
+
   preview: {
     host: true,
     port: 4173,
