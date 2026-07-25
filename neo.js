@@ -2,7 +2,7 @@
     "use strict";
 
     // SECURITY CONSTANTS & CONFIGS
-    const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+    const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
     const MAX_ATTACHED_FILES = 5;
 
     const SUPABASE_URL = "https://ujclhweqqifgoiscvqmd.supabase.co";
@@ -115,8 +115,6 @@
         setupTheme();
         configureSecurityHooks();
 
-        // Initialize the visible product first. Optional network requests
-        // must never prevent the composer, sidebar, or controls from working.
         initializeSidebarState();
         setupEventListeners();
         setupFreemiumLogic();
@@ -175,13 +173,6 @@
                 username: data.user.username || "user"
             };
 
-            /*
-             * Temporary compatibility for parts of the existing UI
-             * that may still read the old local session object.
-             *
-             * Authentication does not trust this value. The backend
-             * always uses the signed HttpOnly session cookie.
-             */
             localStorage.setItem(
                 "signaturesi_user",
                 JSON.stringify(currentUser)
@@ -252,30 +243,87 @@
         );
     }
 
-    function sanitizeHTML(str) {
-        if (window.DOMPurify) {
-            return window.DOMPurify.sanitize(str || "");
-        }
+    // SAFE MARKDOWN & SANITIZATION FUNCTIONS
+    function sanitizeHTML(value) {
+        const source = String(value || "");
 
-        const temp = document.createElement("div");
-        temp.textContent = str || "";
-        return temp.innerHTML;
+        const element =
+            document.createElement("div");
+
+        element.textContent = source;
+
+        return element.innerHTML;
     }
 
     function safeParseMarkdown(text) {
-        if (window.marked) {
-            const rawParsed = window.marked.parse(
-                String(text || "")
-            );
+        const source = String(text || "");
 
-            if (window.DOMPurify) {
-                return window.DOMPurify.sanitize(rawParsed);
+        if (
+            window.marked &&
+            window.DOMPurify
+        ) {
+            let parsed;
+
+            try {
+                parsed =
+                    window.marked.parse(
+                        source
+                    );
+            } catch (error) {
+                console.warn(
+                    "Markdown parsing failed:",
+                    error
+                );
+
+                return sanitizeHTML(
+                    source
+                ).replace(
+                    /\n/g,
+                    "<br>"
+                );
             }
 
-            return rawParsed;
+            return window.DOMPurify.sanitize(
+                parsed,
+                {
+                    USE_PROFILES: {
+                        html: true
+                    },
+
+                    FORBID_TAGS: [
+                        "script",
+                        "style",
+                        "iframe",
+                        "object",
+                        "embed",
+                        "form",
+                        "input",
+                        "button",
+                        "textarea",
+                        "select",
+                        "option"
+                    ],
+
+                    FORBID_ATTR: [
+                        "style",
+                        "srcdoc",
+                        "formaction",
+                        "onerror",
+                        "onload",
+                        "onclick",
+                        "onmouseover",
+                        "onfocus"
+                    ]
+                }
+            );
         }
 
-        return sanitizeHTML(text);
+        return sanitizeHTML(
+            source
+        ).replace(
+            /\n/g,
+            "<br>"
+        );
     }
 
     async function readJsonResponse(response) {
@@ -805,7 +853,52 @@
         }
     }
 
-    // FILE PROCESSING
+    // FILE PROCESSING & VALIDATION HELPERS
+    function isSupportedFile(file) {
+        const mime =
+            String(
+                file?.type || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        const extension =
+            String(
+                file?.name || ""
+            )
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+        const supportedMimeTypes =
+            new Set([
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "application/pdf",
+                "text/plain"
+            ]);
+
+        const supportedExtensions =
+            new Set([
+                "jpg",
+                "jpeg",
+                "png",
+                "webp",
+                "pdf",
+                "txt"
+            ]);
+
+        return (
+            supportedMimeTypes.has(
+                mime
+            ) &&
+            supportedExtensions.has(
+                extension
+            )
+        );
+    }
+
     function getFileTypeCategory(file) {
         const mime =
             file.type.toLowerCase();
@@ -856,6 +949,14 @@
         }
 
         for (const file of files) {
+            if (!isSupportedFile(file)) {
+                alert(
+                    `File "${file.name}" is not supported. Use JPG, PNG, WebP, PDF, or TXT.`
+                );
+
+                continue;
+            }
+
             if (!checkFilePermissionForPlan(file)) {
                 continue;
             }
@@ -876,7 +977,7 @@
                 MAX_FILE_SIZE_BYTES
             ) {
                 alert(
-                    `File "${file.name}" exceeds 15MB limit.`
+                    `File "${file.name}" exceeds 4MB limit.`
                 );
 
                 continue;
@@ -1893,16 +1994,28 @@
             return;
         }
 
+        const cleanedText =
+            String(newText || "")
+                .trim();
+
+        if (!cleanedText) {
+            return;
+        }
+
         isGenerating = true;
 
         try {
             let actualIndex =
-                targetIndex;
+                Number.isInteger(
+                    targetIndex
+                )
+                    ? targetIndex
+                    : -1;
 
             if (
-                actualIndex === null ||
-                actualIndex === undefined ||
-                actualIndex < 0
+                actualIndex < 0 ||
+                actualIndex >=
+                    conversation.length
             ) {
                 actualIndex =
                     conversation.findIndex(
@@ -1910,12 +2023,12 @@
                             message.role ===
                                 "user" &&
                             message.content ===
-                                newText
+                                cleanedText
                     );
             }
 
             if (
-                actualIndex !== -1 &&
+                actualIndex >= 0 &&
                 actualIndex <
                     conversation.length
             ) {
@@ -1929,21 +2042,27 @@
                     messageElement;
 
                 while (
-                    current.nextElementSibling
+                    current
+                        ?.nextElementSibling
                 ) {
-                    current.nextElementSibling.remove();
+                    current
+                        .nextElementSibling
+                        .remove();
                 }
             }
 
             renderUserMessageWrapper(
                 messageElement,
-                newText,
+                cleanedText,
                 conversation.length
             );
 
             conversation.push({
-                role: "user",
-                content: newText
+                role:
+                    "user",
+
+                content:
+                    cleanedText
             });
 
             const aiBubble =
@@ -2098,7 +2217,47 @@
 
         isGenerating = true;
 
+        /*
+         * Attached files ki copy request banane se
+         * pehle preserve karo.
+         */
+        const pendingFiles =
+            [...attachedFiles];
+
         try {
+            let fullContent =
+                text;
+
+            if (
+                pendingFiles.length > 0
+            ) {
+                const attachments =
+                    pendingFiles
+                        .map(file => {
+                            return (
+                                `[Attached ${file.category}: ${file.name}]\n` +
+                                `${file.data}`
+                            );
+                        })
+                        .join("\n\n");
+
+                fullContent =
+                    `${text}\n\n${attachments}`
+                        .trim();
+            }
+
+            if (
+                fullContent.length >
+                120000
+            ) {
+                throw new Error(
+                    "The message and attached files are too large."
+                );
+            }
+
+            const messageIndex =
+                conversation.length;
+
             if (chatInput) {
                 chatInput.value = "";
                 chatInput.style.height =
@@ -2110,36 +2269,21 @@
                     "none";
             }
 
-            let fullContent = text;
-
-            if (
-                attachedFiles.length > 0
-            ) {
-                const attachments =
-                    attachedFiles
-                        .map(
-                            file =>
-                                `[Attached ${file.category}: ${file.name}]\n${file.data}`
-                        )
-                        .join("\n\n");
-
-                fullContent =
-                    `${text}\n\n${attachments}`.trim();
-            }
-
-            const messageIndex =
-                conversation.length;
-
             renderMessageToUI(
                 "user",
+
                 text ||
-                    `[Uploaded ${attachedFiles.length} file(s)]`,
+                    `[Uploaded ${pendingFiles.length} file(s)]`,
+
                 messageIndex
             );
 
             conversation.push({
-                role: "user",
-                content: fullContent
+                role:
+                    "user",
+
+                content:
+                    fullContent
             });
 
             attachedFiles = [];
@@ -2165,73 +2309,181 @@
                 error
             );
 
+            /*
+             * Request start hone se pehle failure aaye
+             * to pending attachments restore kar do.
+             */
+            if (
+                attachedFiles.length === 0 &&
+                pendingFiles.length > 0
+            ) {
+                attachedFiles =
+                    pendingFiles;
+
+                renderAttachedChips();
+                renderAdaptiveSuggestions();
+                updateComposerShape();
+            }
+
             isGenerating = false;
+
+            alert(
+                error?.message ||
+                "Unable to send the message."
+            );
         }
+    }
+
+    function showAssistantError(
+        aiBubble,
+        error
+    ) {
+        if (!aiBubble) {
+            isGenerating = false;
+            return;
+        }
+
+        aiBubble.classList.remove(
+            "is-thinking"
+        );
+
+        const content =
+            aiBubble.querySelector(
+                ".message-content"
+            );
+
+        if (content) {
+            content.textContent =
+                `Error: ${
+                    error?.message ||
+                    "The request failed."
+                }`;
+
+            content.style.color =
+                "#ef4444";
+        }
+
+        isGenerating = false;
     }
 
     async function submitChatRequest(
         aiBubble
     ) {
+        let data;
+
+        /*
+         * STAGE 1
+         * Network/API work only.
+         */
         try {
             const response = await fetch(
                 "/api/chat",
                 {
                     method: "POST",
-                    credentials: "include",
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store",
+
                     headers: {
                         "Content-Type":
                             "application/json",
+
                         Accept:
                             "application/json"
                     },
-                    body: JSON.stringify({
-                        messages:
-                            conversation,
-                        conversationId:
-                            currentConversationId,
-                        model:
-                            selectedModel,
-                        isDeepResearch:
-                            isDeepResearchMode,
-                        memoryContext:
-                            localStorage.getItem(
-                                "neo_user_memories"
-                            ) || ""
-                    })
+
+                    body:
+                        JSON.stringify({
+                            messages:
+                                conversation,
+
+                            conversationId:
+                                currentConversationId,
+
+                            model:
+                                selectedModel,
+
+                            isDeepResearch:
+                                isDeepResearchMode
+                        })
                 }
             );
 
-            const data =
+            data =
                 await readJsonResponse(
                     response
                 );
+        } catch (error) {
+            console.error(
+                "Chat API request failed:",
+                error
+            );
 
-            if (data.conversationId) {
-                currentConversationId =
-                    data.conversationId;
-            }
+            showAssistantError(
+                aiBubble,
+                error
+            );
 
-            const replyValue =
-                data?.choices?.[0]?.message?.content ??
-                data?.reply ??
-                data?.message?.content ??
-                data?.message ??
-                data?.content ??
-                data?.text;
+            return;
+        }
 
-            const reply =
-                typeof replyValue === "string"
-                    ? replyValue.trim()
-                    : "";
+        /*
+         * STAGE 2
+         * Validate successful server response.
+         */
+        const replyValue =
+            data?.reply ??
+            data?.choices?.[0]
+                ?.message?.content ??
+            data?.message?.content ??
+            data?.content ??
+            data?.text;
 
-            if (!reply) {
-                throw new Error(
-                    data?.error?.message ||
-                    data?.error ||
+        const reply =
+            typeof replyValue ===
+                "string"
+                ? replyValue.trim()
+                : "";
+
+        if (!reply) {
+            const error =
+                new Error(
                     "The AI response was empty."
                 );
-            }
 
+            console.error(
+                "Invalid AI response:",
+                data
+            );
+
+            showAssistantError(
+                aiBubble,
+                error
+            );
+
+            return;
+        }
+
+        if (
+            typeof data.conversationId ===
+                "string" &&
+            data.conversationId.trim()
+        ) {
+            currentConversationId =
+                data.conversationId.trim();
+        }
+
+        /*
+         * STAGE 3
+         * Render the successful reply.
+         *
+         * An icon or history error must never
+         * replace a valid AI response.
+         */
+        try {
             if (aiBubble) {
                 aiBubble.classList.remove(
                     "is-thinking"
@@ -2244,29 +2496,36 @@
 
                 if (content) {
                     content.style.color = "";
+
                     content.innerHTML =
                         safeParseMarkdown(
                             reply
                         );
                 }
-
-                if (window.lucide) {
-                    window.lucide.createIcons();
-                }
             }
 
             conversation.push({
-                role: "assistant",
-                content: reply
+                role:
+                    "assistant",
+
+                content:
+                    reply
             });
 
-            await loadHistoryFromSupabase();
-        } catch (error) {
+            if (scrollArea) {
+                scrollArea.scrollTop =
+                    scrollArea.scrollHeight;
+            }
+        } catch (renderError) {
             console.error(
-                "Chat request failed:",
-                error
+                "AI reply rendering failed:",
+                renderError
             );
 
+            /*
+             * Safe plain-text fallback.
+             * The successful server response is preserved.
+             */
             if (aiBubble) {
                 aiBubble.classList.remove(
                     "is-thinking"
@@ -2279,14 +2538,65 @@
 
                 if (content) {
                     content.textContent =
-                        `Error: ${error.message}`;
+                        reply;
 
                     content.style.color =
-                        "#ef4444";
+                        "";
                 }
+            }
+
+            const alreadyStored =
+                conversation.some(
+                    message =>
+                        message.role ===
+                            "assistant" &&
+                        message.content ===
+                            reply
+                );
+
+            if (!alreadyStored) {
+                conversation.push({
+                    role:
+                        "assistant",
+
+                    content:
+                        reply
+                });
             }
         } finally {
             isGenerating = false;
+        }
+
+        /*
+         * Optional icon refresh.
+         * Failure is non-critical.
+         */
+        if (window.lucide) {
+            try {
+                window.lucide.createIcons();
+            } catch (iconError) {
+                console.warn(
+                    "Icon refresh failed:",
+                    iconError
+                );
+            }
+        }
+
+        /*
+         * STAGE 4
+         * Optional history refresh.
+         *
+         * This occurs after the reply is already rendered.
+         * A history error cannot convert success into an
+         * error bubble.
+         */
+        try {
+            await loadHistoryFromSupabase();
+        } catch (historyError) {
+            console.warn(
+                "History refresh failed after successful reply:",
+                historyError
+            );
         }
     }
 
