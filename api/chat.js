@@ -23,10 +23,10 @@ const DEFAULT_MAX_MESSAGE_CHARACTERS = 20000;
 const DEFAULT_TIMEOUT_MS = 60000;
 
 const DEFAULT_FREE_MODEL =
-  "gemini-3.1-flash-lite";
+  "gemini-2.5-flash";
 
 const DEFAULT_PRO_MODEL =
-  "gemini-3.5-flash-lite";
+  "gemini-2.5-pro";
 
 const SUPPORTED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -842,7 +842,7 @@ Core behavior:
   if (deepResearch) {
     text += `
 Deep Research is enabled:
-- Use search and URL context only when useful.
+- Use search context only when useful.
 - Prefer current and authoritative sources.
 - Separate verified evidence from inference.
 - Never fabricate citations.
@@ -889,13 +889,11 @@ async function callGemini({
       }
     };
 
+    // FIXED: Google Gemini v1beta grounding tool format
     if (deepResearch) {
       requestBody.tools = [
         {
-          google_search: {}
-        },
-        {
-          url_context: {}
+          googleSearch: {}
         }
       ];
     }
@@ -979,11 +977,6 @@ async function callGemini({
       groundingMetadata:
         candidate
           ?.groundingMetadata ||
-        null,
-
-      urlContextMetadata:
-        candidate
-          ?.urlContextMetadata ||
         null
     };
   } catch (error) {
@@ -1008,6 +1001,11 @@ function getPublicError(error) {
       error?.message || ""
     );
 
+  // Expose detailed error in non-production environments for faster debugging
+  if (process.env.NODE_ENV !== "production" && message) {
+    return message;
+  }
+
   const publicPatterns = [
     "timed out",
     "No AI response",
@@ -1024,7 +1022,9 @@ function getPublicError(error) {
     "quota",
     "rate limit",
     "model not found",
-    "not supported"
+    "not supported",
+    "API key",
+    "invalid"
   ];
 
   const mayExpose =
@@ -1311,8 +1311,8 @@ export default async function handler(
 
       if (
         filesUsed +
-          converted
-            .totalAttachments >
+        converted
+          .totalAttachments >
         fileDailyLimit
       ) {
         return res
@@ -1455,12 +1455,6 @@ export default async function handler(
       );
     }
 
-    /*
-     * The reply is already generated and saved.
-     * Analytics failure must never convert this
-     * successful request into a false 500 error.
-     */
-
     let usageRecorded = true;
 
     try {
@@ -1551,10 +1545,7 @@ export default async function handler(
         research: {
           grounded:
             Boolean(
-              ai
-                .groundingMetadata ||
-              ai
-                .urlContextMetadata
+              ai.groundingMetadata
             )
         }
       });
