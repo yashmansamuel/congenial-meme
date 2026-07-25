@@ -60,29 +60,13 @@ export default async function handler(req, res) {
     });
   }
 
-  /*
-   * Optional launch fallback:
-   * hosted Lemon Squeezy checkout buy URL.
-   */
   const hostedCheckoutUrl = safeLemonCheckoutUrl(
     process.env.LEMON_SQUEEZY_CHECKOUT_URL
   );
 
-  /*
-   * Dynamic checkout is preferred because custom user data
-   * reaches the webhook for automatic Pro activation.
-   */
-  const apiKey = clean(
-    process.env.LEMON_SQUEEZY_API_KEY
-  );
-
-  const storeId = clean(
-    process.env.LEMON_SQUEEZY_STORE_ID
-  );
-
-  const variantId = clean(
-    process.env.LEMON_SQUEEZY_VARIANT_ID
-  );
+  const apiKey = clean(process.env.LEMON_SQUEEZY_API_KEY);
+  const storeId = clean(process.env.LEMON_SQUEEZY_STORE_ID);
+  const variantId = clean(process.env.LEMON_SQUEEZY_VARIANT_ID);
 
   if (!apiKey || !storeId || !variantId) {
     if (hostedCheckoutUrl) {
@@ -123,18 +107,15 @@ export default async function handler(req, res) {
       "https://api.lemonsqueezy.com/v1/checkouts",
       {
         method: "POST",
-
         headers: {
           Accept: "application/vnd.api+json",
           "Content-Type": "application/vnd.api+json",
           Authorization: `Bearer ${apiKey}`
         },
-
         body: JSON.stringify({
           data: {
             type: "checkouts",
             attributes,
-
             relationships: {
               store: {
                 data: {
@@ -142,7 +123,6 @@ export default async function handler(req, res) {
                   id: storeId
                 }
               },
-
               variant: {
                 data: {
                   type: "variants",
@@ -185,6 +165,14 @@ export default async function handler(req, res) {
       "Lemon Squeezy checkout failed:",
       error?.message
     );
+
+    if (hostedCheckoutUrl) {
+      return res.status(200).json({
+        success: true,
+        url: hostedCheckoutUrl,
+        fallback: true
+      });
+    }
 
     return res.status(502).json({
       error:
