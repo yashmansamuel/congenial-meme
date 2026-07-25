@@ -1,7 +1,7 @@
 // api/auth.js
 
-import { createClient } from "@supabase/supabase-js";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createClient } from '@supabase/supabase-js';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 import {
   normalizeUsername,
@@ -14,178 +14,118 @@ import {
   getAuthenticatedUser,
   buildSessionCookie,
   buildLogoutCookie
-} from "../lib/auth.js";
+} from '../lib/auth.js';
 
-const RATE_LIMITS = {
-  check_username: {
-    maximum: 30,
-    windowSeconds: 60
-  },
-  signup: {
-    maximum: 5,
-    windowSeconds: 60 * 60
-  },
-  login: {
-    maximum: 5,
-    windowSeconds: 15 * 60
-  }
-};
+const RATE_LIMITS = Object.freeze({
+  check_username: { maximum: 30, windowSeconds: 60 },
+  signup: { maximum: 5, windowSeconds: 60 * 60 },
+  login: { maximum: 5, windowSeconds: 15 * 60 }
+});
 
-const OPTIONAL_SCHEMA_ERRORS = new Set([
-  "42P01", // Undefined table
-  "42703"  // Undefined column
+const OPTIONAL_SCHEMA_CODES = new Set([
+  '42P01', // undefined_table
+  '42703'  // undefined_column
 ]);
 
 const memoryRateLimits =
-  globalThis.__signaturesiAuthRateLimits || new Map();
+  globalThis.__signaturesiAuthRateLimits instanceof Map
+    ? globalThis.__signaturesiAuthRateLimits
+    : new Map();
 
-globalThis.__signaturesiAuthRateLimits =
-  memoryRateLimits;
+globalThis.__signaturesiAuthRateLimits = memoryRateLimits;
 
-/* =========================================================
-   ENVIRONMENT
-   ========================================================= */
-
-function cleanEnvironmentValue(value) {
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value
-    .trim()
-    .replace(/^["']|["']$/g, "");
+function cleanEnv(value) {
+  return typeof value === 'string'
+    ? value.trim().replace(/^["']|["']$/g, '')
+    : '';
 }
 
-function getEnvironment() {
-  const supabaseUrl = cleanEnvironmentValue(
-    process.env.SUPABASE_URL
-  );
-
-  const serviceRoleKey = cleanEnvironmentValue(
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-
-  const jwtSecret = cleanEnvironmentValue(
-    process.env.JWT_SECRET
-  );
+function getAuthEnvironment() {
+  const supabaseUrl = cleanEnv(process.env.SUPABASE_URL);
+  const serviceRoleKey = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const jwtSecret = cleanEnv(process.env.JWT_SECRET);
 
   if (!supabaseUrl) {
-    throw new Error("SUPABASE_URL is missing.");
+    throw new Error('SUPABASE_URL is missing.');
   }
 
   if (!serviceRoleKey) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is missing."
-    );
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is missing.');
   }
 
-  if (!jwtSecret || jwtSecret.length < 32) {
-    throw new Error(
-      "JWT_SECRET must contain at least 32 characters."
-    );
+  if (jwtSecret.length < 32) {
+    throw new Error('JWT_SECRET must contain at least 32 characters.');
   }
+
+  let parsedUrl;
 
   try {
-    new URL(supabaseUrl);
+    parsedUrl = new URL(supabaseUrl);
   } catch {
-    throw new Error("SUPABASE_URL is invalid.");
+    throw new Error('SUPABASE_URL is not a valid URL.');
   }
 
-  return {
-    supabaseUrl,
-    serviceRoleKey
-  };
+  if (!['https:', 'http:'].includes(parsedUrl.protocol)) {
+    throw new Error('SUPABASE_URL must use HTTP or HTTPS.');
+  }
+
+  return { supabaseUrl, serviceRoleKey };
 }
 
 function createSupabaseAdmin() {
-  const {
-    supabaseUrl,
-    serviceRoleKey
-  } = getEnvironment();
+  const { supabaseUrl, serviceRoleKey } = getAuthEnvironment();
 
-  return createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      },
-      global: {
-        headers: {
-          "X-Client-Info": "signaturesi-neo-auth"
-        }
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'signaturesi-neo-auth'
       }
     }
-  );
+  });
 }
-
-/* =========================================================
-   RESPONSE SECURITY
-   ========================================================= */
 
 function setSecurityHeaders(res) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader(
-    "Content-Type",
-    "application/json; charset=utf-8"
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
   );
-
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate, proxy-revalidate"
-  );
-
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-
-  res.setHeader(
-    "X-Content-Type-Options",
-    "nosniff"
-  );
-
-  res.setHeader(
-    "X-Frame-Options",
-    "DENY"
-  );
-
-  res.setHeader(
-    "Referrer-Policy",
-    "no-referrer"
-  );
-
-  res.setHeader(
-    "Permissions-Policy",
-    "camera=(), geolocation=(), microphone=()"
+    'Permissions-Policy',
+    'camera=(), geolocation=(), microphone=()'
   );
 }
 
-/* =========================================================
-   REQUEST HELPERS
-   ========================================================= */
-
-function parseRequestBody(req) {
+function parseBody(req) {
   if (
     req.body &&
-    typeof req.body === "object" &&
+    typeof req.body === 'object' &&
     !Array.isArray(req.body)
   ) {
     return req.body;
   }
 
-  if (typeof req.body === "string") {
+  if (typeof req.body === 'string') {
     try {
-      const parsed = JSON.parse(req.body);
+      const value = JSON.parse(req.body);
 
-      if (
-        parsed &&
-        typeof parsed === "object" &&
-        !Array.isArray(parsed)
-      ) {
-        return parsed;
-      }
-
-      return null;
+      return (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      )
+        ? value
+        : null;
     } catch {
       return null;
     }
@@ -197,479 +137,306 @@ function parseRequestBody(req) {
 function cleanLegacyUsername(value) {
   const username = normalizeUsername(value);
 
-  return username.endsWith("@bean")
+  return username.endsWith('@bean')
     ? username.slice(0, -5)
     : username;
 }
 
-function safeUser(user) {
+function publicUser(user) {
   return {
     id: String(user.id),
-    username: cleanLegacyUsername(
-      user.username
-    )
+    username: cleanLegacyUsername(user.username)
   };
 }
 
-function getClientIp(req) {
-  const forwarded =
-    req.headers["x-forwarded-for"];
+function normalizeOrigin(value) {
+  const cleaned = cleanEnv(value);
 
-  if (typeof forwarded === "string") {
-    const firstIp =
-      forwarded.split(",")[0]?.trim();
+  if (!cleaned) {
+    return null;
+  }
 
-    if (firstIp) {
-      return firstIp;
+  const withProtocol =
+    cleaned.startsWith('http://') ||
+    cleaned.startsWith('https://')
+      ? cleaned
+      : `https://${cleaned}`;
+
+  return new URL(withProtocol).origin;
+}
+
+function allowedOrigins() {
+  const origins = new Set([
+    'https://signaturesi.com',
+    'https://www.signaturesi.com'
+  ]);
+
+  const configured = [
+    process.env.APP_ORIGIN,
+    process.env.VERCEL_URL,
+    process.env.VERCEL_BRANCH_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ];
+
+  for (const value of configured) {
+    try {
+      const origin = normalizeOrigin(value);
+
+      if (origin) {
+        origins.add(origin);
+      }
+    } catch {
+      if (value === process.env.APP_ORIGIN) {
+        throw new Error('APP_ORIGIN is invalid.');
+      }
     }
   }
 
-  const realIp =
-    req.headers["x-real-ip"];
-
-  if (typeof realIp === "string") {
-    return realIp.trim();
+  if (
+    process.env.NODE_ENV !== 'production'
+  ) {
+    origins.add('http://localhost:3000');
+    origins.add('http://localhost:5173');
   }
 
-  return (
-    req.socket?.remoteAddress ||
-    "unknown"
-  );
+  return origins;
 }
-
-function createRateLimitKey(req) {
-  const salt =
-    cleanEnvironmentValue(
-      process.env.RATE_LIMIT_SALT
-    ) ||
-    cleanEnvironmentValue(
-      process.env.JWT_SECRET
-    );
-
-  return createHash("sha256")
-    .update(`${salt}:${getClientIp(req)}`)
-    .digest("hex");
-}
-
-/* =========================================================
-   ORIGIN SECURITY
-   ========================================================= */
 
 function isAllowedOrigin(req) {
-  const configuredOrigin =
-    cleanEnvironmentValue(
-      process.env.APP_ORIGIN
-    );
+  const origin =
+    typeof req.headers.origin === 'string'
+      ? req.headers.origin.trim()
+      : '';
 
-  if (!configuredOrigin) {
-    if (
-      process.env.NODE_ENV === "production"
-    ) {
-      throw new Error(
-        "APP_ORIGIN is required in production."
-      );
-    }
-
-    return true;
-  }
-
-  const requestOrigin =
-    req.headers.origin;
-
-  // Direct browser navigation and server requests may
-  // not include an Origin header.
-  if (!requestOrigin) {
+  // Direct navigation and non-browser requests may omit Origin.
+  if (!origin) {
     return true;
   }
 
   try {
-    return (
-      new URL(requestOrigin).origin ===
-      new URL(configuredOrigin).origin
-    );
+    return allowedOrigins().has(new URL(origin).origin);
   } catch {
     return false;
   }
 }
 
-function isOptionalSchemaError(error) {
-  return OPTIONAL_SCHEMA_ERRORS.has(
-    String(error?.code || "")
-  );
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+
+  if (typeof forwarded === 'string') {
+    const first = forwarded.split(',')[0]?.trim();
+
+    if (first) {
+      return first;
+    }
+  }
+
+  const realIp = req.headers['x-real-ip'];
+
+  if (typeof realIp === 'string' && realIp.trim()) {
+    return realIp.trim();
+  }
+
+  return req.socket?.remoteAddress || 'unknown';
 }
 
-/* =========================================================
-   MEMORY RATE-LIMIT FALLBACK
-   ========================================================= */
+function createRateLimitKey(req) {
+  const salt =
+    cleanEnv(process.env.RATE_LIMIT_SALT) ||
+    cleanEnv(process.env.JWT_SECRET);
 
-function memoryRateLimitId(key, action) {
+  return createHash('sha256')
+    .update(`${salt}:${getClientIp(req)}`)
+    .digest('hex');
+}
+
+function isOptionalSchemaError(error) {
+  return OPTIONAL_SCHEMA_CODES.has(String(error?.code || ''));
+}
+
+function memoryId(key, action) {
   return `${action}:${key}`;
 }
 
-function pruneMemoryEntries(
-  key,
-  action,
-  windowSeconds
-) {
-  const id = memoryRateLimitId(
-    key,
-    action
-  );
-
-  const cutoff =
-    Date.now() -
-    windowSeconds * 1000;
-
-  const current =
-    memoryRateLimits.get(id) || [];
-
-  const active = current.filter(
-    timestamp => timestamp >= cutoff
-  );
+function activeMemoryEntries(key, action, windowSeconds) {
+  const id = memoryId(key, action);
+  const cutoff = Date.now() - windowSeconds * 1000;
+  const current = memoryRateLimits.get(id) || [];
+  const active = current.filter((timestamp) => timestamp >= cutoff);
 
   memoryRateLimits.set(id, active);
 
   return active;
 }
 
-function checkMemoryRateLimit(
-  key,
-  action
-) {
-  const config =
-    RATE_LIMITS[action];
-
-  const active =
-    pruneMemoryEntries(
-      key,
-      action,
-      config.windowSeconds
-    );
+function checkMemoryLimit(key, action) {
+  const config = RATE_LIMITS[action];
+  const entries = activeMemoryEntries(
+    key,
+    action,
+    config.windowSeconds
+  );
 
   return {
-    allowed:
-      active.length <
-      config.maximum,
-
-    remaining:
-      Math.max(
-        0,
-        config.maximum -
-        active.length
-      ),
-
-    retryAfter:
-      config.windowSeconds,
-
-    storage: "memory"
+    allowed: entries.length < config.maximum,
+    remaining: Math.max(0, config.maximum - entries.length),
+    retryAfter: config.windowSeconds,
+    storage: 'memory'
   };
 }
 
-function recordMemoryRateLimit(
-  key,
-  action
-) {
-  const config =
-    RATE_LIMITS[action];
-
-  const active =
-    pruneMemoryEntries(
-      key,
-      action,
-      config.windowSeconds
-    );
-
-  active.push(Date.now());
-
-  memoryRateLimits.set(
-    memoryRateLimitId(
-      key,
-      action
-    ),
-    active
+function recordMemoryLimit(key, action) {
+  const config = RATE_LIMITS[action];
+  const entries = activeMemoryEntries(
+    key,
+    action,
+    config.windowSeconds
   );
+
+  entries.push(Date.now());
+  memoryRateLimits.set(memoryId(key, action), entries);
 }
 
-function clearMemoryRateLimit(
-  key,
-  action
-) {
-  memoryRateLimits.delete(
-    memoryRateLimitId(
-      key,
-      action
-    )
-  );
+function clearMemoryLimit(key, action) {
+  memoryRateLimits.delete(memoryId(key, action));
 }
 
-/* =========================================================
-   DATABASE RATE LIMITING
-   ========================================================= */
-
-async function removeExpiredRateLimits(
+async function checkDatabaseLimit(
   supabase,
   key,
   action,
-  windowSeconds
+  config
 ) {
   const cutoff = new Date(
-    Date.now() -
-    windowSeconds * 1000
+    Date.now() - config.windowSeconds * 1000
   ).toISOString();
 
-  const { error } =
-    await supabase
-      .from("auth_rate_limits")
-      .delete()
-      .eq("key", key)
-      .eq("action", action)
-      .lt("created_at", cutoff);
+  const { error: cleanupError } = await supabase
+    .from('auth_rate_limits')
+    .delete()
+    .eq('key', key)
+    .eq('action', action)
+    .lt('created_at', cutoff);
 
-  if (error) {
-    throw error;
+  if (cleanupError) {
+    throw cleanupError;
   }
-}
 
-async function countRateLimits(
-  supabase,
-  key,
-  action,
-  windowSeconds
-) {
-  const cutoff = new Date(
-    Date.now() -
-    windowSeconds * 1000
-  ).toISOString();
-
-  const {
-    count,
-    error
-  } = await supabase
-    .from("auth_rate_limits")
-    .select("id", {
-      count: "exact",
+  const { count, error } = await supabase
+    .from('auth_rate_limits')
+    .select('id', {
+      count: 'exact',
       head: true
     })
-    .eq("key", key)
-    .eq("action", action)
-    .gte("created_at", cutoff);
+    .eq('key', key)
+    .eq('action', action)
+    .gte('created_at', cutoff);
 
   if (error) {
     throw error;
   }
 
-  return count || 0;
+  const attempts = count || 0;
+
+  return {
+    allowed: attempts < config.maximum,
+    remaining: Math.max(0, config.maximum - attempts),
+    retryAfter: config.windowSeconds,
+    storage: 'database'
+  };
 }
 
-async function insertRateLimit(
-  supabase,
-  key,
-  action
-) {
-  const { error } =
-    await supabase
-      .from("auth_rate_limits")
-      .insert({
-        key,
-        action
-      });
-
-  if (error) {
-    throw error;
-  }
-}
-
-async function checkRateLimit(
-  supabase,
-  key,
-  action
-) {
-  const config =
-    RATE_LIMITS[action];
+async function checkRateLimit(supabase, key, action) {
+  const config = RATE_LIMITS[action];
 
   if (!config) {
-    throw new Error(
-      `Unknown rate-limit action: ${action}`
-    );
+    throw new Error(`Unknown rate-limit action: ${action}`);
   }
 
   try {
-    await removeExpiredRateLimits(
+    return await checkDatabaseLimit(
       supabase,
       key,
       action,
-      config.windowSeconds
+      config
     );
-
-    const attempts =
-      await countRateLimits(
-        supabase,
-        key,
-        action,
-        config.windowSeconds
-      );
-
-    return {
-      allowed:
-        attempts <
-        config.maximum,
-
-      remaining:
-        Math.max(
-          0,
-          config.maximum -
-          attempts
-        ),
-
-      retryAfter:
-        config.windowSeconds,
-
-      storage: "database"
-    };
   } catch (error) {
     if (!isOptionalSchemaError(error)) {
       throw error;
     }
 
     console.warn(
-      "auth_rate_limits table is unavailable. Using temporary memory rate limiting."
+      'auth_rate_limits is unavailable; using temporary in-memory limiting.'
     );
 
-    return checkMemoryRateLimit(
-      key,
-      action
-    );
+    return checkMemoryLimit(key, action);
   }
 }
 
-async function consumeRateLimit(
-  supabase,
-  key,
-  action
-) {
-  const result =
-    await checkRateLimit(
-      supabase,
-      key,
-      action
-    );
+async function recordLimit(supabase, key, action, storage) {
+  if (storage === 'memory') {
+    recordMemoryLimit(key, action);
+    return;
+  }
+
+  const { error } = await supabase
+    .from('auth_rate_limits')
+    .insert({ key, action });
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function consumeRateLimit(supabase, key, action) {
+  const result = await checkRateLimit(
+    supabase,
+    key,
+    action
+  );
 
   if (!result.allowed) {
     return result;
   }
 
-  if (result.storage === "memory") {
-    recordMemoryRateLimit(
-      key,
-      action
-    );
-  } else {
-    await insertRateLimit(
-      supabase,
-      key,
-      action
-    );
-  }
+  await recordLimit(
+    supabase,
+    key,
+    action,
+    result.storage
+  );
 
   return {
     ...result,
-    remaining:
-      Math.max(
-        0,
-        result.remaining - 1
-      )
+    remaining: Math.max(0, result.remaining - 1)
   };
 }
 
-async function recordFailedLogin(
-  supabase,
-  key
-) {
-  const result =
-    await checkRateLimit(
-      supabase,
-      key,
-      "login"
-    );
+async function clearLoginLimits(supabase, key) {
+  clearMemoryLimit(key, 'login');
 
-  if (result.storage === "memory") {
-    recordMemoryRateLimit(
-      key,
-      "login"
-    );
-  } else {
-    await insertRateLimit(
-      supabase,
-      key,
-      "login"
-    );
+  const { error } = await supabase
+    .from('auth_rate_limits')
+    .delete()
+    .eq('key', key)
+    .eq('action', 'login');
+
+  if (error && !isOptionalSchemaError(error)) {
+    throw error;
   }
 }
 
-async function clearLoginRateLimits(
-  supabase,
-  key
-) {
-  clearMemoryRateLimit(
-    key,
-    "login"
-  );
+function rateLimitResponse(res, retryAfter, message) {
+  res.setHeader('Retry-After', String(retryAfter));
 
-  try {
-    const { error } =
-      await supabase
-        .from("auth_rate_limits")
-        .delete()
-        .eq("key", key)
-        .eq("action", "login");
-
-    if (
-      error &&
-      !isOptionalSchemaError(error)
-    ) {
-      throw error;
-    }
-  } catch (error) {
-    if (!isOptionalSchemaError(error)) {
-      throw error;
-    }
-  }
+  return res.status(429).json({ error: message });
 }
 
-function sendRateLimitResponse(
-  res,
-  retryAfter,
-  message
-) {
-  res.setHeader(
-    "Retry-After",
-    String(retryAfter)
-  );
-
-  return res
-    .status(429)
-    .json({
-      error: message
-    });
-}
-
-/* =========================================================
-   USER DATABASE HELPERS
-   ========================================================= */
-
-async function findAppUser(
-  supabase,
-  username
-) {
-  const {
-    data,
-    error
-  } = await supabase
-    .from("app_users")
-    .select(
-      "id, username, password_hash, status"
-    )
-    .eq("username", username)
+async function findAppUser(supabase, username) {
+  const { data, error } = await supabase
+    .from('app_users')
+    .select('id, username, password_hash, status')
+    .eq('username', username)
     .maybeSingle();
 
   if (error) {
@@ -679,25 +446,12 @@ async function findAppUser(
   return data;
 }
 
-async function findLegacyProfile(
-  supabase,
-  username
-) {
-  const candidates = [
-    username,
-    `${username}@bean`
-  ];
-
-  for (const candidate of candidates) {
-    const {
-      data,
-      error
-    } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, password"
-      )
-      .eq("username", candidate)
+async function findLegacyProfile(supabase, username) {
+  for (const candidate of [username, `${username}@bean`]) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, password')
+      .eq('username', candidate)
       .maybeSingle();
 
     if (error) {
@@ -716,577 +470,355 @@ async function findLegacyProfile(
   return null;
 }
 
-async function usernameExists(
-  supabase,
-  username
-) {
-  const appUser =
-    await findAppUser(
-      supabase,
-      username
-    );
-
-  if (appUser) {
+async function usernameExists(supabase, username) {
+  if (await findAppUser(supabase, username)) {
     return true;
   }
 
-  const legacyProfile =
-    await findLegacyProfile(
-      supabase,
-      username
-    );
-
-  return Boolean(legacyProfile);
+  return Boolean(
+    await findLegacyProfile(supabase, username)
+  );
 }
-
-async function createAppUser(
-  supabase,
-  username,
-  passwordHash
-) {
-  const {
-    data,
-    error
-  } = await supabase
-    .from("app_users")
-    .insert({
-      username,
-      password_hash:
-        passwordHash,
-      plan_type: "free",
-      status: "active"
-    })
-    .select(
-      "id, username, status"
-    )
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-/* =========================================================
-   PASSWORD HELPERS
-   ========================================================= */
 
 async function verifyStoredPassword(
   plainPassword,
   storedPassword
 ) {
   if (
-    typeof storedPassword !== "string" ||
+    typeof storedPassword !== 'string' ||
     storedPassword.length === 0
   ) {
     return false;
   }
 
   if (isBcryptHash(storedPassword)) {
-    return verifyPassword(
-      plainPassword,
-      storedPassword
-    );
+    return verifyPassword(plainPassword, storedPassword);
   }
 
-  // Temporary support for legacy plaintext passwords.
-  const plainBuffer =
-    Buffer.from(
-      plainPassword,
-      "utf8"
-    );
+  // Temporary migration support for legacy plaintext records.
+  const plain = Buffer.from(plainPassword, 'utf8');
+  const stored = Buffer.from(storedPassword, 'utf8');
 
-  const storedBuffer =
-    Buffer.from(
-      storedPassword,
-      "utf8"
-    );
-
-  if (
-    plainBuffer.length !==
-    storedBuffer.length
-  ) {
-    return false;
-  }
-
-  return timingSafeEqual(
-    plainBuffer,
-    storedBuffer
+  return (
+    plain.length === stored.length &&
+    timingSafeEqual(plain, stored)
   );
 }
 
-async function migratePassword(
+async function updatePasswordHash(
   supabase,
   userId,
-  plainPassword
+  password
 ) {
-  const passwordHash =
-    await hashPassword(
-      plainPassword
-    );
+  const passwordHash = await hashPassword(password);
 
-  const { error } =
-    await supabase
-      .from("app_users")
-      .update({
-        password_hash:
-          passwordHash,
-        updated_at:
-          new Date().toISOString()
-      })
-      .eq("id", userId);
+  const { error } = await supabase
+    .from('app_users')
+    .update({
+      password_hash: passwordHash,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
 
   if (error) {
     throw error;
   }
 }
 
-/* =========================================================
-   SESSION
-   ========================================================= */
-
-function sendSession(
-  res,
-  status,
-  user
-) {
-  const token =
-    createSessionToken(user);
+function setSession(res, status, user) {
+  const token = createSessionToken(user);
 
   res.setHeader(
-    "Set-Cookie",
+    'Set-Cookie',
     buildSessionCookie(token)
   );
 
-  return res
-    .status(status)
-    .json({
-      success: true,
-      authenticated: true,
-      user: safeUser(user)
-    });
+  return res.status(status).json({
+    success: true,
+    authenticated: true,
+    user: publicUser(user)
+  });
 }
 
-/* =========================================================
-   MAIN HANDLER
-   ========================================================= */
-
-export default async function handler(
-  req,
-  res
-) {
+export default async function handler(req, res) {
   setSecurityHeaders(res);
 
-  /* -------------------------------------------------------
-     GET CURRENT SESSION
-     ------------------------------------------------------- */
+  /*
+   * A logged-out session check is intentionally answered before
+   * database initialization. The public signup page therefore
+   * remains usable even when a deployment is being configured.
+   */
+  if (req.method === 'GET') {
+    const sessionUser = getAuthenticatedUser(req);
 
-  if (req.method === "GET") {
-    const sessionUser =
-      getAuthenticatedUser(req);
-
-    // Important: public signup page must not receive 401/500.
     if (!sessionUser) {
-      return res
-        .status(200)
-        .json({
-          authenticated: false,
-          user: null
-        });
+      return res.status(200).json({
+        authenticated: false,
+        user: null
+      });
     }
 
     let supabase;
 
     try {
-      supabase =
-        createSupabaseAdmin();
+      supabase = createSupabaseAdmin();
     } catch (error) {
-      console.error(
-        "Auth configuration error:",
-        error?.message
-      );
+      console.error('Auth configuration error:', error?.message);
 
-      return res
-        .status(500)
-        .json({
-          error:
-            "Authentication service is not configured."
-        });
+      return res.status(500).json({
+        error: 'Authentication service is not configured.'
+      });
     }
 
     try {
-      const {
-        data: currentUser,
-        error
-      } = await supabase
-        .from("app_users")
-        .select(
-          "id, username, status"
-        )
-        .eq(
-          "id",
-          sessionUser.userId
-        )
+      const { data: user, error } = await supabase
+        .from('app_users')
+        .select('id, username, status')
+        .eq('id', sessionUser.userId)
         .maybeSingle();
 
       if (error) {
         throw error;
       }
 
-      if (
-        !currentUser ||
-        currentUser.status !== "active"
-      ) {
+      if (!user || user.status !== 'active') {
         res.setHeader(
-          "Set-Cookie",
+          'Set-Cookie',
           buildLogoutCookie()
         );
 
-        return res
-          .status(200)
-          .json({
-            authenticated: false,
-            user: null
-          });
+        return res.status(200).json({
+          authenticated: false,
+          user: null
+        });
       }
 
-      return res
-        .status(200)
-        .json({
-          authenticated: true,
-          user: safeUser(
-            currentUser
-          )
-        });
+      return res.status(200).json({
+        authenticated: true,
+        user: publicUser(user)
+      });
     } catch (error) {
-      console.error(
-        "Session lookup error:",
-        {
-          message: error?.message,
-          code: error?.code
-        }
-      );
+      console.error('Session lookup error:', {
+        message: error?.message,
+        code: error?.code
+      });
 
-      return res
-        .status(500)
-        .json({
-          error:
-            "Unable to verify the current session."
-        });
+      return res.status(500).json({
+        error: 'Unable to verify the current session.'
+      });
     }
   }
 
-  /* -------------------------------------------------------
-     METHODS
-     ------------------------------------------------------- */
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST');
 
-  if (req.method !== "POST") {
-    res.setHeader(
-      "Allow",
-      "GET, POST"
-    );
-
-    return res
-      .status(405)
-      .json({
-        error: "Method Not Allowed"
-      });
+    return res.status(405).json({
+      error: 'Method Not Allowed'
+    });
   }
-
-  /* -------------------------------------------------------
-     ORIGIN CHECK
-     ------------------------------------------------------- */
 
   try {
     if (!isAllowedOrigin(req)) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Request origin is not allowed."
-        });
+      return res.status(403).json({
+        error: 'Request origin is not allowed.'
+      });
     }
   } catch (error) {
-    console.error(
-      "Origin configuration error:",
-      error?.message
-    );
+    console.error('Origin configuration error:', error?.message);
 
-    return res
-      .status(500)
-      .json({
-        error:
-          "Authentication is not configured safely."
-      });
+    return res.status(500).json({
+      error: 'Authentication origin configuration is invalid.'
+    });
   }
 
   let supabase;
 
   try {
-    supabase =
-      createSupabaseAdmin();
+    supabase = createSupabaseAdmin();
   } catch (error) {
-    console.error(
-      "Auth configuration error:",
-      error?.message
-    );
+    console.error('Auth configuration error:', error?.message);
 
-    return res
-      .status(500)
-      .json({
-        error:
-          "Authentication service is not configured."
-      });
+    return res.status(500).json({
+      error: 'Authentication service is not configured.'
+    });
   }
 
-  const body =
-    parseRequestBody(req);
+  const body = parseBody(req);
 
   if (!body) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Invalid JSON request."
-      });
+    return res.status(400).json({
+      error: 'Invalid JSON request.'
+    });
   }
 
   const action =
-    typeof body.action === "string"
-      ? body.action
-          .trim()
-          .toLowerCase()
-      : "";
+    typeof body.action === 'string'
+      ? body.action.trim().toLowerCase()
+      : '';
 
-  /* -------------------------------------------------------
-     LOGOUT
-     ------------------------------------------------------- */
-
-  if (action === "logout") {
+  if (action === 'logout') {
     res.setHeader(
-      "Set-Cookie",
+      'Set-Cookie',
       buildLogoutCookie()
     );
 
-    return res
-      .status(200)
-      .json({
-        success: true
-      });
+    return res.status(200).json({
+      success: true
+    });
   }
 
-  const rateLimitKey =
-    createRateLimitKey(req);
+  const rateLimitKey = createRateLimitKey(req);
 
-  /* -------------------------------------------------------
-     USERNAME AVAILABILITY
-     ------------------------------------------------------- */
-
-  if (action === "check_username") {
-    const username =
-      cleanLegacyUsername(
-        body.username
-      );
-
-    if (!validateUsername(username)) {
-      return res
-        .status(400)
-        .json({
-          available: false,
-          error:
-            "Username must contain 3–20 letters, numbers, or underscores."
-        });
-    }
-
-    try {
-      const rateLimit =
-        await consumeRateLimit(
-          supabase,
-          rateLimitKey,
-          "check_username"
-        );
-
-      if (!rateLimit.allowed) {
-        return sendRateLimitResponse(
-          res,
-          rateLimit.retryAfter,
-          "Too many Bean ID checks. Please wait before trying again."
-        );
-      }
-
-      const exists =
-        await usernameExists(
-          supabase,
-          username
-        );
-
-      return res
-        .status(200)
-        .json({
-          available: !exists
-        });
-    } catch (error) {
-      console.error(
-        "Username availability error:",
-        {
-          message: error?.message,
-          code: error?.code
-        }
-      );
-
-      return res
-        .status(500)
-        .json({
-          available: false,
-          error:
-            "Unable to check Bean ID."
-        });
-    }
-  }
-
-  const username =
-    cleanLegacyUsername(
+  if (action === 'check_username') {
+    const username = cleanLegacyUsername(
       body.username
     );
 
-  const password =
-    body.password;
-
-  if (!validateUsername(username)) {
-    return res
-      .status(400)
-      .json({
+    if (!validateUsername(username)) {
+      return res.status(400).json({
+        available: false,
         error:
-          "Username must contain 3–20 letters, numbers, or underscores."
+          'Username must contain 3–20 letters, numbers, or underscores.'
       });
+    }
+
+    try {
+      const limit = await consumeRateLimit(
+        supabase,
+        rateLimitKey,
+        'check_username'
+      );
+
+      if (!limit.allowed) {
+        return rateLimitResponse(
+          res,
+          limit.retryAfter,
+          'Too many Bean ID checks. Please wait before trying again.'
+        );
+      }
+
+      const exists = await usernameExists(
+        supabase,
+        username
+      );
+
+      return res.status(200).json({
+        available: !exists
+      });
+    } catch (error) {
+      console.error('Username availability error:', {
+        message: error?.message,
+        code: error?.code
+      });
+
+      return res.status(500).json({
+        available: false,
+        error: 'Unable to check Bean ID.'
+      });
+    }
   }
 
-  if (typeof password !== "string") {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Username and password are required."
-      });
+  const username = cleanLegacyUsername(
+    body.username
+  );
+
+  const password = body.password;
+
+  if (!validateUsername(username)) {
+    return res.status(400).json({
+      error:
+        'Username must contain 3–20 letters, numbers, or underscores.'
+    });
+  }
+
+  if (typeof password !== 'string') {
+    return res.status(400).json({
+      error: 'Username and password are required.'
+    });
   }
 
   try {
-    /* -----------------------------------------------------
-       SIGNUP
-       ----------------------------------------------------- */
+    if (action === 'signup') {
+      const limit = await consumeRateLimit(
+        supabase,
+        rateLimitKey,
+        'signup'
+      );
 
-    if (action === "signup") {
-      const rateLimit =
-        await consumeRateLimit(
-          supabase,
-          rateLimitKey,
-          "signup"
-        );
-
-      if (!rateLimit.allowed) {
-        return sendRateLimitResponse(
+      if (!limit.allowed) {
+        return rateLimitResponse(
           res,
-          rateLimit.retryAfter,
-          "Too many signup attempts. Please try again later."
+          limit.retryAfter,
+          'Too many signup attempts. Please try again later.'
         );
       }
 
       if (!validatePassword(password)) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Password must contain 8–100 characters."
-          });
+        return res.status(400).json({
+          error:
+            'Password must contain 8–100 characters.'
+        });
       }
 
-      const exists =
-        await usernameExists(
-          supabase,
-          username
-        );
-
-      if (exists) {
-        return res
-          .status(409)
-          .json({
-            error:
-              `${username}@bean is already taken.`
-          });
+      if (await usernameExists(supabase, username)) {
+        return res.status(409).json({
+          error: `${username}@bean is already taken.`
+        });
       }
 
-      const passwordHash =
-        await hashPassword(
-          password
-        );
+      const passwordHash = await hashPassword(password);
 
-      let newUser;
+      const { data: user, error } = await supabase
+        .from('app_users')
+        .insert({
+          username,
+          password_hash: passwordHash,
+          plan_type: 'free',
+          status: 'active'
+        })
+        .select('id, username, status')
+        .single();
 
-      try {
-        newUser =
-          await createAppUser(
-            supabase,
-            username,
-            passwordHash
-          );
-      } catch (error) {
-        if (
-          String(error?.code) ===
-          "23505"
-        ) {
-          return res
-            .status(409)
-            .json({
-              error:
-                `${username}@bean is already taken.`
-            });
+      if (error) {
+        if (String(error.code) === '23505') {
+          return res.status(409).json({
+            error: `${username}@bean is already taken.`
+          });
         }
 
         throw error;
       }
 
-      return sendSession(
-        res,
-        201,
-        newUser
-      );
+      return setSession(res, 201, user);
     }
 
-    /* -----------------------------------------------------
-       LOGIN
-       ----------------------------------------------------- */
+    if (action === 'login') {
+      const limit = await checkRateLimit(
+        supabase,
+        rateLimitKey,
+        'login'
+      );
 
-    if (action === "login") {
-      const loginLimit =
-        await checkRateLimit(
-          supabase,
-          rateLimitKey,
-          "login"
-        );
-
-      if (!loginLimit.allowed) {
-        return sendRateLimitResponse(
+      if (!limit.allowed) {
+        return rateLimitResponse(
           res,
-          loginLimit.retryAfter,
-          "Too many failed login attempts. Please try again later."
+          limit.retryAfter,
+          'Too many failed login attempts. Please try again later.'
         );
       }
 
-      const invalidLogin =
-        async () => {
-          await recordFailedLogin(
-            supabase,
-            rateLimitKey
-          );
+      const invalidLogin = async () => {
+        await recordLimit(
+          supabase,
+          rateLimitKey,
+          'login',
+          limit.storage
+        );
 
-          return res
-            .status(401)
-            .json({
-              error:
-                "Invalid username or password."
-            });
-        };
+        return res.status(401).json({
+          error: 'Invalid username or password.'
+        });
+      };
 
       if (
         password.length === 0 ||
@@ -1295,153 +827,115 @@ export default async function handler(
         return invalidLogin();
       }
 
-      let appUser =
-        await findAppUser(
-          supabase,
-          username
-        );
+      const appUser = await findAppUser(
+        supabase,
+        username
+      );
 
       if (appUser) {
-        if (
-          appUser.status !== "active"
-        ) {
-          return res
-            .status(403)
-            .json({
-              error:
-                "This account is unavailable."
-            });
+        if (appUser.status !== 'active') {
+          return res.status(403).json({
+            error: 'This account is unavailable.'
+          });
         }
 
-        const passwordMatches =
-          await verifyStoredPassword(
-            password,
-            appUser.password_hash
-          );
+        const matches = await verifyStoredPassword(
+          password,
+          appUser.password_hash
+        );
 
-        if (!passwordMatches) {
+        if (!matches) {
           return invalidLogin();
         }
 
-        if (
-          !isBcryptHash(
-            appUser.password_hash
-          )
-        ) {
-          await migratePassword(
+        if (!isBcryptHash(appUser.password_hash)) {
+          await updatePasswordHash(
             supabase,
             appUser.id,
             password
           );
         }
 
-        await clearLoginRateLimits(
+        await clearLoginLimits(
           supabase,
           rateLimitKey
         );
 
-        return sendSession(
+        return setSession(
           res,
           200,
           appUser
         );
       }
 
-      /* ---------------------------------------------------
-         LEGACY PROFILE LOGIN
-         --------------------------------------------------- */
+      const legacy = await findLegacyProfile(
+        supabase,
+        username
+      );
 
-      const legacyProfile =
-        await findLegacyProfile(
-          supabase,
-          username
-        );
-
-      if (!legacyProfile) {
-        return invalidLogin();
-      }
-
-      const legacyMatches =
-        await verifyStoredPassword(
+      if (
+        !legacy ||
+        !(await verifyStoredPassword(
           password,
-          legacyProfile.password
-        );
-
-      if (!legacyMatches) {
+          legacy.password
+        ))
+      ) {
         return invalidLogin();
       }
 
-      const migratedHash =
-        await hashPassword(
-          password
-        );
+      const migratedHash = await hashPassword(password);
 
       const {
         data: migratedUser,
         error: migrationError
       } = await supabase
-        .from("app_users")
+        .from('app_users')
         .upsert(
           {
             username,
-            password_hash:
-              migratedHash,
-            plan_type: "free",
-            status: "active",
-            updated_at:
-              new Date().toISOString()
+            password_hash: migratedHash,
+            plan_type: 'free',
+            status: 'active',
+            updated_at: new Date().toISOString()
           },
           {
-            onConflict: "username"
+            onConflict: 'username'
           }
         )
-        .select(
-          "id, username, status"
-        )
+        .select('id, username, status')
         .single();
 
       if (migrationError) {
         throw migrationError;
       }
 
-      await clearLoginRateLimits(
+      await clearLoginLimits(
         supabase,
         rateLimitKey
       );
 
-      return sendSession(
+      return setSession(
         res,
         200,
         migratedUser
       );
     }
 
-    return res
-      .status(400)
-      .json({
-        error:
-          "Invalid authentication action."
-      });
+    return res.status(400).json({
+      error: 'Invalid authentication action.'
+    });
   } catch (error) {
-    console.error(
-      "Auth API error:",
-      {
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      }
-    );
+    console.error('Auth API error:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint
+    });
 
-    const schemaError =
-      isOptionalSchemaError(error);
-
-    return res
-      .status(500)
-      .json({
-        error: schemaError
-          ? "Authentication database tables are not ready. Run the Supabase migrations."
-          : "Authentication request failed. Please try again."
-      });
+    return res.status(500).json({
+      error: isOptionalSchemaError(error)
+        ? 'Authentication database tables are not ready. Run the Supabase migrations.'
+        : 'Authentication request failed. Please try again.'
+    });
   }
 }
