@@ -60,22 +60,52 @@ function cleanUsername(value) {
     : '';
 }
 
-function getAvatarPath(value) {
+function isLegacyAssetPath(value) {
+  return (
+    typeof value === 'string' &&
+    /^\/assets\/avatars\/[a-zA-Z0-9@._-]{1,200}$/.test(
+      value.trim()
+    )
+  );
+}
+
+function isSafeStoragePath(value) {
+  return (
+    typeof value === 'string' &&
+    /^[a-zA-Z0-9._-]{1,180}$/.test(value)
+  );
+}
+
+function getStoragePath(value) {
   if (typeof value !== 'string' || !value.trim()) {
     return null;
   }
 
-  const cleanValue = value.trim();
+  const rawValue = value.trim();
 
-  /*
-   * Old code may have stored either:
-   * - avatar-file.png
-   * - avatars/avatar-file.png
-   * - full public Storage URL
-   */
-  if (cleanValue.startsWith('http')) {
+  if (isLegacyAssetPath(rawValue)) {
+    return null;
+  }
+
+  if (
+    rawValue.startsWith(
+      '/storage/v1/object/public/avatars/'
+    )
+  ) {
+    return decodeURIComponent(
+      rawValue.split('/avatars/').pop() || ''
+    );
+  }
+
+  if (rawValue.startsWith('/avatars/')) {
+    return decodeURIComponent(
+      rawValue.replace(/^\/avatars\//, '')
+    );
+  }
+
+  if (rawValue.startsWith('http')) {
     try {
-      const url = new URL(cleanValue);
+      const url = new URL(rawValue);
       const marker = '/avatars/';
 
       if (!url.pathname.includes(marker)) {
@@ -90,16 +120,7 @@ function getAvatarPath(value) {
     }
   }
 
-  return cleanValue
-    .replace(/^avatars\//i, '')
-    .replace(/^\/+/, '');
-}
-
-function isSafeAvatarPath(value) {
-  return (
-    typeof value === 'string' &&
-    /^[a-zA-Z0-9._-]{1,180}$/.test(value)
-  );
+  return rawValue.replace(/^avatars\//i, '');
 }
 
 function parseAvatarDataUrl(value) {
@@ -189,45 +210,80 @@ async function findLegacyProfile(supabase, username) {
   const baseUsername = cleanUsername(username);
 
   const candidates = [
-    username,
     baseUsername,
-    `${baseUsername}@bean`
-  ].filter(Boolean);
+    `${baseUsername}@bean`,
+    `@${baseUsername}`
+  ];
 
   const { data, error } = await supabase
     .from('profiles')
     .select('id, username, avatar_url')
-    .in('username', candidates)
-    .limit(1);
+    .in('username', candidates);
 
   if (error) {
     throw error;
   }
 
-  return data?.[0] || null;
+  if (!data?.length) {
+    return null;
+  }
+
+  /*
+   * Prefer the original Bean record:
+   * username@bean, then plain username.
+   */
+  return (
+    data.find(
+      profile =>
+        String(profile.username || '').toLowerCase() ===
+        `${baseUsername}@bean`
+    ) ||
+    data.find(
+      profile =>
+        cleanUsername(profile.username) === baseUsername
+    ) ||
+    data[0]
+  );
 }
 
 function getPublicAvatarUrl(supabase, avatarUrl) {
-  const avatarPath = getAvatarPath(avatarUrl);
+  if (
+    typeof avatarUrl !== 'string' ||
+    !avatarUrl.trim()
+  ) {
+    return null;
+  }
 
-  if (!isSafeAvatarPath(avatarPath)) {
+  const rawAvatarUrl = avatarUrl.trim();
+
+  /*
+   * Existing legacy avatar already lives on this website.
+   */
+  if (isLegacyAssetPath(rawAvatarUrl)) {
+    return rawAvatarUrl;
+  }
+
+  /*
+   * New uploaded avatars use Supabase Storage bucket "avatars".
+   */
+  const storagePath = getStoragePath(rawAvatarUrl);
+
+  if (!isSafeStoragePath(storagePath)) {
     return null;
   }
 
   const { data } = supabase.storage
     .from(AVATAR_BUCKET)
-    .getPublicUrl(avatarPath);
+    .getPublicUrl(storagePath);
 
   return data?.publicUrl || null;
 }
 
-function profileResponse(supabase, user, profile) {
-  const username = cleanUsername(user.username);
-
+function publicResponse(supabase, user, profile) {
   return {
     user: {
       id: String(user.id),
-      username,
+      username: cleanUsername(user.username),
       planType: String(user.plan_type || 'free')
     },
     profile: {
@@ -242,15 +298,30 @@ function profileResponse(supabase, user, profile) {
 
 async function updateAvatarUrl(
   supabase,
-  profileId,
+  profile,
   avatarUrl
 ) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('profiles')
     .update({
       avatar_url: avatarUrl
-    })
-    .eq('id', profileId)
+    });
+
+  /*
+   * Your old profiles table has id = NULL,
+   * therefore username is the safe record identifier.
+   */
+  if (
+    profile?.id !== null &&
+    profile?.id !== undefined &&
+    profile?.id !== ''
+  ) {
+    query = query.eq('id', profile.id);
+  } else {
+    query = query.eq('username', profile.username);
+  }
+
+  const { data, error } = await query
     .select('id, username, avatar_url')
     .single();
 
@@ -267,12 +338,12 @@ async function uploadAvatar(supabase, userId, avatar) {
     ''
   );
 
-  const avatarName =
+  const fileName =
     `neo-avatar-${safeUserId}-${Date.now()}.${avatar.extension}`;
 
   const { error } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .upload(avatarName, avatar.buffer, {
+    .upload(fileName, avatar.buffer, {
       contentType: avatar.mimeType,
       cacheControl: '3600',
       upsert: false
@@ -282,19 +353,23 @@ async function uploadAvatar(supabase, userId, avatar) {
     throw error;
   }
 
-  return avatarName;
+  return fileName;
 }
 
-async function removeAvatarFile(supabase, avatarUrl) {
-  const avatarPath = getAvatarPath(avatarUrl);
+async function removeStorageAvatar(supabase, avatarUrl) {
+  if (isLegacyAssetPath(avatarUrl)) {
+    return;
+  }
 
-  if (!isSafeAvatarPath(avatarPath)) {
+  const storagePath = getStoragePath(avatarUrl);
+
+  if (!isSafeStoragePath(storagePath)) {
     return;
   }
 
   const { error } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .remove([avatarPath]);
+    .remove([storagePath]);
 
   if (error) {
     console.warn(
@@ -359,7 +434,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       return res.status(200).json({
         success: true,
-        ...profileResponse(supabase, user, profile)
+        ...publicResponse(supabase, user, profile)
       });
     }
 
@@ -371,23 +446,23 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!profile?.id) {
+    if (!profile) {
       return res.status(409).json({
         error:
-          'Your legacy profile was not found. Do not create a new account; contact support so we can safely link it.'
+          'Profile record was not found. Please contact support before changing your avatar.'
       });
     }
 
     const wantsRemoval = body.removeAvatar === true;
-    const hasAvatarUpload =
+    const hasNewAvatar =
       Object.prototype.hasOwnProperty.call(
         body,
         'avatarDataUrl'
       );
 
-    if (!wantsRemoval && !hasAvatarUpload) {
+    if (!wantsRemoval && !hasNewAvatar) {
       return res.status(400).json({
-        error: 'Choose an avatar image or remove the current avatar.'
+        error: 'Choose a new avatar or remove the current avatar.'
       });
     }
 
@@ -396,11 +471,11 @@ export default async function handler(req, res) {
     if (wantsRemoval) {
       updatedProfile = await updateAvatarUrl(
         supabase,
-        profile.id,
+        profile,
         null
       );
 
-      await removeAvatarFile(
+      await removeStorageAvatar(
         supabase,
         profile.avatar_url
       );
@@ -410,7 +485,7 @@ export default async function handler(req, res) {
       if (!avatar) {
         return res.status(400).json({
           error:
-            'Avatar must be JPG, PNG, or WebP and smaller than 2 MB.'
+            'Avatar must be a JPG, PNG, or WebP image smaller than 2 MB.'
         });
       }
 
@@ -423,11 +498,11 @@ export default async function handler(req, res) {
       try {
         updatedProfile = await updateAvatarUrl(
           supabase,
-          profile.id,
+          profile,
           newAvatarName
         );
       } catch (error) {
-        await removeAvatarFile(
+        await removeStorageAvatar(
           supabase,
           newAvatarName
         );
@@ -435,7 +510,7 @@ export default async function handler(req, res) {
         throw error;
       }
 
-      await removeAvatarFile(
+      await removeStorageAvatar(
         supabase,
         profile.avatar_url
       );
@@ -443,7 +518,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      ...profileResponse(
+      ...publicResponse(
         supabase,
         user,
         updatedProfile
