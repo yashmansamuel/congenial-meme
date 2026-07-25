@@ -1,59 +1,55 @@
-// api/history.js
-
 import { createClient } from '@supabase/supabase-js';
-import { getAuthenticatedUser } from '../lib/auth.js';
-import { isAllowedOrigin } from '../lib/http.js';
 
-const DEFAULT_HISTORY_LIMIT = 100;
-const MAX_HISTORY_LIMIT = 200;
+import { getAuthenticatedUser } from '../lib/auth.js';
+
+import {
+  setJsonHeaders,
+  parseJsonBody,
+  isAllowedOrigin,
+  positiveInteger
+} from '../lib/http.js';
+
+const DEFAULT_HISTORY_LIMIT = 50;
+const MAX_HISTORY_LIMIT = 100;
 const MAX_TITLE_LENGTH = 80;
 
-function setResponseHeaders(res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader(
-    'Cache-Control',
-    'no-store, no-cache, must-revalidate, proxy-revalidate'
-  );
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+function cleanEnv(value) {
+  return typeof value === 'string'
+    ? value.trim().replace(/^["']|["']$/g, '')
+    : '';
 }
 
 function createSupabaseAdmin() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = cleanEnv(process.env.SUPABASE_URL);
+  const serviceRoleKey = cleanEnv(
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error(
-      'Missing required Supabase environment variables.'
-    );
+    throw new Error('Supabase configuration is missing.');
+  }
+
+  const parsedUrl = new URL(supabaseUrl);
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    parsedUrl.protocol !== 'https:'
+  ) {
+    throw new Error('Supabase must use HTTPS in production.');
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
-      autoRefreshToken: false
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'signaturesi-neo-history'
+      }
     }
   });
-}
-
-function parseRequestBody(req) {
-  if (!req.body) {
-    return {};
-  }
-
-  if (typeof req.body === 'object') {
-    return req.body;
-  }
-
-  if (typeof req.body === 'string') {
-    try {
-      return JSON.parse(req.body);
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
 }
 
 function cleanString(value, maxLength = 200) {
@@ -67,31 +63,16 @@ function cleanString(value, maxLength = 200) {
     .slice(0, maxLength);
 }
 
-function getHistoryLimit(value) {
-  const parsed = Number.parseInt(String(value || ''), 10);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return DEFAULT_HISTORY_LIMIT;
-  }
-
-  return Math.min(parsed, MAX_HISTORY_LIMIT);
-}
-
 function normalizeAction(value) {
   const action = cleanString(value, 40).toLowerCase();
 
   const aliases = {
     history: 'list',
     conversations: 'list',
-    gethistory: 'list',
-
     load: 'get',
     open: 'get',
     messages: 'get',
-    conversation: 'get',
-
     remove: 'delete',
-
     update: 'rename',
     title: 'rename'
   };
@@ -99,14 +80,33 @@ function normalizeAction(value) {
   return aliases[action] || action;
 }
 
+function getHistoryLimit(value) {
+  return Math.min(
+    positiveInteger(value, DEFAULT_HISTORY_LIMIT),
+    MAX_HISTORY_LIMIT
+  );
+}
+
+function validateConversationId(value) {
+  const id = cleanString(value, 100);
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (!uuidPattern.test(id)) {
+    return '';
+  }
+
+  return id;
+}
+
 function getConversationId(req, body) {
-  return cleanString(
+  return validateConversationId(
     body?.conversationId ||
       body?.conversation_id ||
       req.query?.conversationId ||
       req.query?.conversation_id ||
-      '',
-    100
+      ''
   );
 }
 
@@ -114,16 +114,13 @@ function safeConversation(conversation) {
   return {
     id: String(conversation.id),
     title:
-      typeof conversation.title === 'string' &&
-      conversation.title.trim()
-        ? conversation.title.trim()
-        : 'New Chat',
+      cleanString(conversation.title, MAX_TITLE_LENGTH) ||
+      'New Chat',
     model:
       conversation.model_used ||
       conversation.model ||
       null,
-    createdAt:
-      conversation.created_at || null,
+    createdAt: conversation.created_at || null,
     updatedAt:
       conversation.updated_at ||
       conversation.created_at ||
@@ -134,11 +131,13 @@ function safeConversation(conversation) {
 function safeMessage(message) {
   return {
     id: String(message.id),
-    role: message.role,
-    content:
-      typeof message.content === 'string'
-        ? message.content
-        : '',
+    role:
+      message.role === 'assistant'
+        ? 'assistant'
+        : message.role === 'user'
+        ? 'user'
+        : 'system',
+    content: cleanString(message.content, 50_000),
     createdAt: message.created_at || null
   };
 }
@@ -150,7 +149,9 @@ async function verifyConversationOwnership(
 ) {
   const { data, error } = await supabase
     .from('chat_conversations')
-    .select('*')
+    .select(
+      'id, title, model_used, created_at, updated_at'
+    )
     .eq('id', conversationId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -169,11 +170,11 @@ async function listConversations(
 ) {
   const { data, error } = await supabase
     .from('chat_conversations')
-    .select('*')
+    .select(
+      'id, title, model_used, created_at, updated_at'
+    )
     .eq('user_id', userId)
-    .order('created_at', {
-      ascending: false
-    })
+    .order('updated_at', { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -189,11 +190,10 @@ async function loadConversationMessages(
 ) {
   const { data, error } = await supabase
     .from('chat_messages')
-    .select('*')
+    .select('id, role, content, created_at')
     .eq('conversation_id', conversationId)
-    .order('created_at', {
-      ascending: true
-    });
+    .order('created_at', { ascending: true })
+    .limit(500);
 
   if (error) {
     throw error;
@@ -202,162 +202,134 @@ async function loadConversationMessages(
   return (data || []).map(safeMessage);
 }
 
-async function deleteConversation(
-  supabase,
-  conversationId,
-  userId
-) {
-  const conversation =
-    await verifyConversationOwnership(
-      supabase,
-      conversationId,
-      userId
-    );
-
-  if (!conversation) {
-    return false;
-  }
-
-  /*
-   * Delete messages first so this works even when the database
-   * does not have ON DELETE CASCADE configured.
-   */
-  const { error: messageDeleteError } =
-    await supabase
-      .from('chat_messages')
-      .delete()
-      .eq('conversation_id', conversationId);
-
-  if (messageDeleteError) {
-    throw messageDeleteError;
-  }
-
-  const { error: conversationDeleteError } =
-    await supabase
-      .from('chat_conversations')
-      .delete()
-      .eq('id', conversationId)
-      .eq('user_id', userId);
-
-  if (conversationDeleteError) {
-    throw conversationDeleteError;
-  }
-
-  return true;
-}
-
 async function renameConversation(
   supabase,
   conversationId,
   userId,
   title
 ) {
-  const conversation =
-    await verifyConversationOwnership(
-      supabase,
-      conversationId,
-      userId
-    );
-
-  if (!conversation) {
-    return null;
-  }
-
   const cleanTitle = cleanString(
     title,
     MAX_TITLE_LENGTH
   ).replace(/\s+/g, ' ');
 
   if (!cleanTitle) {
-    throw new Error('INVALID_TITLE');
+    throw new Error('A conversation title is required.');
   }
 
   const { data, error } = await supabase
     .from('chat_conversations')
     .update({
-      title: cleanTitle
+      title: cleanTitle,
+      updated_at: new Date().toISOString()
     })
     .eq('id', conversationId)
     .eq('user_id', userId)
-    .select('*')
-    .single();
+    .select(
+      'id, title, model_used, created_at, updated_at'
+    )
+    .maybeSingle();
 
   if (error) {
     throw error;
   }
 
-  return safeConversation(data);
+  return data || null;
+}
+
+async function deleteConversation(
+  supabase,
+  conversationId,
+  userId
+) {
+  const { data, error } = await supabase.rpc(
+    'delete_own_conversation',
+    {
+      p_user_id: userId,
+      p_conversation_id: conversationId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data === true;
+}
+
+function methodAllowsAction(method, action) {
+  if (method === 'GET') {
+    return ['list', 'get'].includes(action);
+  }
+
+  if (method === 'DELETE') {
+    return action === 'delete';
+  }
+
+  if (method === 'PATCH') {
+    return action === 'rename';
+  }
+
+  if (method === 'POST') {
+    return ['list', 'get', 'delete', 'rename'].includes(
+      action
+    );
+  }
+
+  return false;
 }
 
 export default async function handler(req, res) {
-  setResponseHeaders(res);
+  setJsonHeaders(res);
 
-  const allowedMethods = [
-    'GET',
-    'POST',
-    'DELETE',
-    'PATCH'
-  ];
+  const allowedMethods = ['GET', 'POST', 'DELETE', 'PATCH'];
 
   if (!allowedMethods.includes(req.method)) {
-    res.setHeader(
-      'Allow',
-      allowedMethods.join(', ')
-    );
+    res.setHeader('Allow', allowedMethods.join(', '));
 
     return res.status(405).json({
       error: 'Method Not Allowed'
     });
   }
 
-  /*
-   * Identity always comes from the signed HttpOnly cookie.
-   * userId or username supplied by the frontend is ignored.
-   */
   const authUser = getAuthenticatedUser(req);
 
   if (!authUser?.userId) {
     return res.status(401).json({
-      error: 'Authentication required. Please log in.',
-      authenticated: false
+      error: 'Authentication required. Please log in.'
     });
   }
 
   if (req.method !== 'GET') {
     try {
       if (!isAllowedOrigin(req)) {
-        return res.status(403).json({ error: 'Request origin is not allowed.' });
+        return res.status(403).json({
+          error: 'Request origin is not allowed.'
+        });
       }
-    } catch (error) {
-      console.error('History origin configuration error:', error.message);
-      return res.status(500).json({ error: 'History is not configured safely.' });
+    } catch {
+      return res.status(500).json({
+        error: 'History service is not configured safely.'
+      });
     }
   }
 
   const body =
     req.method === 'GET'
       ? {}
-      : parseRequestBody(req);
+      : parseJsonBody(req);
 
-  if (body === null) {
+  if (!body) {
     return res.status(400).json({
-      error: 'Invalid JSON request payload.'
+      error: 'Invalid JSON request.'
     });
   }
 
-  let action = normalizeAction(
-    body?.action || req.query?.action || ''
-  );
+  const conversationId = getConversationId(req, body);
 
-  /*
-   * Sensible defaults:
-   * GET without conversationId = list
-   * GET with conversationId = get
-   * DELETE = delete
-   * PATCH = rename
-   */
-  const conversationId =
-    getConversationId(req, body);
+  let action = normalizeAction(
+    body.action || req.query?.action || ''
+  );
 
   if (!action) {
     if (req.method === 'DELETE') {
@@ -371,75 +343,46 @@ export default async function handler(req, res) {
     }
   }
 
+  if (!methodAllowsAction(req.method, action)) {
+    return res.status(405).json({
+      error: 'This method cannot perform the requested action.'
+    });
+  }
+
+  if (
+    ['get', 'delete', 'rename'].includes(action) &&
+    !conversationId
+  ) {
+    return res.status(400).json({
+      error: 'A valid conversation ID is required.'
+    });
+  }
+
   let supabase;
 
   try {
     supabase = createSupabaseAdmin();
-  } catch (error) {
-    console.error(
-      'History configuration error:',
-      error.message
-    );
 
-    return res.status(500).json({
-      error:
-        'The conversation history service is not configured.'
-    });
-  }
-
-  const userId = authUser.userId;
-
-  try {
-    /*
-     * LIST USER CONVERSATIONS
-     *
-     * Supported:
-     * GET /api/history
-     * GET /api/history?action=list
-     * POST { action: "list" }
-     */
     if (action === 'list') {
-      const limit = getHistoryLimit(
-        body?.limit || req.query?.limit
+      const conversations = await listConversations(
+        supabase,
+        authUser.userId,
+        getHistoryLimit(body.limit || req.query?.limit)
       );
-
-      const conversations =
-        await listConversations(
-          supabase,
-          userId,
-          limit
-        );
 
       return res.status(200).json({
         success: true,
         conversations,
-        history: conversations,
         count: conversations.length
       });
     }
 
-    /*
-     * LOAD ONE CONVERSATION
-     *
-     * Supported:
-     * GET /api/history?conversationId=...
-     * POST {
-     *   action: "get",
-     *   conversationId: "..."
-     * }
-     */
     if (action === 'get') {
-      if (!conversationId) {
-        return res.status(400).json({
-          error: 'Conversation ID is required.'
-        });
-      }
-
       const conversation =
         await verifyConversationOwnership(
           supabase,
           conversationId,
-          userId
+          authUser.userId
         );
 
       if (!conversation) {
@@ -448,43 +391,45 @@ export default async function handler(req, res) {
         });
       }
 
-      const messages =
-        await loadConversationMessages(
-          supabase,
-          conversationId
-        );
+      const messages = await loadConversationMessages(
+        supabase,
+        conversationId
+      );
 
       return res.status(200).json({
         success: true,
-        conversation:
-          safeConversation(conversation),
+        conversation: safeConversation(conversation),
         messages
       });
     }
 
-    /*
-     * DELETE ONE CONVERSATION
-     *
-     * Supported:
-     * DELETE /api/history?conversationId=...
-     * POST {
-     *   action: "delete",
-     *   conversationId: "..."
-     * }
-     */
-    if (action === 'delete') {
-      if (!conversationId) {
-        return res.status(400).json({
-          error: 'Conversation ID is required.'
+    if (action === 'rename') {
+      const conversation =
+        await renameConversation(
+          supabase,
+          conversationId,
+          authUser.userId,
+          body.title
+        );
+
+      if (!conversation) {
+        return res.status(404).json({
+          error: 'Conversation not found.'
         });
       }
 
-      const deleted =
-        await deleteConversation(
-          supabase,
-          conversationId,
-          userId
-        );
+      return res.status(200).json({
+        success: true,
+        conversation: safeConversation(conversation)
+      });
+    }
+
+    if (action === 'delete') {
+      const deleted = await deleteConversation(
+        supabase,
+        conversationId,
+        authUser.userId
+      );
 
       if (!deleted) {
         return res.status(404).json({
@@ -499,77 +444,17 @@ export default async function handler(req, res) {
       });
     }
 
-    /*
-     * RENAME ONE CONVERSATION
-     *
-     * Supported:
-     * PATCH {
-     *   conversationId: "...",
-     *   title: "New title"
-     * }
-     *
-     * POST {
-     *   action: "rename",
-     *   conversationId: "...",
-     *   title: "New title"
-     * }
-     */
-    if (action === 'rename') {
-      if (!conversationId) {
-        return res.status(400).json({
-          error: 'Conversation ID is required.'
-        });
-      }
-
-      const title = cleanString(
-        body?.title,
-        MAX_TITLE_LENGTH
-      );
-
-      if (!title) {
-        return res.status(400).json({
-          error: 'A valid conversation title is required.'
-        });
-      }
-
-      const updatedConversation =
-        await renameConversation(
-          supabase,
-          conversationId,
-          userId,
-          title
-        );
-
-      if (!updatedConversation) {
-        return res.status(404).json({
-          error: 'Conversation not found.'
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        conversation: updatedConversation
-      });
-    }
-
     return res.status(400).json({
       error: 'Invalid history action.'
     });
   } catch (error) {
-    console.error('History API error:', {
+    console.error('History request failed:', {
       message: error?.message,
       code: error?.code
     });
 
-    if (error?.message === 'INVALID_TITLE') {
-      return res.status(400).json({
-        error: 'A valid conversation title is required.'
-      });
-    }
-
     return res.status(500).json({
-      error:
-        'Unable to process conversation history. Please try again.'
+      error: 'Unable to process conversation history.'
     });
   }
 }
