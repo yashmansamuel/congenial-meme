@@ -1,25 +1,25 @@
 {
   "name": "signaturesi-neo",
   "version": "1.2.0",
-  "type": "module",
   "private": true,
-  "dependencies": {
-    "@supabase/supabase-js": "^2.48.0",
-    "bcryptjs": "^3.0.2",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "description": "NEO Phase 1 production web application",
+  "type": "module",
+  "description": "Signaturesi NEO Phase 1 web application",
   "scripts": {
     "dev": "vite",
     "dev:full": "vercel dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node --check api/auth.js && node --check api/chat.js && node --check api/history.js && node --check api/checkout.js && node --check api/notifications.js && node --check neo.js && node --check premium-ui.js"
+    "check": "node --check api/auth.js && node --check api/chat.js && node --check api/history.js && node --check api/checkout.js && node --check api/notifications.js && node --check neo.js"
   },
   "engines": {
     "node": "20.x"
   },
+  "dependencies": {
+    "@supabase/supabase-js": "2.48.1",
+    "bcryptjs": "3.0.2",
+    "jsonwebtoken": "9.0.2"
+  },
   "devDependencies": {
-    "vite": "^7.0.0"
+    "vite": "6.1.0"
   }
 }
