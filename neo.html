@@ -45,6 +45,11 @@
 
       <div class="history-section">
         <span class="section-title">Recent Chats</span>
+        <div class="history-search" id="historySearchWrap">
+          <i data-lucide="search" size="14" aria-hidden="true"></i>
+          <input id="historySearchInput" type="search" placeholder="Search chats" autocomplete="off" aria-label="Search chats">
+          <button id="clearHistorySearchBtn" type="button" aria-label="Clear chat search" hidden>&times;</button>
+        </div>
         <div class="history-list" id="historyList"></div>
       </div>
     </div>
@@ -153,6 +158,9 @@
           <div class="attachment-popup-item" id="addFilesMenuBtn">
             <i data-lucide="paperclip" size="16"></i><span>Add Files</span>
           </div>
+          <div class="attachment-popup-item" id="addUrlMenuBtn">
+            <i data-lucide="link" size="16"></i><span>Add URL Context</span>
+          </div>
           <div class="attachment-popup-item" id="deepResearchToggleBtn">
             <i data-lucide="search-code" size="16"></i><span>Deep Research</span>
           </div>
@@ -161,7 +169,7 @@
           </div>
         </div>
 
-        <input type="file" id="hiddenFileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt,.js,.ts,.py,.html,.css,.json,.cpp,.c,.java,.mp3,.mp4,.wav,.webm" style="display: none;">
+        <input type="file" id="hiddenFileInput" multiple accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,application/json,text/javascript,application/javascript,text/css,text/html,.js,.css,.html,.json,.txt,.pdf" style="display: none;">
 
         <div class="glass-input-container" id="glassInputContainer">
           <div class="attached-chips-wrapper" id="attachedChipsWrapper"></div>
@@ -203,6 +211,33 @@
     <div class="history-popup-item danger" id="hpDeleteBtn"><i data-lucide="trash-2" size="16"></i> Delete</div>
   </div>
 
+  <div class="url-modal-overlay" id="urlModal" aria-hidden="true">
+    <div class="url-modal-card" role="dialog" aria-modal="true" aria-labelledby="urlModalTitle">
+      <button class="modal-close-btn" id="urlModalCloseBtn" type="button" aria-label="Close URL dialog">&times;</button>
+      <h2 id="urlModalTitle">Add URL context</h2>
+      <p>Paste a public HTTPS URL for Deep Research to read.</p>
+      <input id="urlInput" type="url" inputmode="url" placeholder="https://example.com/article" autocomplete="url">
+      <div class="url-modal-actions">
+        <button class="upgrade-btn-secondary" id="urlModalCancelBtn" type="button">Cancel</button>
+        <button class="upgrade-btn-primary" id="urlModalAddBtn" type="button">Add URL</button>
+      </div>
+      <p class="url-modal-error" id="urlModalError" role="alert" hidden></p>
+    </div>
+  </div>
+
+  <div class="url-modal-overlay" id="memoryModal" aria-hidden="true">
+    <div class="url-modal-card" role="dialog" aria-modal="true" aria-labelledby="memoryModalTitle">
+      <button class="modal-close-btn" id="memoryModalCloseBtn" type="button" aria-label="Close memory dialog">&times;</button>
+      <h2 id="memoryModalTitle">Memory context</h2>
+      <p>This local note is used only as context on this device.</p>
+      <textarea id="memoryInput" rows="5" placeholder="Write a short note for NEO..."></textarea>
+      <div class="url-modal-actions">
+        <button class="upgrade-btn-secondary" id="memoryModalClearBtn" type="button">Clear</button>
+        <button class="upgrade-btn-primary" id="memoryModalSaveBtn" type="button">Save note</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="upgradeModal">
     <div class="modal-card">
       <button class="modal-close-btn" id="modalCloseBtn" type="button">&times;</button>
@@ -235,7 +270,7 @@
         </div>
       </div>
       <div class="modal-footer-actions">
-        <button class="upgrade-btn-primary" id="upgradeActionBtn" type="button">Upgrade to Pro ($12/mo)</button>
+        <button class="upgrade-btn-primary" id="upgradeActionBtn" type="button">Upgrade to Pro ($10/mo)</button>
         <button class="upgrade-btn-secondary" id="modalMaybeLaterBtn" type="button">Maybe Later</button>
       </div>
     </div>
