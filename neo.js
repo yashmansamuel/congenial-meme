@@ -168,9 +168,25 @@
                 return false;
             }
 
+            const rawPlan = String(
+                data.user.planType || "free"
+            ).trim().toLowerCase();
+
+            userPlan = [
+                "pro",
+                "neo_pro",
+                "neo-pro",
+                "premium",
+                "business",
+                "suite"
+            ].includes(rawPlan)
+                ? "pro"
+                : "free";
+
             currentUser = {
                 id: data.user.id,
-                username: data.user.username || "user"
+                username: data.user.username || "user",
+                planType: userPlan
             };
 
             localStorage.setItem(
@@ -446,17 +462,66 @@
             }
         );
 
+        async function startNeoProCheckout() {
+            if (!upgradeActionBtn) {
+                return;
+            }
+
+            const originalText =
+                upgradeActionBtn.textContent;
+
+            upgradeActionBtn.disabled = true;
+            upgradeActionBtn.textContent =
+                "Opening secure checkout...";
+
+            try {
+                const response = await fetch(
+                    "/api/checkout",
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        cache: "no-store",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json"
+                        },
+                        body: JSON.stringify({})
+                    }
+                );
+
+                const data = await response
+                    .json()
+                    .catch(() => ({}));
+
+                if (!response.ok || !data?.url) {
+                    throw new Error(
+                        data?.error ||
+                        "Unable to open secure checkout."
+                    );
+                }
+
+                window.location.assign(data.url);
+            } catch (error) {
+                console.error(
+                    "NEO Pro checkout failed:",
+                    error
+                );
+
+                alert(
+                    error?.message ||
+                    "Checkout could not be opened. Please try again."
+                );
+            } finally {
+                upgradeActionBtn.disabled = false;
+                upgradeActionBtn.textContent = originalText;
+            }
+        }
+
         upgradeActionBtn?.addEventListener(
             "click",
-            () => {
-                alert(
-                    "Redirecting to Checkout / Stripe Payment Gateway..."
-                );
-            }
+            startNeoProCheckout
         );
-    }
-
-    function checkFilePermissionForPlan(file) {
+            function checkFilePermissionForPlan(file) {
         const extension = file.name
             .split(".")
             .pop()
@@ -972,7 +1037,7 @@
                 break;
             }
 
-            if (
+                    if (
                 file.size >
                 MAX_FILE_SIZE_BYTES
             ) {
@@ -1491,7 +1556,7 @@
 
                             historyPopupMenu.style.left =
                                 `${rect.left}px`;
-                        }
+                                                    }
                     };
 
                 actions.appendChild(
@@ -2011,8 +2076,7 @@
                 )
                     ? targetIndex
                     : -1;
-
-            if (
+                        if (
                 actualIndex < 0 ||
                 actualIndex >=
                     conversation.length
@@ -2217,10 +2281,6 @@
 
         isGenerating = true;
 
-        /*
-         * Attached files ki copy request banane se
-         * pehle preserve karo.
-         */
         const pendingFiles =
             [...attachedFiles];
 
@@ -2309,10 +2369,6 @@
                 error
             );
 
-            /*
-             * Request start hone se pehle failure aaye
-             * to pending attachments restore kar do.
-             */
             if (
                 attachedFiles.length === 0 &&
                 pendingFiles.length > 0
@@ -2371,10 +2427,6 @@
     ) {
         let data;
 
-        /*
-         * STAGE 1
-         * Network/API work only.
-         */
         try {
             const response = await fetch(
                 "/api/chat",
@@ -2430,10 +2482,6 @@
             return;
         }
 
-        /*
-         * STAGE 2
-         * Validate successful server response.
-         */
         const replyValue =
             data?.reply ??
             data?.choices?.[0]
@@ -2476,13 +2524,6 @@
                 data.conversationId.trim();
         }
 
-        /*
-         * STAGE 3
-         * Render the successful reply.
-         *
-         * An icon or history error must never
-         * replace a valid AI response.
-         */
         try {
             if (aiBubble) {
                 aiBubble.classList.remove(
@@ -2522,16 +2563,11 @@
                 renderError
             );
 
-            /*
-             * Safe plain-text fallback.
-             * The successful server response is preserved.
-             */
             if (aiBubble) {
                 aiBubble.classList.remove(
                     "is-thinking"
                 );
-
-                const content =
+                                const content =
                     aiBubble.querySelector(
                         ".message-content"
                     );
@@ -2567,10 +2603,6 @@
             isGenerating = false;
         }
 
-        /*
-         * Optional icon refresh.
-         * Failure is non-critical.
-         */
         if (window.lucide) {
             try {
                 window.lucide.createIcons();
@@ -2582,14 +2614,6 @@
             }
         }
 
-        /*
-         * STAGE 4
-         * Optional history refresh.
-         *
-         * This occurs after the reply is already rendered.
-         * A history error cannot convert success into an
-         * error bubble.
-         */
         try {
             await loadHistoryFromSupabase();
         } catch (historyError) {
@@ -2966,13 +2990,24 @@
         "DOMContentLoaded",
         () => {
             document.documentElement.dataset.neoRuntime = "ready";
+
             init().catch(error => {
-                console.error("NEO initialization failed:", error);
-                const input = document.getElementById("chatInput");
+                console.error(
+                    "NEO initialization failed:",
+                    error
+                );
+
+                const input =
+                    document.getElementById(
+                        "chatInput"
+                    );
+
                 if (input) {
-                    input.placeholder = "NEO could not initialize. Check console.";
+                    input.placeholder =
+                        "NEO could not initialize. Check console.";
                 }
             });
         }
     );
 })();
+    }
