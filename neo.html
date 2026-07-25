@@ -158,14 +158,11 @@
           <div class="attachment-popup-item" id="addFilesMenuBtn">
             <i data-lucide="paperclip" size="16"></i><span>Add Files</span>
           </div>
-          <div class="attachment-popup-item" id="addUrlMenuBtn">
-            <i data-lucide="link" size="16"></i><span>Add URL Context</span>
-          </div>
           <div class="attachment-popup-item" id="deepResearchToggleBtn">
             <i data-lucide="search-code" size="16"></i><span>Deep Research</span>
           </div>
-          <div class="attachment-popup-item" id="personalMemoryBtn">
-            <i data-lucide="brain-circuit" size="16"></i><span>Memory Context</span>
+          <div class="attachment-popup-item" id="neoPersonalitiesBtn">
+            <i data-lucide="sparkles" size="16"></i><span>NEO Personalities</span>
           </div>
         </div>
 
@@ -211,29 +208,24 @@
     <div class="history-popup-item danger" id="hpDeleteBtn"><i data-lucide="trash-2" size="16"></i> Delete</div>
   </div>
 
-  <div class="url-modal-overlay" id="urlModal" aria-hidden="true">
-    <div class="url-modal-card" role="dialog" aria-modal="true" aria-labelledby="urlModalTitle">
-      <button class="modal-close-btn" id="urlModalCloseBtn" type="button" aria-label="Close URL dialog">&times;</button>
-      <h2 id="urlModalTitle">Add URL context</h2>
-      <p>Paste a public HTTPS URL for Deep Research to read.</p>
-      <input id="urlInput" type="url" inputmode="url" placeholder="https://example.com/article" autocomplete="url">
-      <div class="url-modal-actions">
-        <button class="upgrade-btn-secondary" id="urlModalCancelBtn" type="button">Cancel</button>
-        <button class="upgrade-btn-primary" id="urlModalAddBtn" type="button">Add URL</button>
+  <div class="modal-overlay" id="personalityModal" aria-hidden="true">
+    <div class="modal-card personality-modal-card" role="dialog" aria-modal="true" aria-labelledby="personalityModalTitle">
+      <button class="modal-close-btn" id="personalityModalCloseBtn" type="button" aria-label="Close personalities">&times;</button>
+      <div class="modal-header personality-modal-header">
+        <div class="pro-sparkle-badge"><i data-lucide="sparkles" size="22"></i></div>
+        <h2 id="personalityModalTitle">NEO Personalities</h2>
+        <p>Choose how NEO should think and respond in this chat.</p>
       </div>
-      <p class="url-modal-error" id="urlModalError" role="alert" hidden></p>
-    </div>
-  </div>
-
-  <div class="url-modal-overlay" id="memoryModal" aria-hidden="true">
-    <div class="url-modal-card" role="dialog" aria-modal="true" aria-labelledby="memoryModalTitle">
-      <button class="modal-close-btn" id="memoryModalCloseBtn" type="button" aria-label="Close memory dialog">&times;</button>
-      <h2 id="memoryModalTitle">Memory context</h2>
-      <p>This local note is used only as context on this device.</p>
-      <textarea id="memoryInput" rows="5" placeholder="Write a short note for NEO..."></textarea>
-      <div class="url-modal-actions">
-        <button class="upgrade-btn-secondary" id="memoryModalClearBtn" type="button">Clear</button>
-        <button class="upgrade-btn-primary" id="memoryModalSaveBtn" type="button">Save note</button>
+      <div class="personality-grid" role="listbox" aria-label="NEO personalities">
+        <button type="button" class="personality-option" data-neo-personality="balanced"><i data-lucide="circle-dot" size="17"></i><span>Balanced</span><small>Clear and natural</small></button>
+        <button type="button" class="personality-option" data-neo-personality="researcher"><i data-lucide="search" size="17"></i><span>Researcher</span><small>Evidence-led</small></button>
+        <button type="button" class="personality-option" data-neo-personality="strategist"><i data-lucide="route" size="17"></i><span>Strategist</span><small>Plans and decisions</small></button>
+        <button type="button" class="personality-option" data-neo-personality="creative"><i data-lucide="palette" size="17"></i><span>Creative</span><small>Fresh ideas</small></button>
+        <button type="button" class="personality-option" data-neo-personality="teacher"><i data-lucide="graduation-cap" size="17"></i><span>Teacher</span><small>Simple explanations</small></button>
+        <button type="button" class="personality-option" data-neo-personality="coding_expert"><i data-lucide="code-2" size="17"></i><span>Coding Expert</span><small>Practical code</small></button>
+        <button type="button" class="personality-option" data-neo-personality="business_advisor"><i data-lucide="briefcase-business" size="17"></i><span>Business Advisor</span><small>Growth focused</small></button>
+        <button type="button" class="personality-option" data-neo-personality="deep_thinker"><i data-lucide="brain-circuit" size="17"></i><span>Deep Thinker</span><small>Careful reasoning</small></button>
+        <button type="button" class="personality-option" data-neo-personality="warm_companion"><i data-lucide="heart" size="17"></i><span>Warm Companion</span><small>Supportive tone</small></button>
       </div>
     </div>
   </div>
