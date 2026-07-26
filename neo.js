@@ -15,7 +15,10 @@
     files: [],
     generating: false,
     ready: false,
-    historySearch: ""
+    historySearch: "",
+    profile: null,
+    pendingAvatarDataUrl: null,
+    removeAvatar: false
   };
 
   const personalities = {
@@ -48,6 +51,26 @@
     avatar: $("userAvatar"),
     username: $("userNameDisplay"),
     planBadge: $("userPlanBadge"),
+    settings: $("settingsBtn"),
+    settingsModal: $("settingsModal"),
+    settingsClose: $("settingsModalCloseBtn"),
+    settingsTheme: $("settingsThemeBtn"),
+    settingsThemeValue: $("settingsThemeValue"),
+    settingsVoice: $("settingsVoiceToggle"),
+    settingsAvatar: $("settingsAvatarPreview"),
+    settingsAvatarChange: $("profileAvatarChangeBtn"),
+    settingsAvatarRemove: $("profileAvatarRemoveBtn"),
+    settingsAvatarInput: $("profileAvatarInput"),
+    settingsDisplayName: $("settingsDisplayName"),
+    settingsBeanId: $("settingsBeanId"),
+    settingsProfileSave: $("profileSaveBtn"),
+    settingsNotifications: $("settingsNotificationsToggle"),
+    settingsProductUpdates: $("settingsProductUpdatesToggle"),
+    settingsPersonality: $("settingsPersonalityBtn"),
+    settingsPersonalityName: $("settingsPersonalityName"),
+    settingsPersonalityDescription: $("settingsPersonalityDescription"),
+    settingsPlanName: $("settingsPlanName"),
+    settingsUpgrade: $("settingsUpgradeBtn"),
 
     themeTop: $("topBarDarkModeToggle"),
     themeSide: $("sidebarDarkModeToggle"),
@@ -99,22 +122,30 @@
 
   function toast(message, tone = "info") {
     const element = document.createElement("div");
+
     element.className = `neo-toast neo-toast-${tone}`;
     element.textContent = message;
 
     document.body.appendChild(element);
 
-    requestAnimationFrame(() => element.classList.add("show"));
+    requestAnimationFrame(() => {
+      element.classList.add("show");
+    });
 
     window.setTimeout(() => {
       element.classList.remove("show");
-      window.setTimeout(() => element.remove(), 220);
+
+      window.setTimeout(() => {
+        element.remove();
+      }, 220);
     }, 3600);
   }
 
   function escapeHtml(value) {
     const element = document.createElement("div");
+
     element.textContent = String(value || "");
+
     return element.innerHTML;
   }
 
@@ -126,49 +157,60 @@
     }
 
     try {
-      return window.DOMPurify.sanitize(window.marked.parse(text), {
-        USE_PROFILES: { html: true },
-        FORBID_TAGS: [
-          "script",
-          "style",
-          "iframe",
-          "object",
-          "embed",
-          "form",
-          "input",
-          "button",
-          "textarea",
-          "select"
-        ],
-        FORBID_ATTR: [
-          "style",
-          "srcdoc",
-          "formaction",
-          "onerror",
-          "onload",
-          "onclick",
-          "onmouseover",
-          "onfocus"
-        ]
-      });
+      return window.DOMPurify.sanitize(
+        window.marked.parse(text),
+        {
+          USE_PROFILES: {
+            html: true
+          },
+          FORBID_TAGS: [
+            "script",
+            "style",
+            "iframe",
+            "object",
+            "embed",
+            "form",
+            "input",
+            "button",
+            "textarea",
+            "select"
+          ],
+          FORBID_ATTR: [
+            "style",
+            "srcdoc",
+            "formaction",
+            "onerror",
+            "onload",
+            "onclick",
+            "onmouseover",
+            "onfocus"
+          ]
+        }
+      );
     } catch {
       return escapeHtml(text).replace(/\n/g, "<br>");
     }
   }
 
   async function json(response) {
-    const data = await response.json().catch(() => ({}));
+    const data = await response
+      .json()
+      .catch(() => ({}));
 
     if (response.status === 401) {
       window.location.replace("signup.html");
-      throw new Error("Your session has expired. Please log in again.");
+
+      throw new Error(
+        "Your session has expired. Please log in again."
+      );
     }
 
     if (!response.ok) {
       throw new Error(
         typeof data?.error === "string"
           ? data.error
-          : data?.error?.message || "The request failed."
+          : data?.error?.message ||
+              "The request failed."
       );
     }
 
@@ -187,17 +229,35 @@
   }
 
   function toggleTheme() {
-    const dark = !document.body.classList.contains("dark-mode");
+    const dark = !document.body.classList.contains(
+      "dark-mode"
+    );
 
-    document.body.classList.toggle("dark-mode", dark);
-    localStorage.setItem("neo_theme", dark ? "dark" : "light");
+    document.body.classList.toggle(
+      "dark-mode",
+      dark
+    );
+
+    localStorage.setItem(
+      "neo_theme",
+      dark ? "dark" : "light"
+    );
   }
 
   function setSidebar(open) {
-    if (!dom.sidebar) return;
+    if (!dom.sidebar) {
+      return;
+    }
 
-    dom.sidebar.classList.toggle("collapsed", !open);
-    document.body.classList.toggle("sidebar-collapsed", !open);
+    dom.sidebar.classList.toggle(
+      "collapsed",
+      !open
+    );
+
+    document.body.classList.toggle(
+      "sidebar-collapsed",
+      !open
+    );
 
     dom.sidebarScrim?.classList.toggle(
       "visible",
@@ -218,32 +278,50 @@
       return;
     }
 
-    setSidebar(localStorage.getItem("neo_desktop_sidebar") !== "collapsed");
+    setSidebar(
+      localStorage.getItem(
+        "neo_desktop_sidebar"
+      ) !== "collapsed"
+    );
   }
 
   function updateComposer() {
-    const hasText = Boolean(dom.input?.value.trim());
-    const multiline = Boolean(dom.input && dom.input.scrollHeight > 38);
+    const hasText = Boolean(
+      dom.input?.value.trim()
+    );
+
+    const multiline = Boolean(
+      dom.input &&
+        dom.input.scrollHeight > 38
+    );
 
     dom.composer?.classList.toggle(
       "is-expanded",
-      hasText || multiline || state.files.length > 0
+      hasText ||
+        multiline ||
+        state.files.length > 0
     );
   }
 
   function scrollToBottom() {
-    if (dom.scroll) dom.scroll.scrollTop = dom.scroll.scrollHeight;
+    if (dom.scroll) {
+      dom.scroll.scrollTop =
+        dom.scroll.scrollHeight;
+    }
   }
 
   function renderSuggestions() {
-    if (!dom.suggestions) return;
+    if (!dom.suggestions) {
+      return;
+    }
 
     const items = state.files.length
       ? [
           {
             icon: "search",
             label: "Summarize / Describe",
-            prompt: "Analyze and describe the attached files."
+            prompt:
+              "Analyze and describe the attached files."
           }
         ]
       : [
@@ -262,20 +340,25 @@
     dom.suggestions.innerHTML = "";
 
     items.forEach(item => {
-      const button = document.createElement("button");
+      const button =
+        document.createElement("button");
 
       button.className = "suggestion-chip";
       button.type = "button";
+
       button.innerHTML = `
         <i data-lucide="${item.icon}" size="14"></i>
         <span>${item.label}</span>
       `;
 
       button.addEventListener("click", () => {
-        if (!dom.input) return;
+        if (!dom.input) {
+          return;
+        }
 
         dom.input.value = item.prompt;
         dom.input.focus();
+
         updateComposer();
       });
 
@@ -286,40 +369,75 @@
   }
 
   function renderFiles() {
-    if (!dom.attached) return;
+    if (!dom.attached) {
+      return;
+    }
 
     dom.attached.innerHTML = "";
 
     state.files.forEach(item => {
-      const element = document.createElement("div");
+      const element =
+        document.createElement("div");
 
       const remove = () => {
-        state.files = state.files.filter(file => file.id !== item.id);
+        state.files = state.files.filter(
+          file => file.id !== item.id
+        );
+
         renderFiles();
         renderSuggestions();
         updateComposer();
       };
 
       if (item.category === "image") {
-        element.className = "image-preview-chip";
+        element.className =
+          "image-preview-chip";
 
         element.innerHTML = `
           <img src="${item.data}" alt="">
-          <button class="chip-remove-btn" type="button" aria-label="Remove image">×</button>
+          <button
+            class="chip-remove-btn"
+            type="button"
+            aria-label="Remove image"
+          >×</button>
         `;
 
-        element.querySelector("button")?.addEventListener("click", remove);
+        element
+          .querySelector("button")
+          ?.addEventListener(
+            "click",
+            remove
+          );
       } else {
         element.className = "file-chip";
 
         element.innerHTML = `
-          <i data-lucide="${item.category === "code" ? "code" : "file-text"}" size="14"></i>
+          <i
+            data-lucide="${
+              item.category === "code"
+                ? "code"
+                : "file-text"
+            }"
+            size="14"
+          ></i>
           <span></span>
-          <button class="file-chip-remove" type="button" aria-label="Remove file">×</button>
+          <button
+            class="file-chip-remove"
+            type="button"
+            aria-label="Remove file"
+          >×</button>
         `;
 
-        element.querySelector("span").textContent = item.name;
-        element.querySelector("button")?.addEventListener("click", remove);
+        element.querySelector(
+          "span"
+        ).textContent = item.name;
+
+        element
+          .querySelector("button")
+          ?.addEventListener(
+            "click",
+            remove
+          );
       }
 
       dom.attached.appendChild(element);
@@ -329,8 +447,13 @@
   }
 
   function supportedFile(file) {
-    const type = String(file?.type || "").toLowerCase();
-    const extension = String(file?.name || "")
+    const type = String(
+      file?.type || ""
+    ).toLowerCase();
+
+    const extension = String(
+      file?.name || ""
+    )
       .split(".")
       .pop()
       .toLowerCase();
@@ -343,24 +466,43 @@
       "text/plain"
     ];
 
-    const extensions = ["jpg", "jpeg", "png", "webp", "pdf", "txt"];
+    const extensions = [
+      "jpg",
+      "jpeg",
+      "png",
+      "webp",
+      "pdf",
+      "txt"
+    ];
 
-    return types.includes(type) && extensions.includes(extension);
+    return (
+      types.includes(type) &&
+      extensions.includes(extension)
+    );
   }
 
   function readFile(file, image) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    return new Promise(
+      (resolve, reject) => {
+        const reader = new FileReader();
 
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("Unable to read file."));
+        reader.onload = () => {
+          resolve(reader.result);
+        };
 
-      if (image) {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
+        reader.onerror = () => {
+          reject(
+            new Error("Unable to read file.")
+          );
+        };
+
+        if (image) {
+          reader.readAsDataURL(file);
+        } else {
+          reader.readAsText(file);
+        }
       }
-    });
+    );
   }
 
   async function addFiles(files) {
@@ -370,33 +512,65 @@
           `File "${file.name}" is not supported. Use JPG, PNG, WebP, PDF, or TXT.`,
           "error"
         );
+
         continue;
       }
 
       if (state.files.length >= MAX_FILES) {
-        toast(`Maximum ${MAX_FILES} files allowed.`, "error");
+        toast(
+          `Maximum ${MAX_FILES} files allowed.`,
+          "error"
+        );
+
         break;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        toast(`File "${file.name}" exceeds 4MB limit.`, "error");
+        toast(
+          `File "${file.name}" exceeds 4MB limit.`,
+          "error"
+        );
+
         continue;
       }
 
-      const image = file.type.startsWith("image/");
-      const extension = file.name.split(".").pop().toLowerCase();
+      const image =
+        file.type.startsWith("image/");
+
+      const extension = file.name
+        .split(".")
+        .pop()
+        .toLowerCase();
 
       const category = image
         ? "image"
-        : ["js", "ts", "py", "java", "html", "css", "json", "cpp"].includes(extension)
+        : [
+              "js",
+              "ts",
+              "py",
+              "java",
+              "html",
+              "css",
+              "json",
+              "cpp"
+            ].includes(extension)
           ? "code"
           : "document";
 
       state.files.push({
-        id: `file_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`,
+        id:
+          `file_${
+            crypto.randomUUID?.() ||
+            Math.random()
+              .toString(36)
+              .slice(2)
+          }`,
         name: file.name,
         category,
-        data: await readFile(file, image)
+        data: await readFile(
+          file,
+          image
+        )
       });
     }
 
@@ -405,10 +579,18 @@
     updateComposer();
   }
 
-  function renderMessage(role, content, thinking = false) {
-    const message = document.createElement("div");
+  function renderMessage(
+    role,
+    content,
+    thinking = false
+  ) {
+    const message =
+      document.createElement("div");
 
-    message.className = `message ${role}${thinking ? " is-thinking" : ""}`;
+    message.className =
+      `message ${role}${
+        thinking ? " is-thinking" : ""
+      }`;
 
     if (role === "user") {
       message.innerHTML = `
@@ -417,7 +599,9 @@
         </div>
       `;
 
-      message.querySelector(".message-content").textContent = content;
+      message.querySelector(
+        ".message-content"
+      ).textContent = content;
     } else {
       message.innerHTML = `
         <div class="message-content">
@@ -431,72 +615,117 @@
     }
 
     dom.messages?.appendChild(message);
+
     scrollToBottom();
 
     return message;
   }
 
-  function setThinkingError(element, error) {
-    element?.classList.remove("is-thinking");
+  function setThinkingError(
+    element,
+    error
+  ) {
+    element?.classList.remove(
+      "is-thinking"
+    );
 
-    const content = element?.querySelector(".message-content");
+    const content = element?.querySelector(
+      ".message-content"
+    );
 
     if (content) {
-      content.textContent = `Error: ${
-        error?.message || "Unable to complete this request."
-      }`;
+      content.textContent =
+        `Error: ${
+          error?.message ||
+          "Unable to complete this request."
+        }`;
 
       content.style.color = "#ef4444";
     }
   }
 
   function selectedPersonality() {
-    return personalities[state.personality]
+    return personalities[
+      state.personality
+    ]
       ? state.personality
       : "balanced";
   }
 
   function syncPersonality() {
-    document.querySelectorAll("[data-neo-personality]").forEach(button => {
-      const active =
-        button.dataset.neoPersonality === selectedPersonality();
+    document
+      .querySelectorAll(
+        "[data-neo-personality]"
+      )
+      .forEach(button => {
+        const active =
+          button.dataset.neoPersonality ===
+          selectedPersonality();
 
-      button.classList.toggle("is-selected", active);
-      button.setAttribute("aria-selected", String(active));
-    });
+        button.classList.toggle(
+          "is-selected",
+          active
+        );
+
+        button.setAttribute(
+          "aria-selected",
+          String(active)
+        );
+      });
   }
 
   function closePersonalityModal() {
-    dom.personalityModal?.classList.remove("show");
-    dom.personalityModal?.setAttribute("aria-hidden", "true");
+    dom.personalityModal?.classList.remove(
+      "show"
+    );
+
+    dom.personalityModal?.setAttribute(
+      "aria-hidden",
+      "true"
+    );
   }
 
   function openPersonalityModal() {
     syncPersonality();
-    dom.personalityModal?.classList.add("show");
-    dom.personalityModal?.setAttribute("aria-hidden", "false");
+
+    dom.personalityModal?.classList.add(
+      "show"
+    );
+
+    dom.personalityModal?.setAttribute(
+      "aria-hidden",
+      "false"
+    );
   }
 
   async function loadHistory() {
-    if (!dom.history) return;
+    if (!dom.history) {
+      return;
+    }
 
     try {
-      const response = await fetch("/api/history", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          action: "list",
-          limit: 100
-        })
-      });
+      const response = await fetch(
+        "/api/history",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            action: "list",
+            limit: 100
+          })
+        }
+      );
 
       const data = await json(response);
 
-      const conversations = Array.isArray(data.conversations)
+      const conversations = Array.isArray(
+        data.conversations
+      )
         ? data.conversations
         : [];
 
@@ -504,16 +733,19 @@
         ? conversations.filter(item =>
             String(item.title || "")
               .toLowerCase()
-              .includes(state.historySearch)
+              .includes(
+                state.historySearch
+              )
           )
         : conversations;
 
       dom.history.innerHTML = "";
 
       if (!visible.length) {
-        dom.history.textContent = conversations.length
-          ? "No matching chats"
-          : "No recent chats";
+        dom.history.textContent =
+          conversations.length
+            ? "No matching chats"
+            : "No recent chats";
 
         dom.history.style.cssText =
           "padding:10px;color:var(--text-muted);font-size:12px";
@@ -524,81 +756,128 @@
       dom.history.removeAttribute("style");
 
       visible.forEach(item => {
-        const row = document.createElement("div");
+        const row =
+          document.createElement("div");
 
-        row.className = `history-item${
-          state.conversationId === item.id ? " active" : ""
-        }`;
+        row.className =
+          `history-item${
+            state.conversationId === item.id
+              ? " active"
+              : ""
+          }`;
 
         row.innerHTML = `
           <span class="history-item-title"></span>
+
           <div class="history-item-actions">
-            <button class="history-action-btn" type="button" aria-label="Conversation options">
-              <i data-lucide="more-horizontal" size="14"></i>
+            <button
+              class="history-action-btn"
+              type="button"
+              aria-label="Conversation options"
+            >
+              <i
+                data-lucide="more-horizontal"
+                size="14"
+              ></i>
             </button>
           </div>
         `;
 
-        row.querySelector(".history-item-title").textContent =
+        row.querySelector(
+          ".history-item-title"
+        ).textContent =
           item.title || "New Chat";
 
-        row.addEventListener("click", () => {
-          loadConversation(item.id);
-        });
-
-        row.querySelector("button")?.addEventListener("click", event => {
-          event.stopPropagation();
-
-          activeHistoryId = item.id;
-
-          const rect = event.currentTarget.getBoundingClientRect();
-
-          if (dom.historyMenu) {
-            dom.historyMenu.style.top = `${rect.bottom}px`;
-            dom.historyMenu.style.left = `${rect.left}px`;
-            dom.historyMenu.classList.add("show");
+        row.addEventListener(
+          "click",
+          () => {
+            loadConversation(item.id);
           }
-        });
+        );
+
+        row
+          .querySelector("button")
+          ?.addEventListener(
+            "click",
+            event => {
+              event.stopPropagation();
+
+              activeHistoryId = item.id;
+
+              const rect =
+                event.currentTarget
+                  .getBoundingClientRect();
+
+              if (dom.historyMenu) {
+                dom.historyMenu.style.top =
+                  `${rect.bottom}px`;
+
+                dom.historyMenu.style.left =
+                  `${rect.left}px`;
+
+                dom.historyMenu.classList.add(
+                  "show"
+                );
+              }
+            }
+          );
 
         dom.history.appendChild(row);
       });
 
       window.lucide?.createIcons();
     } catch (error) {
-      console.error("History load failed:", error);
+      console.error(
+        "History load failed:",
+        error
+      );
     }
   }
 
   async function loadConversation(id) {
     try {
-      const response = await fetch("/api/history", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          action: "get",
-          conversationId: id
-        })
-      });
+      const response = await fetch(
+        "/api/history",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            action: "get",
+            conversationId: id
+          })
+        }
+      );
 
       const data = await json(response);
 
       state.conversationId = id;
 
-      state.messages = (data.messages || []).map(item => ({
+      state.messages = (
+        data.messages || []
+      ).map(item => ({
         role: item.role,
         content: item.content || ""
       }));
 
-      if (dom.messages) dom.messages.innerHTML = "";
-      if (dom.hero) dom.hero.style.display = "none";
+      if (dom.messages) {
+        dom.messages.innerHTML = "";
+      }
+
+      if (dom.hero) {
+        dom.hero.style.display = "none";
+      }
 
       state.messages.forEach(item => {
         if (item.role !== "system") {
-          renderMessage(item.role, item.content);
+          renderMessage(
+            item.role,
+            item.content
+          );
         }
       });
 
@@ -618,8 +897,13 @@
     state.conversationId = null;
     activeHistoryId = null;
 
-    if (dom.messages) dom.messages.innerHTML = "";
-    if (dom.hero) dom.hero.style.display = "block";
+    if (dom.messages) {
+      dom.messages.innerHTML = "";
+    }
+
+    if (dom.hero) {
+      dom.hero.style.display = "block";
+    }
 
     renderFiles();
     renderSuggestions();
@@ -628,29 +912,45 @@
   }
 
   async function sendMessage() {
-    if (!state.ready || state.generating) return;
+    if (!state.ready || state.generating) {
+      return;
+    }
 
-    const text = dom.input?.value.trim() || "";
+    const text =
+      dom.input?.value.trim() || "";
 
-    if (!text && !state.files.length) return;
+    if (!text && !state.files.length) {
+      return;
+    }
 
     state.generating = true;
 
-    const pendingFiles = [...state.files];
+    const pendingFiles = [
+      ...state.files
+    ];
+
     let content = text;
 
     if (pendingFiles.length) {
       content = `${text}
 
 ${pendingFiles
-  .map(file => `[Attached ${file.category}: ${file.name}]
-${file.data}`)
+  .map(
+    file =>
+      `[Attached ${file.category}: ${file.name}]
+${file.data}`
+  )
   .join("\n\n")}`.trim();
     }
 
     if (content.length > 120000) {
       state.generating = false;
-      toast("The message and attached files are too large.", "error");
+
+      toast(
+        "The message and attached files are too large.",
+        "error"
+      );
+
       return;
     }
 
@@ -659,11 +959,14 @@ ${file.data}`)
       dom.input.style.height = "auto";
     }
 
-    if (dom.hero) dom.hero.style.display = "none";
+    if (dom.hero) {
+      dom.hero.style.display = "none";
+    }
 
     renderMessage(
       "user",
-      text || `[Uploaded ${pendingFiles.length} file(s)]`
+      text ||
+        `[Uploaded ${pendingFiles.length} file(s)]`
     );
 
     state.messages.push({
@@ -677,46 +980,69 @@ ${file.data}`)
     renderSuggestions();
     updateComposer();
 
-    const thinking = renderMessage("assistant", "", true);
+    const thinking = renderMessage(
+      "assistant",
+      "",
+      true
+    );
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          messages: state.messages,
-          conversationId: state.conversationId,
-          model: state.model,
-          isDeepResearch: state.deepResearch,
-          personality: selectedPersonality()
-        })
-      });
+      const response = await fetch(
+        "/api/chat",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            messages: state.messages,
+            conversationId:
+              state.conversationId,
+            model: state.model,
+            isDeepResearch:
+              state.deepResearch,
+            personality:
+              selectedPersonality()
+          })
+        }
+      );
 
       const data = await json(response);
 
       const reply = String(
-        data.reply || data?.choices?.[0]?.message?.content || ""
+        data.reply ||
+          data?.choices?.[0]?.message
+            ?.content ||
+          ""
       ).trim();
 
       if (!reply) {
-        throw new Error("The AI response was empty.");
+        throw new Error(
+          "The AI response was empty."
+        );
       }
 
       state.conversationId =
-        typeof data.conversationId === "string"
+        typeof data.conversationId ===
+        "string"
           ? data.conversationId
           : state.conversationId;
 
-      thinking.classList.remove("is-thinking");
+      thinking.classList.remove(
+        "is-thinking"
+      );
 
-      const output = thinking.querySelector(".message-content");
+      const output =
+        thinking.querySelector(
+          ".message-content"
+        );
 
       if (output) {
-        output.innerHTML = markdown(reply);
+        output.innerHTML =
+          markdown(reply);
       }
 
       state.messages.push({
@@ -726,115 +1052,178 @@ ${file.data}`)
 
       await loadHistory();
     } catch (error) {
-      setThinkingError(thinking, error);
+      setThinkingError(
+        thinking,
+        error
+      );
 
       state.files = pendingFiles;
+
       renderFiles();
       renderSuggestions();
       updateComposer();
     } finally {
       state.generating = false;
+
       window.lucide?.createIcons();
     }
   }
 
   async function startCheckout() {
-    if (!dom.upgradeAction) return;
+    if (!dom.upgradeAction) {
+      return;
+    }
 
-    const original = dom.upgradeAction.textContent;
+    const original =
+      dom.upgradeAction.textContent;
 
     dom.upgradeAction.disabled = true;
-    dom.upgradeAction.textContent = "Opening secure checkout...";
+
+    dom.upgradeAction.textContent =
+      "Opening secure checkout...";
 
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: "{}"
-      });
+      const response = await fetch(
+        "/api/checkout",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Accept: "application/json"
+          },
+          body: "{}"
+        }
+      );
 
       const data = await json(response);
 
       if (!data.url) {
-        throw new Error("Checkout URL was not returned.");
+        throw new Error(
+          "Checkout URL was not returned."
+        );
       }
 
       window.location.assign(data.url);
     } catch (error) {
-      toast(error.message || "Checkout could not be opened.", "error");
+      toast(
+        error.message ||
+          "Checkout could not be opened.",
+        "error"
+      );
     } finally {
       dom.upgradeAction.disabled = false;
-      dom.upgradeAction.textContent = original;
+
+      dom.upgradeAction.textContent =
+        original;
     }
   }
 
   function setupSpeech() {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      return;
+    }
 
-    recognition = new SpeechRecognition();
+    recognition =
+      new SpeechRecognition();
+
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       document
-        .querySelector(".composer-input-row")
-        ?.classList.add("is-transcribing");
+        .querySelector(
+          ".composer-input-row"
+        )
+        ?.classList.add(
+          "is-transcribing"
+        );
     };
 
-    recognition.onend = recognition.onerror = () => {
-      document
-        .querySelector(".composer-input-row")
-        ?.classList.remove("is-transcribing");
-    };
+    recognition.onend =
+      recognition.onerror = () => {
+        document
+          .querySelector(
+            ".composer-input-row"
+          )
+          ?.classList.remove(
+            "is-transcribing"
+          );
+      };
 
     recognition.onresult = event => {
-      const text = Array.from(event.results)
-        .map(result => result[0].transcript)
+      const text = Array.from(
+        event.results
+      )
+        .map(
+          result =>
+            result[0].transcript
+        )
         .join("");
 
-      if (dom.input) dom.input.value = text;
+      if (dom.input) {
+        dom.input.value = text;
+      }
 
       updateComposer();
     };
 
-    dom.mic?.addEventListener("click", () => {
-      try {
-        recognition.start();
-      } catch {
+    dom.mic?.addEventListener(
+      "click",
+      () => {
+        try {
+          recognition.start();
+        } catch {
+          recognition.stop();
+        }
+      }
+    );
+
+    dom.stopMic?.addEventListener(
+      "click",
+      () => {
         recognition.stop();
       }
-    });
-
-    dom.stopMic?.addEventListener("click", () => {
-      recognition.stop();
-    });
+    );
   }
 
   async function restoreSession() {
-    const response = await fetch("/api/auth", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        Accept: "application/json"
+    const response = await fetch(
+      "/api/auth",
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
       }
-    });
+    );
 
-    const data = await response.json().catch(() => ({}));
+    const data = await response
+      .json()
+      .catch(() => ({}));
 
-    if (!response.ok || !data.authenticated || !data.user) {
-      window.location.replace("signup.html");
+    if (
+      !response.ok ||
+      !data.authenticated ||
+      !data.user
+    ) {
+      window.location.replace(
+        "signup.html"
+      );
+
       return false;
     }
 
-    const plan = String(data.user.planType || "free").toLowerCase();
+    const plan = String(
+      data.user.planType || "free"
+    ).toLowerCase();
 
     state.plan = [
       "pro",
@@ -852,21 +1241,530 @@ ${file.data}`)
     return true;
   }
 
-  async function renderProfile() {
-    const username = String(state.user?.username || "user")
+  function cleanUsername(value) {
+    return String(value || "user")
+      .trim()
       .replace(/^@/, "")
       .replace(/@bean$/i, "");
+  }
+
+  function avatarInitial() {
+    const name =
+      state.profile?.displayName ||
+      cleanUsername(
+        state.user?.username
+      );
+
+    return (
+      String(name)
+        .charAt(0)
+        .toUpperCase() || "U"
+    );
+  }
+
+  function paintAvatar(
+    element,
+    avatarUrl
+  ) {
+    if (!element) {
+      return;
+    }
+
+    element.style.backgroundImage =
+      "none";
+
+    element.textContent =
+      avatarInitial();
+
+    if (!avatarUrl) {
+      return;
+    }
+
+    const image = new Image();
+
+    image.onload = () => {
+      const safeUrl = avatarUrl.replace(
+        /["\\]/g,
+        "\\$&"
+      );
+
+      element.style.backgroundImage =
+        `url("${safeUrl}")`;
+
+      element.textContent = "";
+    };
+
+    image.onerror = () => {
+      element.style.backgroundImage =
+        "none";
+
+      element.textContent =
+        avatarInitial();
+    };
+
+    image.src = avatarUrl;
+  }
+
+  function personalityDescription(
+    key
+  ) {
+    const descriptions = {
+      balanced:
+        "Clear, helpful, and natural.",
+
+      researcher:
+        "Evidence-led and careful.",
+
+      strategist:
+        "Focused on plans and decisions.",
+
+      creative:
+        "Fresh ideas and original thinking.",
+
+      teacher:
+        "Simple, structured explanations.",
+
+      coding_expert:
+        "Practical and accurate code.",
+
+      business_advisor:
+        "Focused on growth and execution.",
+
+      deep_thinker:
+        "Careful reasoning for complex problems.",
+
+      warm_companion:
+        "Supportive, calm, and friendly."
+    };
+
+    return (
+      descriptions[key] ||
+      descriptions.balanced
+    );
+  }
+
+  function renderSettingsProfile() {
+    const username = cleanUsername(
+      state.user?.username
+    );
+
+    const profile =
+      state.profile || {};
+
+    const displayName =
+      profile.displayName || username;
+
+    if (dom.settingsDisplayName) {
+      dom.settingsDisplayName.value =
+        displayName;
+    }
+
+    if (dom.settingsBeanId) {
+      dom.settingsBeanId.value =
+        `${username}@bean`;
+    }
+
+    if (dom.settingsNotifications) {
+      dom.settingsNotifications.checked =
+        profile.notificationsEnabled !==
+        false;
+    }
+
+    if (dom.settingsProductUpdates) {
+      dom.settingsProductUpdates.checked =
+        profile.productUpdatesEnabled ===
+        true;
+    }
+
+    if (dom.settingsPersonalityName) {
+      dom.settingsPersonalityName.textContent =
+        personalities[
+          state.personality
+        ] || "Balanced";
+    }
+
+    if (
+      dom.settingsPersonalityDescription
+    ) {
+      dom.settingsPersonalityDescription.textContent =
+        personalityDescription(
+          state.personality
+        );
+    }
+
+    if (dom.settingsPlanName) {
+      dom.settingsPlanName.textContent =
+        isPro()
+          ? "NEO Pro"
+          : "Free Plan";
+    }
+
+    paintAvatar(
+      dom.settingsAvatar,
+      state.removeAvatar
+        ? null
+        : state.pendingAvatarDataUrl ||
+            profile.avatarUrl ||
+            null
+    );
+  }
+
+  function applyProfile(profile) {
+    const username = cleanUsername(
+      state.user?.username
+    );
+
+    state.profile = {
+      displayName:
+        String(
+          profile?.displayName ||
+            username
+        ).trim() || username,
+
+      avatarUrl:
+        typeof profile?.avatarUrl ===
+        "string"
+          ? profile.avatarUrl
+          : null,
+
+      selectedPersonality:
+        personalities[
+          profile?.selectedPersonality
+        ]
+          ? profile.selectedPersonality
+          : "balanced",
+
+      notificationsEnabled:
+        profile?.notificationsEnabled !==
+        false,
+
+      productUpdatesEnabled:
+        profile?.productUpdatesEnabled ===
+        true
+    };
+
+    state.personality =
+      state.profile.selectedPersonality;
+
+    localStorage.setItem(
+      "neo_personality",
+      state.personality
+    );
 
     if (dom.username) {
-      dom.username.textContent = `@${username}`;
+      dom.username.textContent =
+        state.profile.displayName ===
+        username
+          ? `@${username}`
+          : state.profile.displayName;
     }
 
     if (dom.planBadge) {
-      dom.planBadge.textContent = isPro() ? "Pro Plan" : "Free Plan";
+      dom.planBadge.textContent =
+        isPro()
+          ? "Pro Plan"
+          : "Free Plan";
     }
 
-    if (dom.avatar) {
-      dom.avatar.textContent = username.charAt(0).toUpperCase() || "U";
+    paintAvatar(
+      dom.avatar,
+      state.profile.avatarUrl
+    );
+
+    renderSettingsProfile();
+    syncPersonality();
+  }
+
+  async function loadProfile() {
+    const response = await fetch(
+      "/api/profile",
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
+      }
+    );
+
+    const data = await json(response);
+
+    if (data.user) {
+      state.user = {
+        ...state.user,
+        ...data.user
+      };
+    }
+
+    applyProfile(
+      data.profile || {}
+    );
+  }
+
+  async function renderProfile() {
+    const username = cleanUsername(
+      state.user?.username
+    );
+
+    if (dom.username) {
+      dom.username.textContent =
+        `@${username}`;
+    }
+
+    if (dom.planBadge) {
+      dom.planBadge.textContent =
+        isPro()
+          ? "Pro Plan"
+          : "Free Plan";
+    }
+
+    paintAvatar(
+      dom.avatar,
+      null
+    );
+
+    try {
+      await loadProfile();
+    } catch (error) {
+      console.warn(
+        "Profile could not be loaded:",
+        error?.message || error
+      );
+    }
+  }
+
+  function selectSettingsTab(
+    tabName
+  ) {
+    document
+      .querySelectorAll(
+        "[data-settings-tab]"
+      )
+      .forEach(button => {
+        button.classList.toggle(
+          "is-active",
+          button.dataset.settingsTab ===
+            tabName
+        );
+      });
+
+    document
+      .querySelectorAll(
+        "[data-settings-panel]"
+      )
+      .forEach(panel => {
+        const active =
+          panel.dataset.settingsPanel ===
+          tabName;
+
+        panel.hidden = !active;
+
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
+      });
+  }
+
+  function openSettings() {
+    state.pendingAvatarDataUrl = null;
+    state.removeAvatar = false;
+
+    if (dom.settingsThemeValue) {
+      dom.settingsThemeValue.textContent =
+        document.body.classList.contains(
+          "dark-mode"
+        )
+          ? "Dark"
+          : "Light";
+    }
+
+    renderSettingsProfile();
+    selectSettingsTab("general");
+
+    dom.profileMenu?.classList.remove(
+      "show"
+    );
+
+    dom.settingsModal?.classList.add(
+      "show"
+    );
+
+    dom.settingsModal?.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+    window.lucide?.createIcons();
+  }
+
+  function closeSettings() {
+    state.pendingAvatarDataUrl = null;
+    state.removeAvatar = false;
+
+    dom.settingsModal?.classList.remove(
+      "show"
+    );
+
+    dom.settingsModal?.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+
+  function readAvatarFile(file) {
+    return new Promise(
+      (resolve, reject) => {
+        if (
+          !file ||
+          ![
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ].includes(file.type)
+        ) {
+          reject(
+            new Error(
+              "Choose a JPG, PNG, or WebP image."
+            )
+          );
+
+          return;
+        }
+
+        if (
+          file.size >
+          2 * 1024 * 1024
+        ) {
+          reject(
+            new Error(
+              "Profile picture must be smaller than 2 MB."
+            )
+          );
+
+          return;
+        }
+
+        const reader =
+          new FileReader();
+
+        reader.onload = () => {
+          resolve(
+            String(
+              reader.result || ""
+            )
+          );
+        };
+
+        reader.onerror = () => {
+          reject(
+            new Error(
+              "Unable to read this image."
+            )
+          );
+        };
+
+        reader.readAsDataURL(file);
+      }
+    );
+  }
+
+  async function patchProfile(
+    changes
+  ) {
+    const response = await fetch(
+      "/api/profile",
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type":
+            "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(changes)
+      }
+    );
+
+    const data = await json(response);
+
+    if (data.user) {
+      state.user = {
+        ...state.user,
+        ...data.user
+      };
+    }
+
+    applyProfile(
+      data.profile || {}
+    );
+
+    return data;
+  }
+
+  async function saveProfileSettings() {
+    if (!dom.settingsProfileSave) {
+      return;
+    }
+
+    const originalText =
+      dom.settingsProfileSave
+        .textContent;
+
+    dom.settingsProfileSave.disabled =
+      true;
+
+    dom.settingsProfileSave.textContent =
+      "Saving...";
+
+    const changes = {
+      displayName:
+        dom.settingsDisplayName?.value.trim() ||
+        "",
+
+      selectedPersonality:
+        selectedPersonality(),
+
+      notificationsEnabled:
+        dom.settingsNotifications
+          ?.checked !== false,
+
+      productUpdatesEnabled:
+        dom.settingsProductUpdates
+          ?.checked === true
+    };
+
+    if (state.removeAvatar) {
+      changes.removeAvatar = true;
+    } else if (
+      state.pendingAvatarDataUrl
+    ) {
+      changes.avatarDataUrl =
+        state.pendingAvatarDataUrl;
+    }
+
+    try {
+      await patchProfile(changes);
+
+      state.pendingAvatarDataUrl = null;
+      state.removeAvatar = false;
+
+      toast(
+        "Profile settings saved."
+      );
+    } catch (error) {
+      toast(
+        error.message,
+        "error"
+      );
+
+      renderSettingsProfile();
+    } finally {
+      dom.settingsProfileSave.disabled =
+        false;
+
+      dom.settingsProfileSave.textContent =
+        originalText;
     }
   }
 
@@ -876,312 +1774,842 @@ ${file.data}`)
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type":
+            "application/json"
         },
         body: JSON.stringify({
           action: "logout"
         })
       });
     } finally {
-      window.location.replace("signup.html");
+      window.location.replace(
+        "signup.html"
+      );
     }
   }
 
   function setupEvents() {
     applyTheme();
 
-    dom.themeTop?.addEventListener("click", toggleTheme);
-    dom.themeSide?.addEventListener("click", toggleTheme);
-
-    dom.sidebarToggle?.addEventListener("click", () => {
-      setSidebar(true);
-    });
-
-    dom.sidebarClose?.addEventListener("click", () => {
-      setSidebar(false);
-    });
-
-    dom.sidebarScrim?.addEventListener("click", () => {
-      setSidebar(false);
-    });
-
-    dom.newChat?.addEventListener("click", startNewChat);
-
-    dom.profile?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.profileMenu?.classList.toggle("show");
-    });
-
-    dom.logout?.addEventListener("click", logout);
-
-    dom.modelBadge?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.modelMenu?.classList.toggle("show");
-    });
-
-    dom.modelL10?.addEventListener("click", () => {
-      state.model = "l1.0";
-
-      if (dom.modelText) {
-        dom.modelText.textContent = "NEO L1.0";
-      }
-
-      dom.modelL10.classList.add("active");
-      dom.modelL12?.classList.remove("active");
-      dom.modelMenu?.classList.remove("show");
-    });
-
-    dom.modelL12?.addEventListener("click", () => {
-      dom.modelMenu?.classList.remove("show");
-
-      if (!isPro()) {
-        dom.upgradeModal?.classList.add("show");
-        return;
-      }
-
-      state.model = "l1.2";
-
-      if (dom.modelText) {
-        dom.modelText.textContent = "NEO L1.2 Pro";
-      }
-
-      dom.modelL12.classList.add("active");
-      dom.modelL10?.classList.remove("active");
-    });
-
-    dom.input?.addEventListener("input", () => {
-      dom.input.style.height = "auto";
-      dom.input.style.height = `${Math.min(dom.input.scrollHeight, 160)}px`;
-
-      updateComposer();
-    });
-
-    dom.input?.addEventListener("keydown", event => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
-
-    dom.send?.addEventListener("click", sendMessage);
-
-    document.querySelectorAll("[data-prompt]").forEach(button => {
-      button.addEventListener("click", () => {
-        if (dom.input) {
-          dom.input.value = button.dataset.prompt || "";
-        }
-
-        sendMessage();
-      });
-    });
-
-    dom.attach?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.attachMenu?.classList.toggle("show");
-    });
-
-    dom.addFiles?.addEventListener("click", () => {
-      dom.attachMenu?.classList.remove("show");
-      dom.fileInput?.click();
-    });
-
-    dom.fileInput?.addEventListener("change", event => {
-      addFiles(Array.from(event.target.files || []));
-      event.target.value = "";
-    });
-
-    dom.input?.addEventListener("paste", event => {
-      const files = Array.from(event.clipboardData?.items || [])
-        .filter(item => item.kind === "file")
-        .map(item => item.getAsFile())
-        .filter(Boolean);
-
-      if (files.length) {
-        addFiles(files);
-      }
-    });
-
-    ["dragenter", "dragover", "dragleave", "drop"].forEach(name => {
-      dom.composerWrapper?.addEventListener(name, event => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-    });
-
-    dom.composerWrapper?.addEventListener("dragenter", () => {
-      dom.dropOverlay?.classList.add("active");
-    });
-
-    dom.composerWrapper?.addEventListener("dragover", () => {
-      dom.dropOverlay?.classList.add("active");
-    });
-
-    dom.dropOverlay?.addEventListener("dragleave", () => {
-      dom.dropOverlay?.classList.remove("active");
-    });
-
-    dom.composerWrapper?.addEventListener("drop", event => {
-      dom.dropOverlay?.classList.remove("active");
-
-      addFiles(Array.from(event.dataTransfer?.files || []));
-    });
-
-    dom.deepResearch?.addEventListener("click", () => {
-      if (!isPro()) {
-        dom.upgradeModal?.classList.add("show");
-        return;
-      }
-
-      state.deepResearch = !state.deepResearch;
-
-      dom.deepResearch.classList.toggle(
-        "active-mode",
-        state.deepResearch
-      );
-    });
-
-    dom.personalities?.addEventListener("click", () => {
-      dom.attachMenu?.classList.remove("show");
-      openPersonalityModal();
-    });
-
-    dom.personalityClose?.addEventListener(
+    dom.themeTop?.addEventListener(
       "click",
-      closePersonalityModal
+      toggleTheme
     );
 
-    dom.personalityModal?.addEventListener("click", event => {
-      if (event.target === dom.personalityModal) {
-        closePersonalityModal();
+    dom.themeSide?.addEventListener(
+      "click",
+      toggleTheme
+    );
+
+    dom.sidebarToggle?.addEventListener(
+      "click",
+      () => {
+        setSidebar(true);
       }
-    });
+    );
 
-    document.querySelectorAll("[data-neo-personality]").forEach(button => {
-      button.addEventListener("click", () => {
-        const personality = button.dataset.neoPersonality;
+    dom.sidebarClose?.addEventListener(
+      "click",
+      () => {
+        setSidebar(false);
+      }
+    );
 
-        if (!personalities[personality]) return;
+    dom.sidebarScrim?.addEventListener(
+      "click",
+      () => {
+        setSidebar(false);
+      }
+    );
 
-        state.personality = personality;
-        localStorage.setItem("neo_personality", personality);
+    dom.newChat?.addEventListener(
+      "click",
+      startNewChat
+    );
 
-        syncPersonality();
-        closePersonalityModal();
+    dom.profile?.addEventListener(
+      "click",
+      event => {
+        event.stopPropagation();
 
-        toast(`${personalities[personality]} personality selected.`);
+        dom.profileMenu?.classList.toggle(
+          "show"
+        );
+      }
+    );
+
+    dom.settings?.addEventListener(
+      "click",
+      openSettings
+    );
+
+    dom.settingsClose?.addEventListener(
+      "click",
+      closeSettings
+    );
+
+    dom.settingsModal?.addEventListener(
+      "click",
+      event => {
+        if (
+          event.target ===
+          dom.settingsModal
+        ) {
+          closeSettings();
+        }
+      }
+    );
+
+    document
+      .querySelectorAll(
+        "[data-settings-tab]"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            selectSettingsTab(
+              button.dataset.settingsTab
+            );
+          }
+        );
       });
-    });
 
-    dom.upgradeClose?.addEventListener("click", () => {
-      dom.upgradeModal?.classList.remove("show");
-    });
+    dom.settingsTheme?.addEventListener(
+      "click",
+      () => {
+        toggleTheme();
 
-    dom.upgradeLater?.addEventListener("click", () => {
-      dom.upgradeModal?.classList.remove("show");
-    });
-
-    dom.upgradeModal?.addEventListener("click", event => {
-      if (event.target === dom.upgradeModal) {
-        dom.upgradeModal.classList.remove("show");
+        if (
+          dom.settingsThemeValue
+        ) {
+          dom.settingsThemeValue.textContent =
+            document.body.classList.contains(
+              "dark-mode"
+            )
+              ? "Dark"
+              : "Light";
+        }
       }
+    );
+
+    dom.settingsVoice?.addEventListener(
+      "change",
+      () => {
+        if (dom.mic) {
+          dom.mic.hidden =
+            !dom.settingsVoice.checked;
+        }
+
+        if (
+          !dom.settingsVoice.checked
+        ) {
+          try {
+            recognition?.stop();
+          } catch {
+            // Recognition is already stopped.
+          }
+        }
+      }
+    );
+
+    dom.settingsAvatarChange
+      ?.addEventListener(
+        "click",
+        () => {
+          dom.settingsAvatarInput
+            ?.click();
+        }
+      );
+
+    dom.settingsAvatarInput
+      ?.addEventListener(
+        "change",
+        async event => {
+          const file =
+            event.target.files?.[0];
+
+          event.target.value = "";
+
+          if (!file) {
+            return;
+          }
+
+          try {
+            state.pendingAvatarDataUrl =
+              await readAvatarFile(
+                file
+              );
+
+            state.removeAvatar = false;
+
+            renderSettingsProfile();
+          } catch (error) {
+            toast(
+              error.message,
+              "error"
+            );
+          }
+        }
+      );
+
+    dom.settingsAvatarRemove
+      ?.addEventListener(
+        "click",
+        () => {
+          state.pendingAvatarDataUrl =
+            null;
+
+          state.removeAvatar = true;
+
+          renderSettingsProfile();
+        }
+      );
+
+    dom.settingsProfileSave
+      ?.addEventListener(
+        "click",
+        saveProfileSettings
+      );
+
+    dom.settingsNotifications
+      ?.addEventListener(
+        "change",
+        async () => {
+          try {
+            await patchProfile({
+              notificationsEnabled:
+                dom
+                  .settingsNotifications
+                  .checked
+            });
+          } catch (error) {
+            dom.settingsNotifications.checked =
+              state.profile
+                ?.notificationsEnabled !==
+              false;
+
+            toast(
+              error.message,
+              "error"
+            );
+          }
+        }
+      );
+
+    dom.settingsProductUpdates
+      ?.addEventListener(
+        "change",
+        async () => {
+          try {
+            await patchProfile({
+              productUpdatesEnabled:
+                dom
+                  .settingsProductUpdates
+                  .checked
+            });
+          } catch (error) {
+            dom.settingsProductUpdates.checked =
+              state.profile
+                ?.productUpdatesEnabled ===
+              true;
+
+            toast(
+              error.message,
+              "error"
+            );
+          }
+        }
+      );
+
+    dom.settingsPersonality
+      ?.addEventListener(
+        "click",
+        () => {
+          closeSettings();
+          openPersonalityModal();
+        }
+      );
+
+    dom.settingsUpgrade?.addEventListener(
+      "click",
+      startCheckout
+    );
+
+    dom.logout?.addEventListener(
+      "click",
+      logout
+    );
+
+    dom.modelBadge?.addEventListener(
+      "click",
+      event => {
+        event.stopPropagation();
+
+        dom.modelMenu?.classList.toggle(
+          "show"
+        );
+      }
+    );
+
+    dom.modelL10?.addEventListener(
+      "click",
+      () => {
+        state.model = "l1.0";
+
+        if (dom.modelText) {
+          dom.modelText.textContent =
+            "NEO L1.0";
+        }
+
+        dom.modelL10.classList.add(
+          "active"
+        );
+
+        dom.modelL12?.classList.remove(
+          "active"
+        );
+
+        dom.modelMenu?.classList.remove(
+          "show"
+        );
+      }
+    );
+
+    dom.modelL12?.addEventListener(
+      "click",
+      () => {
+        dom.modelMenu?.classList.remove(
+          "show"
+        );
+
+        if (!isPro()) {
+          dom.upgradeModal?.classList.add(
+            "show"
+          );
+
+          return;
+        }
+
+        state.model = "l1.2";
+
+        if (dom.modelText) {
+          dom.modelText.textContent =
+            "NEO L1.2 Pro";
+        }
+
+        dom.modelL12.classList.add(
+          "active"
+        );
+
+        dom.modelL10?.classList.remove(
+          "active"
+        );
+      }
+    );
+
+    dom.input?.addEventListener(
+      "input",
+      () => {
+        dom.input.style.height =
+          "auto";
+
+        dom.input.style.height =
+          `${Math.min(
+            dom.input.scrollHeight,
+            160
+          )}px`;
+
+        updateComposer();
+      }
+    );
+
+    dom.input?.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+          event.preventDefault();
+          sendMessage();
+        }
+      }
+    );
+
+    dom.send?.addEventListener(
+      "click",
+      sendMessage
+    );
+
+    document
+      .querySelectorAll(
+        "[data-prompt]"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            if (dom.input) {
+              dom.input.value =
+                button.dataset.prompt ||
+                "";
+            }
+
+            sendMessage();
+          }
+        );
+      });
+
+    dom.attach?.addEventListener(
+      "click",
+      event => {
+        event.stopPropagation();
+
+        dom.attachMenu?.classList.toggle(
+          "show"
+        );
+      }
+    );
+
+    dom.addFiles?.addEventListener(
+      "click",
+      () => {
+        dom.attachMenu?.classList.remove(
+          "show"
+        );
+
+        dom.fileInput?.click();
+      }
+    );
+
+    dom.fileInput?.addEventListener(
+      "change",
+      event => {
+        addFiles(
+          Array.from(
+            event.target.files || []
+          )
+        );
+
+        event.target.value = "";
+      }
+    );
+
+    dom.input?.addEventListener(
+      "paste",
+      event => {
+        const files = Array.from(
+          event.clipboardData?.items ||
+            []
+        )
+          .filter(
+            item =>
+              item.kind === "file"
+          )
+          .map(item =>
+            item.getAsFile()
+          )
+          .filter(Boolean);
+
+        if (files.length) {
+          addFiles(files);
+        }
+      }
+    );
+
+    [
+      "dragenter",
+      "dragover",
+      "dragleave",
+      "drop"
+    ].forEach(name => {
+      dom.composerWrapper
+        ?.addEventListener(
+          name,
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        );
     });
 
-    dom.upgradeAction?.addEventListener("click", startCheckout);
+    dom.composerWrapper
+      ?.addEventListener(
+        "dragenter",
+        () => {
+          dom.dropOverlay?.classList.add(
+            "active"
+          );
+        }
+      );
 
-    dom.historySearch?.addEventListener("input", event => {
-      state.historySearch = String(event.target.value || "")
-        .trim()
-        .toLowerCase();
+    dom.composerWrapper
+      ?.addEventListener(
+        "dragover",
+        () => {
+          dom.dropOverlay?.classList.add(
+            "active"
+          );
+        }
+      );
 
-      if (dom.clearHistorySearch) {
-        dom.clearHistorySearch.hidden = !state.historySearch;
+    dom.dropOverlay?.addEventListener(
+      "dragleave",
+      () => {
+        dom.dropOverlay?.classList.remove(
+          "active"
+        );
       }
+    );
 
-      loadHistory();
-    });
+    dom.composerWrapper
+      ?.addEventListener(
+        "drop",
+        event => {
+          dom.dropOverlay?.classList.remove(
+            "active"
+          );
 
-    dom.clearHistorySearch?.addEventListener("click", () => {
-      if (dom.historySearch) {
-        dom.historySearch.value = "";
+          addFiles(
+            Array.from(
+              event.dataTransfer?.files ||
+                []
+            )
+          );
+        }
+      );
+
+    dom.deepResearch?.addEventListener(
+      "click",
+      () => {
+        if (!isPro()) {
+          dom.upgradeModal?.classList.add(
+            "show"
+          );
+
+          return;
+        }
+
+        state.deepResearch =
+          !state.deepResearch;
+
+        dom.deepResearch.classList.toggle(
+          "active-mode",
+          state.deepResearch
+        );
       }
+    );
 
-      state.historySearch = "";
+    dom.personalities?.addEventListener(
+      "click",
+      () => {
+        dom.attachMenu?.classList.remove(
+          "show"
+        );
 
-      if (dom.clearHistorySearch) {
-        dom.clearHistorySearch.hidden = true;
+        openPersonalityModal();
       }
+    );
 
-      loadHistory();
-    });
+    dom.personalityClose
+      ?.addEventListener(
+        "click",
+        closePersonalityModal
+      );
 
-    dom.deleteHistory?.addEventListener("click", async () => {
-      if (!activeHistoryId) return;
+    dom.personalityModal
+      ?.addEventListener(
+        "click",
+        event => {
+          if (
+            event.target ===
+            dom.personalityModal
+          ) {
+            closePersonalityModal();
+          }
+        }
+      );
 
-      try {
-        const response = await fetch("/api/history", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action: "delete",
-            conversationId: activeHistoryId
-          })
-        });
+    document
+      .querySelectorAll(
+        "[data-neo-personality]"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          async () => {
+            const personality =
+              button.dataset
+                .neoPersonality;
 
-        await json(response);
+            if (
+              !personalities[
+                personality
+              ]
+            ) {
+              return;
+            }
 
-        if (state.conversationId === activeHistoryId) {
-          startNewChat();
-        } else {
+            const previousPersonality =
+              state.personality;
+
+            state.personality =
+              personality;
+
+            localStorage.setItem(
+              "neo_personality",
+              personality
+            );
+
+            syncPersonality();
+            closePersonalityModal();
+
+            try {
+              await patchProfile({
+                selectedPersonality:
+                  personality
+              });
+
+              toast(
+                `${personalities[personality]} personality selected.`
+              );
+            } catch (error) {
+              state.personality =
+                previousPersonality;
+
+              localStorage.setItem(
+                "neo_personality",
+                previousPersonality
+              );
+
+              syncPersonality();
+
+              toast(
+                error.message,
+                "error"
+              );
+            }
+          }
+        );
+      });
+
+    dom.upgradeClose?.addEventListener(
+      "click",
+      () => {
+        dom.upgradeModal?.classList.remove(
+          "show"
+        );
+      }
+    );
+
+    dom.upgradeLater?.addEventListener(
+      "click",
+      () => {
+        dom.upgradeModal?.classList.remove(
+          "show"
+        );
+      }
+    );
+
+    dom.upgradeModal?.addEventListener(
+      "click",
+      event => {
+        if (
+          event.target ===
+          dom.upgradeModal
+        ) {
+          dom.upgradeModal.classList.remove(
+            "show"
+          );
+        }
+      }
+    );
+
+    dom.upgradeAction?.addEventListener(
+      "click",
+      startCheckout
+    );
+
+    dom.historySearch?.addEventListener(
+      "input",
+      event => {
+        state.historySearch = String(
+          event.target.value || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        if (
+          dom.clearHistorySearch
+        ) {
+          dom.clearHistorySearch.hidden =
+            !state.historySearch;
+        }
+
+        loadHistory();
+      }
+    );
+
+    dom.clearHistorySearch
+      ?.addEventListener(
+        "click",
+        () => {
+          if (dom.historySearch) {
+            dom.historySearch.value = "";
+          }
+
+          state.historySearch = "";
+
+          if (
+            dom.clearHistorySearch
+          ) {
+            dom.clearHistorySearch.hidden =
+              true;
+          }
+
           loadHistory();
         }
-      } catch (error) {
-        toast(error.message, "error");
-      } finally {
-        activeHistoryId = null;
-        dom.historyMenu?.classList.remove("show");
+      );
+
+    dom.deleteHistory?.addEventListener(
+      "click",
+      async () => {
+        if (!activeHistoryId) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "/api/history",
+            {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                action: "delete",
+                conversationId:
+                  activeHistoryId
+              })
+            }
+          );
+
+          await json(response);
+
+          if (
+            state.conversationId ===
+            activeHistoryId
+          ) {
+            startNewChat();
+          } else {
+            loadHistory();
+          }
+        } catch (error) {
+          toast(
+            error.message,
+            "error"
+          );
+        } finally {
+          activeHistoryId = null;
+
+          dom.historyMenu?.classList.remove(
+            "show"
+          );
+        }
       }
-    });
+    );
 
-    document.addEventListener("click", event => {
-      if (
-        !dom.profile?.contains(event.target) &&
-        !dom.profileMenu?.contains(event.target)
-      ) {
-        dom.profileMenu?.classList.remove("show");
+    document.addEventListener(
+      "click",
+      event => {
+        if (
+          !dom.profile?.contains(
+            event.target
+          ) &&
+          !dom.profileMenu?.contains(
+            event.target
+          )
+        ) {
+          dom.profileMenu?.classList.remove(
+            "show"
+          );
+        }
+
+        if (
+          !dom.attach?.contains(
+            event.target
+          ) &&
+          !dom.attachMenu?.contains(
+            event.target
+          )
+        ) {
+          dom.attachMenu?.classList.remove(
+            "show"
+          );
+        }
+
+        if (
+          !dom.modelBadge?.contains(
+            event.target
+          ) &&
+          !dom.modelMenu?.contains(
+            event.target
+          )
+        ) {
+          dom.modelMenu?.classList.remove(
+            "show"
+          );
+        }
+
+        if (
+          !dom.historyMenu?.contains(
+            event.target
+          ) &&
+          !event.target.closest(
+            ".history-action-btn"
+          )
+        ) {
+          dom.historyMenu?.classList.remove(
+            "show"
+          );
+        }
       }
+    );
 
-      if (
-        !dom.attach?.contains(event.target) &&
-        !dom.attachMenu?.contains(event.target)
-      ) {
-        dom.attachMenu?.classList.remove("show");
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (event.key !== "Escape") {
+          return;
+        }
+
+        closeSettings();
+        closePersonalityModal();
+
+        dom.upgradeModal?.classList.remove(
+          "show"
+        );
       }
+    );
 
-      if (
-        !dom.modelBadge?.contains(event.target) &&
-        !dom.modelMenu?.contains(event.target)
-      ) {
-        dom.modelMenu?.classList.remove("show");
+    window.addEventListener(
+      "resize",
+      initialiseSidebar,
+      {
+        passive: true
       }
+    );
 
-      if (
-        !dom.historyMenu?.contains(event.target) &&
-        !event.target.closest(".history-action-btn")
-      ) {
-        dom.historyMenu?.classList.remove("show");
+    $("brandBtn")?.addEventListener(
+      "click",
+      () => {
+        window.location.href =
+          "index.html";
       }
-    });
-
-    window.addEventListener("resize", initialiseSidebar, {
-      passive: true
-    });
-
-    $("brandBtn")?.addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
+    );
 
     setupSpeech();
   }
@@ -1190,10 +2618,17 @@ ${file.data}`)
     window.lucide?.createIcons();
 
     state.personality =
-      localStorage.getItem("neo_personality") || "balanced";
+      localStorage.getItem(
+        "neo_personality"
+      ) || "balanced";
 
-    if (!personalities[state.personality]) {
-      state.personality = "balanced";
+    if (
+      !personalities[
+        state.personality
+      ]
+    ) {
+      state.personality =
+        "balanced";
     }
 
     initialiseSidebar();
@@ -1202,7 +2637,9 @@ ${file.data}`)
     updateComposer();
     syncPersonality();
 
-    if (!await restoreSession()) return;
+    if (!(await restoreSession())) {
+      return;
+    }
 
     state.ready = true;
 
@@ -1212,14 +2649,20 @@ ${file.data}`)
     dom.input?.focus();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    init().catch(error => {
-      console.error("NEO initialization failed:", error);
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      init().catch(error => {
+        console.error(
+          "NEO initialization failed:",
+          error
+        );
 
-      if (dom.input) {
-        dom.input.placeholder =
-          "NEO could not initialize. Please refresh.";
-      }
-    });
-  });
+        if (dom.input) {
+          dom.input.placeholder =
+            "NEO could not initialize. Please refresh.";
+        }
+      });
+    }
+  );
 })();
