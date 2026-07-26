@@ -970,3 +970,487 @@ body {
     padding: 0;
   }
 }
+/* NEO SETTINGS MODAL ADD-ON */
+.neo-settings-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 19000;
+    background: rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 22px;
+    align-items: center;
+    justify-content: center;
+}
+
+.neo-settings-overlay.show {
+    display: flex;
+    animation: settingsFadeIn 0.16s ease forwards;
+}
+
+@keyframes settingsFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.neo-settings-modal {
+    width: min(860px, 100%);
+    height: min(720px, calc(100vh - 44px));
+    background: var(--bg-main);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 224px 1fr;
+}
+
+.neo-settings-sidebar {
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-subtle);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.neo-settings-close {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-radius: 12px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+}
+
+.neo-settings-close:hover {
+    background: var(--bg-hover);
+}
+
+.neo-settings-tab {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.neo-settings-tab:hover {
+    background: var(--bg-hover);
+}
+
+.neo-settings-tab.active {
+    background: var(--bg-active);
+    font-weight: 600;
+}
+
+.neo-settings-content {
+    padding: 22px;
+    overflow: auto;
+}
+
+.neo-settings-panel {
+    display: none;
+}
+
+.neo-settings-panel.active {
+    display: block;
+}
+
+.neo-settings-panel h2 {
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 650;
+    margin-bottom: 22px;
+    letter-spacing: -0.03em;
+}
+
+.settings-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: -12px 0 18px;
+}
+
+.settings-row {
+    min-height: 74px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 0;
+}
+
+.settings-row:last-child {
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-row strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.settings-row small {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.35;
+}
+
+.settings-pill-btn,
+.settings-status-pill {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-sidebar);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.settings-pill-btn {
+    cursor: pointer;
+}
+
+.settings-pill-btn:hover {
+    background: var(--bg-hover);
+}
+
+.settings-status-pill {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.16);
+}
+
+.profile-editor-card {
+    display: grid;
+    grid-template-columns: 86px 1fr;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    background: var(--bg-sidebar);
+}
+
+.profile-editor-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    font-weight: 700;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.profile-editor-main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-editor-main label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.profile-editor-main input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+.profile-editor-main input:focus {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.profile-editor-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.settings-primary-btn,
+.settings-ghost-btn {
+    border: none;
+    border-radius: 12px;
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 13.5px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.settings-primary-btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #ffffff;
+}
+
+.settings-primary-btn:hover {
+    opacity: 0.92;
+}
+
+.settings-ghost-btn {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.settings-ghost-btn:hover {
+    filter: brightness(0.98);
+}
+
+.settings-helper-text {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.notification-center {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification-empty-state {
+    min-height: 170px;
+    border: 1px dashed var(--border-subtle);
+    border-radius: 18px;
+    background: var(--bg-sidebar);
+    color: var(--text-muted);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 22px;
+}
+
+.notification-empty-state strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.notification-empty-state small {
+    max-width: 320px;
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+
+.notification-item {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-sidebar);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.notification-item strong {
+    display: block;
+    font-size: 13.5px;
+    color: var(--text-primary);
+}
+
+.notification-item small {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.35;
+}
+
+.personality-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.personality-card {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-sidebar);
+    color: var(--text-primary);
+    border-radius: 16px;
+    min-height: 122px;
+    padding: 12px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.personality-card:hover {
+    transform: translateY(-1px);
+    background: var(--bg-hover);
+}
+
+.personality-card.active {
+    border-color: rgba(59, 130, 246, 0.55);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.personality-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    background: var(--bg-hover);
+}
+
+.personality-card strong {
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.personality-card small {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+.pro-personality {
+    position: relative;
+}
+
+.pro-personality::after {
+    content: "PRO";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.12);
+    border-radius: 999px;
+    padding: 3px 6px;
+}
+
+body.dark-mode .neo-settings-overlay {
+    background: rgba(0, 0, 0, 0.52);
+}
+
+body.dark-mode .settings-status-pill {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.12);
+    border-color: rgba(52, 211, 153, 0.2);
+}
+
+body.dark-mode .personality-card.active {
+    background: rgba(96, 165, 250, 0.12);
+    border-color: rgba(96, 165, 250, 0.48);
+}
+
+@media (max-width: 760px) {
+    .neo-settings-overlay {
+        padding: 10px;
+        align-items: stretch;
+    }
+
+    .neo-settings-modal {
+        height: calc(100vh - 20px);
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        border-radius: 20px;
+    }
+
+    .neo-settings-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .neo-settings-close {
+        flex: 0 0 38px;
+        margin: 0;
+    }
+
+    .neo-settings-tab {
+        flex: 0 0 auto;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .neo-settings-content {
+        padding: 18px;
+    }
+
+    .profile-editor-card {
+        grid-template-columns: 1fr;
+    }
+
+    .personality-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .neo-settings-overlay {
+        padding: 0;
+    }
+
+    .neo-settings-modal {
+        height: 100vh;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .personality-grid {
+        grid-template-columns: 1fr;
+    }
+}
