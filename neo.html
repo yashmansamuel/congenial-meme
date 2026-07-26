@@ -2,235 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-
-  <meta
-    name="referrer"
-    content="strict-origin-when-cross-origin"
-  >
-
-  <meta
-    http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co; connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co /api/;"
-  >
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co; connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co /api/;">
 
   <title>NEO • Signaturesi</title>
-
-  <link
-    rel="stylesheet"
-    href="/neo.css"
-  >
-
+  <link rel="stylesheet" href="neo.css">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
 </head>
+<body class="sidebar-collapsed">
 
-<body>
-  <div
-    class="sidebar-scrim"
-    id="sidebarScrim"
-  ></div>
+  <div class="sidebar-scrim" id="sidebarScrim"></div>
 
-  <aside
-    class="sidebar"
-    id="sidebar"
-  >
+  <aside class="sidebar collapsed" id="sidebar">
     <div class="sidebar-header">
-      <button
-        class="brand-button"
-        id="brandBtn"
-        type="button"
-      >
+      <button class="brand-button" id="brandBtn" type="button">
         <span class="brand-copy">
           <strong>NEO Engine</strong>
           <small>Signaturesi Central</small>
         </span>
       </button>
-
-      <button
-        class="icon-btn sidebar-control-btn"
-        id="collapseSidebarBtn"
-        title="Close Sidebar"
-        aria-label="Close sidebar"
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect
-            x="3"
-            y="4"
-            width="18"
-            height="16"
-            rx="2"
-          ></rect>
-
-          <path d="M9 4v16"></path>
-        </svg>
+      <button class="icon-btn" id="collapseSidebarBtn" title="Close Sidebar" type="button">
+        <i data-lucide="columns-2" size="20"></i>
       </button>
     </div>
 
     <div class="sidebar-content">
-      <button
-        class="new-chat-btn"
-        id="newChatBtn"
-        type="button"
-      >
+      <button class="new-chat-btn" id="newChatBtn" type="button">
         <div class="btn-inner">
-          <i
-            data-lucide="square-pen"
-            size="16"
-          ></i>
-
+          <i data-lucide="square-pen" size="16"></i>
           <span>New Conversation</span>
         </div>
       </button>
 
       <div class="history-section">
-        <span class="section-title">
-          Recent Chats
-        </span>
-
-        <div
-          class="history-search"
-          id="historySearchWrap"
-        >
-          <i
-            data-lucide="search"
-            size="14"
-            aria-hidden="true"
-          ></i>
-
-          <input
-            id="historySearchInput"
-            type="search"
-            placeholder="Search chats"
-            autocomplete="off"
-            aria-label="Search chats"
-          >
-
-          <button
-            id="clearHistorySearchBtn"
-            type="button"
-            aria-label="Clear chat search"
-            hidden
-          >
-            &times;
-          </button>
-        </div>
-
-        <div
-          class="history-list"
-          id="historyList"
-        ></div>
+        <span class="section-title">Recent Chats</span>
+        <div class="history-list" id="historyList"></div>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <div
-        class="user-popup-menu"
-        id="userPopupMenu"
-      >
-        <div
-          class="popup-item"
-          id="sidebarDarkModeToggle"
-        >
-          <i
-            data-lucide="sun"
-            size="16"
-          ></i>
-
+      <div class="user-popup-menu" id="userPopupMenu">
+        <div class="popup-item" id="sidebarDarkModeToggle">
+          <i data-lucide="sun" size="16"></i>
           <span>Toggle Theme</span>
         </div>
-
-        <div
-          class="popup-item"
-          id="settingsBtn"
-        >
-          <i
-            data-lucide="settings"
-            size="16"
-          ></i>
-
+        <div class="popup-item" id="settingsBtn">
+          <i data-lucide="settings" size="16"></i>
           <span>Settings</span>
         </div>
-
         <div class="popup-divider"></div>
-
-        <div
-          class="popup-item danger"
-          id="logoutBtn"
-        >
-          <i
-            data-lucide="log-out"
-            size="16"
-          ></i>
-
+        <div class="popup-item danger" id="logoutBtn">
+          <i data-lucide="log-out" size="16"></i>
           <span>Log out</span>
         </div>
       </div>
 
-      <button
-        class="user-profile-btn"
-        id="userProfileBtn"
-        type="button"
-      >
+      <button class="user-profile-btn" id="userProfileBtn" type="button">
         <div id="userAvatar">U</div>
-
         <div class="user-info">
-          <span
-            class="user-name"
-            id="userNameDisplay"
-          >
-            @user
-          </span>
-
-          <span
-            class="user-badge"
-            id="userPlanBadge"
-          >
-            Free Plan
-          </span>
+          <span class="user-name" id="userNameDisplay">@user</span>
+          <span class="user-badge" id="userPlanBadge">Free Plan</span>
         </div>
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="more-icon lucide lucide-bolt"
-        >
-          <path
-            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-          ></path>
-
-          <circle
-            cx="12"
-            cy="12"
-            r="4"
-          ></circle>
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="more-icon lucide lucide-bolt"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="4"/></svg>
       </button>
     </div>
   </aside>
@@ -238,1100 +77,403 @@
   <main class="app-shell">
     <header class="top-bar">
       <div class="top-left">
-        <button
-          class="icon-btn top-toggle-btn sidebar-control-btn"
-          id="sidebarToggleBtn"
-          title="Open Sidebar"
-          aria-label="Open sidebar"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect
-              x="3"
-              y="4"
-              width="18"
-              height="16"
-              rx="2"
-            ></rect>
-
-            <path d="M9 4v16"></path>
-          </svg>
+        <button class="icon-btn top-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar" type="button">
+          <i data-lucide="columns-2" size="20"></i>
         </button>
 
         <div class="model-dropdown-wrapper">
-          <div
-            class="model-badge"
-            id="modelBadgeBtn"
-          >
-            <span
-              class="model-name"
-              id="currentModelDisplay"
-            >
-              NEO L1.0
-            </span>
-
-            <i
-              data-lucide="chevron-down"
-              size="16"
-              class="model-chevron"
-            ></i>
+          <div class="model-badge" id="modelBadgeBtn">
+            <span class="model-name" id="currentModelDisplay">NEO L1.0</span>
+            <i data-lucide="chevron-down" size="16" class="model-chevron"></i>
           </div>
 
-          <div
-            class="model-dropdown-menu"
-            id="modelDropdownMenu"
-          >
-            <div
-              class="model-option active"
-              data-model="l1.0"
-              id="optL10"
-            >
+          <div class="model-dropdown-menu" id="modelDropdownMenu">
+            <div class="model-option active" data-model="l1.0" id="optL10">
               <div class="model-opt-info">
                 <strong>NEO L1.0</strong>
-
-                <small>
-                  Text & Images • Snappy Responses
-                </small>
+                <small>Text & Images • Snappy Responses</small>
               </div>
-
-              <i
-                data-lucide="check"
-                size="16"
-                class="opt-check-icon"
-              ></i>
+              <i data-lucide="check" size="16" class="opt-check-icon"></i>
             </div>
 
-            <div
-              class="model-option pro-option"
-              data-model="l1.2"
-              id="optL12"
-            >
+            <div class="model-option pro-option" data-model="l1.2" id="optL12">
               <div class="model-opt-info">
                 <strong>NEO L1.2 Pro</strong>
-
-                <small>
-                  Audio, Video, Deep Reasoning & 4K Tokens
-                </small>
+                <small>Audio, Video, Deep Reasoning & 4K Tokens</small>
               </div>
-
-              <span class="pro-tag">
-                PRO
-              </span>
+              <span class="pro-tag">PRO</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="top-right">
-        <button
-          class="icon-btn"
-          id="topBarDarkModeToggle"
-          title="Toggle Theme"
-          type="button"
-        >
-          <i
-            data-lucide="sun"
-            size="20"
-          ></i>
+        <button class="icon-btn" id="topBarDarkModeToggle" title="Toggle Theme" type="button">
+          <i data-lucide="sun" size="20"></i>
         </button>
       </div>
     </header>
 
-    <div
-      class="scroll-area"
-      id="scrollArea"
-    >
+    <div class="scroll-area" id="scrollArea">
       <div class="conversation-column">
-        <div
-          class="hero-section"
-          id="heroSection"
-        >
-          <h1>
-            What can I help with today?
-          </h1>
-
-          <p class="hero-copy">
-            Powered by NEO Engine. Select a prompt or type your message below.
-          </p>
+        <div class="hero-section" id="heroSection">
+          <h1>What can I help with today?</h1>
+          <p class="hero-copy">Powered by NEO Engine. Select a prompt or type your message below.</p>
 
           <div class="starter-grid">
-            <button
-              type="button"
-              data-prompt="Write a Python script to scrape website data cleanly."
-            >
-              <i
-                data-lucide="code-2"
-                size="16"
-              ></i>
-
-              <span>
-                Python Scraper
-              </span>
+            <button type="button" data-prompt="Write a Python script to scrape website data cleanly.">
+              <i data-lucide="code-2" size="16"></i>
+              <span>Python Scraper</span>
             </button>
 
-            <button
-              type="button"
-              data-prompt="Explain quantum computing in simple terms."
-            >
-              <i
-                data-lucide="cpu"
-                size="16"
-              ></i>
-
-              <span>
-                Quantum Computing
-              </span>
+            <button type="button" data-prompt="Explain quantum computing in simple terms.">
+              <i data-lucide="cpu" size="16"></i>
+              <span>Quantum Computing</span>
             </button>
 
-            <button
-              type="button"
-              data-prompt="Help me outline a business plan for a new SaaS product."
-            >
-              <i
-                data-lucide="lightbulb"
-                size="16"
-              ></i>
-
-              <span>
-                SaaS Business Plan
-              </span>
+            <button type="button" data-prompt="Help me outline a business plan for a new SaaS product.">
+              <i data-lucide="lightbulb" size="16"></i>
+              <span>SaaS Business Plan</span>
             </button>
 
-            <button
-              type="button"
-              data-prompt="Draft a professional partnership proposal email."
-            >
-              <i
-                data-lucide="mail-check"
-                size="16"
-              ></i>
-
-              <span>
-                Draft Partnership Email
-              </span>
+            <button type="button" data-prompt="Draft a professional partnership proposal email.">
+              <i data-lucide="mail-check" size="16"></i>
+              <span>Draft Partnership Email</span>
             </button>
           </div>
         </div>
 
-        <div
-          class="chat-messages"
-          id="chatMessages"
-        ></div>
+        <div class="chat-messages" id="chatMessages"></div>
       </div>
     </div>
 
     <footer class="composer-dock">
-      <div
-        class="composer-wrapper"
-        id="composerWrapper"
-      >
-        <div
-          class="drag-drop-overlay"
-          id="dragDropOverlay"
-        >
-          <i
-            data-lucide="upload-cloud"
-            size="32"
-          ></i>
-
-          <span>
-            Drop files here to attach
-          </span>
+      <div class="composer-wrapper" id="composerWrapper">
+        <div class="drag-drop-overlay" id="dragDropOverlay">
+          <i data-lucide="upload-cloud" size="32"></i>
+          <span>Drop files here to attach</span>
         </div>
 
-        <div
-          class="live-suggestions"
-          id="liveSuggestions"
-        ></div>
-
-        <div
-          class="attachment-popup-menu"
-          id="attachPopupMenu"
-        >
-          <div
-            class="attachment-popup-item"
-            id="addFilesMenuBtn"
-          >
-            <i
-              data-lucide="paperclip"
-              size="16"
-            ></i>
-
+        <div class="live-suggestions" id="liveSuggestions"></div>
+        
+        <div class="attachment-popup-menu" id="attachPopupMenu">
+          <div class="attachment-popup-item" id="addFilesMenuBtn">
+            <i data-lucide="paperclip" size="16"></i>
             <span>Add Files</span>
           </div>
 
-          <div
-            class="attachment-popup-item"
-            id="deepResearchToggleBtn"
-          >
-            <i
-              data-lucide="search-code"
-              size="16"
-            ></i>
-
+          <div class="attachment-popup-item" id="deepResearchToggleBtn">
+            <i data-lucide="search-code" size="16"></i>
             <span>Deep Research</span>
           </div>
 
-          <div
-            class="attachment-popup-item"
-            id="neoPersonalitiesBtn"
-          >
-            <i
-              data-lucide="sparkles"
-              size="16"
-            ></i>
-
-            <span>NEO Personalities</span>
+          <div class="attachment-popup-item" id="personalMemoryBtn">
+            <i data-lucide="brain-circuit" size="16"></i>
+            <span>Memory Context</span>
           </div>
         </div>
 
-        <input
-          type="file"
-          id="hiddenFileInput"
-          multiple
-          accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,application/json,text/javascript,application/javascript,text/css,text/html,.js,.css,.html,.json,.txt,.pdf"
-          style="display: none;"
-        >
+        <input type="file" id="hiddenFileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt,.js,.ts,.py,.html,.css,.json,.cpp,.c,.java,.mp3,.mp4,.wav,.webm" style="display: none;">
 
-        <div
-          class="glass-input-container"
-          id="glassInputContainer"
-        >
-          <div
-            class="attached-chips-wrapper"
-            id="attachedChipsWrapper"
-          ></div>
+        <div class="glass-input-container" id="glassInputContainer">
+          <div class="attached-chips-wrapper" id="attachedChipsWrapper"></div>
 
           <div class="composer-input-row">
-            <button
-              class="attach-btn"
-              id="attachBtn"
-              title="Add Attachments"
-              type="button"
-            >
-              <i
-                data-lucide="plus"
-                size="20"
-              ></i>
+            <button class="attach-btn" id="attachBtn" title="Add Attachments" type="button">
+              <i data-lucide="plus" size="20"></i>
             </button>
-
-            <textarea
-              id="chatInput"
-              rows="1"
-              placeholder="Message NEO..."
-            ></textarea>
-
-            <div
-              class="voice-transcribe-container"
-              id="voiceTranscribeContainer"
-            >
-              <div
-                class="wave-dots-bar"
-                id="waveDotsBar"
-              >
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
+            
+            <textarea id="chatInput" rows="1" placeholder="Message NEO..."></textarea>
+            
+            <div class="voice-transcribe-container" id="voiceTranscribeContainer">
+              <div class="wave-dots-bar" id="waveDotsBar">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
               </div>
 
-              <button
-                class="stop-recording-btn"
-                id="stopRecBtn"
-                title="Stop Listening"
-                type="button"
-              >
-                <i
-                  data-lucide="square"
-                  size="14"
-                ></i>
+              <button class="stop-recording-btn" id="stopRecBtn" title="Stop Listening" type="button">
+                <i data-lucide="square" size="14"></i>
               </button>
             </div>
 
-            <button
-              class="icon-btn mic-btn"
-              id="micBtn"
-              title="Voice Input"
-              type="button"
-            >
-              <i
-                data-lucide="audio-lines"
-                size="16"
-              ></i>
+            <button class="icon-btn mic-btn" id="micBtn" title="Voice Input" type="button">
+              <i data-lucide="audio-lines" size="16"></i>
             </button>
 
-            <button
-              class="send-btn"
-              id="sendBtn"
-              title="Send Message"
-              type="button"
-            >
-              <i
-                data-lucide="arrow-up"
-                size="18"
-              ></i>
+            <button class="send-btn" id="sendBtn" title="Send Message" type="button">
+              <i data-lucide="arrow-up" size="18"></i>
             </button>
           </div>
         </div>
 
-        <p class="composer-note">
-          NEO may produce inaccurate info. Verify critical data.
-        </p>
+        <p class="composer-note">NEO may produce inaccurate info. Verify critical data.</p>
       </div>
     </footer>
   </main>
 
-  <div
-    class="history-popup-menu"
-    id="historyPopupMenu"
-  >
+  <div class="history-popup-menu" id="historyPopupMenu">
     <div class="history-popup-item">
-      <i
-        data-lucide="share-2"
-        size="16"
-      ></i>
-
+      <i data-lucide="share-2" size="16"></i>
       Share conversation
     </div>
 
     <div class="history-popup-item">
-      <i
-        data-lucide="pin"
-        size="16"
-      ></i>
-
+      <i data-lucide="pin" size="16"></i>
       Pin
     </div>
 
     <div class="history-popup-item">
-      <i
-        data-lucide="pencil"
-        size="16"
-      ></i>
-
+      <i data-lucide="pencil" size="16"></i>
       Rename
     </div>
 
-    <div
-      class="history-popup-item danger"
-      id="hpDeleteBtn"
-    >
-      <i
-        data-lucide="trash-2"
-        size="16"
-      ></i>
-
+    <div class="history-popup-item danger" id="hpDeleteBtn">
+      <i data-lucide="trash-2" size="16"></i>
       Delete
     </div>
   </div>
 
-  <div
-    class="modal-overlay settings-modal-overlay"
-    id="settingsModal"
-    aria-hidden="true"
-  >
-    <section
-      class="settings-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settingsModalTitle"
-    >
-      <button
-        class="settings-close-btn"
-        id="settingsModalCloseBtn"
-        type="button"
-        aria-label="Close settings"
-      >
-        <i
-          data-lucide="x"
-          size="20"
-        ></i>
-      </button>
+  <div class="neo-settings-overlay" id="neoSettingsOverlay" aria-hidden="true">
+    <div class="neo-settings-modal" role="dialog" aria-modal="true" aria-label="NEO Settings">
+      <aside class="neo-settings-sidebar">
+        <button class="neo-settings-close" id="neoSettingsCloseBtn" type="button" aria-label="Close settings">
+          <i data-lucide="x" size="20"></i>
+        </button>
 
-      <aside
-        class="settings-sidebar"
-        aria-label="Settings navigation"
-      >
-        <div class="settings-brand">
-          <span class="settings-brand-mark">
-            NEO
-          </span>
+        <button class="neo-settings-tab active" type="button" data-settings-tab="general">
+          <i data-lucide="settings" size="17"></i>
+          <span>General</span>
+        </button>
 
-          <span>Settings</span>
-        </div>
+        <button class="neo-settings-tab" type="button" data-settings-tab="profile">
+          <i data-lucide="user-circle" size="17"></i>
+          <span>Profile</span>
+        </button>
 
-        <nav class="settings-nav">
-          <button
-            class="settings-nav-item is-active"
-            type="button"
-            data-settings-tab="general"
-          >
-            <i
-              data-lucide="sliders-horizontal"
-              size="18"
-            ></i>
+        <button class="neo-settings-tab" type="button" data-settings-tab="notifications">
+          <i data-lucide="bell" size="17"></i>
+          <span>Notifications</span>
+        </button>
 
-            <span>General</span>
-          </button>
+        <button class="neo-settings-tab" type="button" data-settings-tab="personalities">
+          <i data-lucide="sparkles" size="17"></i>
+          <span>NEO Personalities</span>
+        </button>
 
-          <button
-            class="settings-nav-item"
-            type="button"
-            data-settings-tab="account"
-          >
-            <i
-              data-lucide="user-round"
-              size="18"
-            ></i>
-
-            <span>Account</span>
-          </button>
-
-          <button
-            class="settings-nav-item"
-            type="button"
-            data-settings-tab="notifications"
-          >
-            <i
-              data-lucide="bell"
-              size="18"
-            ></i>
-
-            <span>Notifications</span>
-          </button>
-
-          <button
-            class="settings-nav-item"
-            type="button"
-            data-settings-tab="personalization"
-          >
-            <i
-              data-lucide="sparkles"
-              size="18"
-            ></i>
-
-            <span>Personalization</span>
-          </button>
-
-          <button
-            class="settings-nav-item"
-            type="button"
-            data-settings-tab="billing"
-          >
-            <i
-              data-lucide="credit-card"
-              size="18"
-            ></i>
-
-            <span>Billing</span>
-          </button>
-        </nav>
+        <button class="neo-settings-tab" type="button" data-settings-tab="billing">
+          <i data-lucide="credit-card" size="17"></i>
+          <span>Billing</span>
+        </button>
       </aside>
 
-      <div class="settings-content">
-        <section
-          class="settings-panel is-active"
-          data-settings-panel="general"
-        >
-          <div class="settings-panel-heading">
-            <h2 id="settingsModalTitle">
-              General
-            </h2>
-
-            <p>
-              Set up how NEO feels and works for you.
-            </p>
-          </div>
+      <section class="neo-settings-content">
+        <div class="neo-settings-panel active" id="settingsPanelGeneral">
+          <h2>General</h2>
 
           <div class="settings-row">
             <div>
               <strong>Appearance</strong>
-
-              <span>
-                Choose the look you prefer.
-              </span>
+              <small>Choose how NEO looks on this device.</small>
             </div>
-
-            <button
-              class="settings-select-btn"
-              id="settingsThemeBtn"
-              type="button"
-            >
-              <span id="settingsThemeValue">
-                System
-              </span>
-
-              <i
-                data-lucide="chevron-down"
-                size="16"
-              ></i>
-            </button>
+            <button class="settings-pill-btn" id="settingsThemeBtn" type="button">System</button>
           </div>
 
           <div class="settings-row">
             <div>
-              <strong>Voice input</strong>
-
-              <span>
-                Use your microphone to write messages.
-              </span>
+              <strong>Language</strong>
+              <small>Auto-detect Urdu, Roman Urdu, Hindi, and English.</small>
             </div>
-
-            <label class="settings-switch">
-              <input
-                id="settingsVoiceToggle"
-                type="checkbox"
-                checked
-              >
-
-              <span></span>
-            </label>
-          </div>
-        </section>
-
-        <section
-          class="settings-panel"
-          data-settings-panel="account"
-          hidden
-        >
-          <div class="settings-panel-heading">
-            <h2>Account</h2>
-
-            <p>
-              Your NEO profile and sign-in identity.
-            </p>
-          </div>
-
-          <div class="profile-settings-card">
-            <div
-              class="profile-settings-avatar"
-              id="settingsAvatarPreview"
-            >
-              U
-            </div>
-
-            <div class="profile-settings-copy">
-              <strong>
-                Profile picture
-              </strong>
-
-              <span>
-                JPG, PNG, or WebP up to 2 MB.
-              </span>
-
-              <div class="profile-settings-actions">
-                <button
-                  class="settings-secondary-btn"
-                  id="profileAvatarChangeBtn"
-                  type="button"
-                >
-                  Change picture
-                </button>
-
-                <button
-                  class="settings-text-btn danger"
-                  id="profileAvatarRemoveBtn"
-                  type="button"
-                >
-                  Remove
-                </button>
-              </div>
-
-              <input
-                id="profileAvatarInput"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                hidden
-              >
-            </div>
-          </div>
-
-          <label class="settings-field">
-            <span>Display name</span>
-
-            <input
-              id="settingsDisplayName"
-              type="text"
-              maxlength="50"
-              autocomplete="name"
-              placeholder="Your display name"
-            >
-          </label>
-
-          <label class="settings-field">
-            <span>Bean ID</span>
-
-            <input
-              id="settingsBeanId"
-              type="text"
-              readonly
-              aria-readonly="true"
-            >
-
-            <small>
-              Your Bean ID is your secure sign-in identity.
-            </small>
-          </label>
-
-          <button
-            class="settings-primary-btn"
-            id="profileSaveBtn"
-            type="button"
-          >
-            Save profile
-          </button>
-        </section>
-
-        <section
-          class="settings-panel"
-          data-settings-panel="notifications"
-          hidden
-        >
-          <div class="settings-panel-heading">
-            <h2>Notifications</h2>
-
-            <p>
-              Only important updates from NEO and your plan.
-            </p>
+            <button class="settings-pill-btn" type="button">Auto</button>
           </div>
 
           <div class="settings-row">
             <div>
-              <strong>
-                Important notifications
-              </strong>
-
-              <span>
-                Billing, security, and account updates.
-              </span>
+              <strong>Deep Research</strong>
+              <small>Use backend URL context when a link is attached.</small>
             </div>
-
-            <label class="settings-switch">
-              <input
-                id="settingsNotificationsToggle"
-                type="checkbox"
-                checked
-              >
-
-              <span></span>
-            </label>
+            <span class="settings-status-pill">Ready</span>
           </div>
-
-          <div class="settings-row">
-            <div>
-              <strong>
-                Product updates
-              </strong>
-
-              <span>
-                New NEO features and improvements.
-              </span>
-            </div>
-
-            <label class="settings-switch">
-              <input
-                id="settingsProductUpdatesToggle"
-                type="checkbox"
-              >
-
-              <span></span>
-            </label>
-          </div>
-        </section>
-
-        <section
-          class="settings-panel"
-          data-settings-panel="personalization"
-          hidden
-        >
-          <div class="settings-panel-heading">
-            <h2>Personalization</h2>
-
-            <p>
-              Choose the personality NEO uses in new chats.
-            </p>
-          </div>
-
-          <div class="settings-row settings-personality-row">
-            <div>
-              <strong id="settingsPersonalityName">
-                Balanced
-              </strong>
-
-              <span id="settingsPersonalityDescription">
-                Clear, helpful, and natural.
-              </span>
-            </div>
-
-            <button
-              class="settings-secondary-btn"
-              id="settingsPersonalityBtn"
-              type="button"
-            >
-              Choose personality
-            </button>
-          </div>
-
-          <p class="settings-helper-text">
-            Choose from nine prepared NEO personalities.
-          </p>
-        </section>
-
-        <section
-          class="settings-panel"
-          data-settings-panel="billing"
-          hidden
-        >
-          <div class="settings-panel-heading">
-            <h2>Billing</h2>
-
-            <p>
-              Manage your current NEO plan.
-            </p>
-          </div>
-
-          <div class="billing-plan-card">
-            <div>
-              <span class="billing-plan-label">
-                Current plan
-              </span>
-
-              <strong id="settingsPlanName">
-                Free Plan
-              </strong>
-
-              <small>
-                Five file uploads each day and standard NEO access.
-              </small>
-            </div>
-
-            <button
-              class="settings-primary-btn"
-              id="settingsUpgradeBtn"
-              type="button"
-            >
-              Upgrade to Pro
-            </button>
-          </div>
-        </section>
-      </div>
-    </section>
-  </div>
-
-  <div
-    class="modal-overlay"
-    id="personalityModal"
-    aria-hidden="true"
-  >
-    <div
-      class="modal-card personality-modal-card"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="personalityModalTitle"
-    >
-      <button
-        class="modal-close-btn"
-        id="personalityModalCloseBtn"
-        type="button"
-        aria-label="Close personalities"
-      >
-        &times;
-      </button>
-
-      <div class="modal-header personality-modal-header">
-        <div class="pro-sparkle-badge">
-          <i
-            data-lucide="sparkles"
-            size="22"
-          ></i>
         </div>
 
-        <h2 id="personalityModalTitle">
-          NEO Personalities
-        </h2>
+        <div class="neo-settings-panel" id="settingsPanelProfile">
+          <h2>Profile</h2>
 
-        <p>
-          Choose how NEO should think and respond.
-        </p>
-      </div>
+          <div class="profile-editor-card">
+            <div class="profile-editor-avatar" id="settingsAvatarPreview">U</div>
 
-      <div
-        class="personality-grid"
-        role="listbox"
-        aria-label="NEO personalities"
-      >
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="balanced"
-        >
-          <i
-            data-lucide="circle-dot"
-            size="17"
-          ></i>
+            <div class="profile-editor-main">
+              <label>
+                Display name
+                <input id="settingsDisplayNameInput" type="text" placeholder="Your NEO name">
+              </label>
 
-          <span>Balanced</span>
-          <small>Clear and natural</small>
-        </button>
+              <label>
+                Username
+                <input id="settingsUsernameInput" type="text" placeholder="@username">
+              </label>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="researcher"
-        >
-          <i
-            data-lucide="search"
-            size="17"
-          ></i>
+              <label>
+                Avatar URL
+                <input id="settingsAvatarUrlInput" type="url" placeholder="https://... or Supabase avatar path">
+              </label>
 
-          <span>Researcher</span>
-          <small>Evidence-led</small>
-        </button>
+              <div class="profile-editor-actions">
+                <button class="settings-primary-btn" id="saveProfileSettingsBtn" type="button">Save profile</button>
+                <button class="settings-ghost-btn" id="resetProfileSettingsBtn" type="button">Reset</button>
+              </div>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="strategist"
-        >
-          <i
-            data-lucide="route"
-            size="17"
-          ></i>
+              <small class="settings-helper-text">
+                Bean ID users can use NEO safely without showing private card/payment details.
+              </small>
+            </div>
+          </div>
+        </div>
 
-          <span>Strategist</span>
-          <small>Plans and decisions</small>
-        </button>
+        <div class="neo-settings-panel" id="settingsPanelNotifications">
+          <h2>Notifications</h2>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="creative"
-        >
-          <i
-            data-lucide="palette"
-            size="17"
-          ></i>
+          <div class="notification-center" id="notificationCenter">
+            <div class="notification-empty-state">
+              <i data-lucide="inbox" size="22"></i>
+              <strong>No new notifications</strong>
+              <small>Important account, billing, and NEO updates will appear here.</small>
+            </div>
+          </div>
+        </div>
 
-          <span>Creative</span>
-          <small>Fresh ideas</small>
-        </button>
+        <div class="neo-settings-panel" id="settingsPanelPersonalities">
+          <h2>NEO Personalities</h2>
+          <p class="settings-subtitle">Choose how NEO should respond. Custom personality is Pro only.</p>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="teacher"
-        >
-          <i
-            data-lucide="graduation-cap"
-            size="17"
-          ></i>
+          <div class="personality-grid" id="personalityGrid">
+            <button class="personality-card active" type="button" data-personality="default">
+              <span class="personality-avatar">⚡</span>
+              <strong>Default NEO</strong>
+              <small>Balanced and helpful</small>
+            </button>
 
-          <span>Teacher</span>
-          <small>Simple explanations</small>
-        </button>
+            <button class="personality-card" type="button" data-personality="teacher">
+              <span class="personality-avatar">🎓</span>
+              <strong>Teacher</strong>
+              <small>Simple learning style</small>
+            </button>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="coding_expert"
-        >
-          <i
-            data-lucide="code-2"
-            size="17"
-          ></i>
+            <button class="personality-card" type="button" data-personality="coder">
+              <span class="personality-avatar">💻</span>
+              <strong>Coder</strong>
+              <small>Clean coding help</small>
+            </button>
 
-          <span>Coding Expert</span>
-          <small>Practical code</small>
-        </button>
+            <button class="personality-card" type="button" data-personality="researcher">
+              <span class="personality-avatar">🔎</span>
+              <strong>Researcher</strong>
+              <small>Careful deep answers</small>
+            </button>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="business_advisor"
-        >
-          <i
-            data-lucide="briefcase-business"
-            size="17"
-          ></i>
+            <button class="personality-card" type="button" data-personality="business">
+              <span class="personality-avatar">📈</span>
+              <strong>Business</strong>
+              <small>Growth and planning</small>
+            </button>
 
-          <span>Business Advisor</span>
-          <small>Growth focused</small>
-        </button>
+            <button class="personality-card" type="button" data-personality="creative">
+              <span class="personality-avatar">🎨</span>
+              <strong>Creative</strong>
+              <small>Ideas and writing</small>
+            </button>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="deep_thinker"
-        >
-          <i
-            data-lucide="brain-circuit"
-            size="17"
-          ></i>
+            <button class="personality-card" type="button" data-personality="calm">
+              <span class="personality-avatar">🌿</span>
+              <strong>Calm</strong>
+              <small>Soft supportive tone</small>
+            </button>
 
-          <span>Deep Thinker</span>
-          <small>Careful reasoning</small>
-        </button>
+            <button class="personality-card" type="button" data-personality="direct">
+              <span class="personality-avatar">🎯</span>
+              <strong>Direct</strong>
+              <small>Short and focused</small>
+            </button>
 
-        <button
-          type="button"
-          class="personality-option"
-          data-neo-personality="warm_companion"
-        >
-          <i
-            data-lucide="heart"
-            size="17"
-          ></i>
+            <button class="personality-card pro-personality" type="button" data-personality="custom">
+              <span class="personality-avatar">✨</span>
+              <strong>Custom</strong>
+              <small>Pro only</small>
+            </button>
+          </div>
+        </div>
 
-          <span>Warm Companion</span>
-          <small>Supportive tone</small>
-        </button>
-      </div>
+        <div class="neo-settings-panel" id="settingsPanelBilling">
+          <h2>Billing</h2>
+
+          <div class="settings-row">
+            <div>
+              <strong id="billingPlanText">Free Plan</strong>
+              <small>Upgrade to unlock more usage and advanced features.</small>
+            </div>
+            <button class="settings-primary-btn" id="settingsUpgradeBtn" type="button">Upgrade</button>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
-  <div
-    class="modal-overlay"
-    id="upgradeModal"
-  >
+  <div class="modal-overlay" id="upgradeModal">
     <div class="modal-card">
-      <button
-        class="modal-close-btn"
-        id="modalCloseBtn"
-        type="button"
-        aria-label="Close upgrade"
-      >
-        &times;
-      </button>
+      <button class="modal-close-btn" id="modalCloseBtn" type="button">&times;</button>
 
       <div class="modal-header">
         <div class="pro-sparkle-badge">
-          <i
-            data-lucide="zap"
-            size="22"
-          ></i>
+          <i data-lucide="zap" size="22"></i>
         </div>
 
-        <h2>
-          Unlock NEO L1.2 Pro
-        </h2>
-
-        <p>
-          Supercharge your workflow with full multimodal power and reasoning.
-        </p>
+        <h2>Unlock NEO L1.2 Pro</h2>
+        <p>Supercharge your workflow with full multimodal power and reasoning.</p>
       </div>
 
       <div class="modal-features-list">
         <div class="feature-item">
           <div class="feature-icon">
-            <i
-              data-lucide="clapperboard"
-              size="18"
-            ></i>
+            <i data-lucide="clapperboard" size="18"></i>
           </div>
 
           <div class="feature-text">
-            <strong>
-              Video & Audio Processing
-            </strong>
-
-            <small>
-              Upload MP4, MP3, and WAV files directly for AI analysis.
-            </small>
+            <strong>Video & Audio Processing</strong>
+            <small>Upload MP4, MP3, and WAV files directly for AI analysis.</small>
           </div>
         </div>
 
         <div class="feature-item">
           <div class="feature-icon">
-            <i
-              data-lucide="brain-circuit"
-              size="18"
-            ></i>
+            <i data-lucide="brain-circuit" size="18"></i>
           </div>
 
           <div class="feature-text">
-            <strong>
-              Deep Structural Reasoning
-            </strong>
-
-            <small>
-              Solve complex logic, architecture, and step-by-step math.
-            </small>
+            <strong>Deep Structural Reasoning</strong>
+            <small>Solve complex logic, architecture, and step-by-step math.</small>
           </div>
         </div>
 
         <div class="feature-item">
           <div class="feature-icon">
-            <i
-              data-lucide="file-text"
-              size="18"
-            ></i>
+            <i data-lucide="file-text" size="18"></i>
           </div>
 
           <div class="feature-text">
-            <strong>
-              4,000 Output Tokens
-            </strong>
-
-            <small>
-              Generate long-form scripts, complete codebases, and reports.
-            </small>
+            <strong>4,000 Output Tokens</strong>
+            <small>Generate long-form scripts, complete codebases, and reports.</small>
           </div>
         </div>
       </div>
 
       <div class="modal-footer-actions">
-        <button
-          class="upgrade-btn-primary"
-          id="upgradeActionBtn"
-          type="button"
-        >
-          Upgrade to Pro ($10/mo)
-        </button>
-
-        <button
-          class="upgrade-btn-secondary"
-          id="modalMaybeLaterBtn"
-          type="button"
-        >
-          Maybe Later
-        </button>
+        <button class="upgrade-btn-primary" id="upgradeActionBtn" type="button">Upgrade to Pro ($12/mo)</button>
+        <button class="upgrade-btn-secondary" id="modalMaybeLaterBtn" type="button">Maybe Later</button>
       </div>
     </div>
   </div>
 
-  <script
-    type="module"
-    src="/neo.js"
-  ></script>
+  <script src="neo.js"></script>
 </body>
 </html>
