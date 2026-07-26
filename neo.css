@@ -161,6 +161,10 @@ body.sidebar-collapsed #sidebarToggleBtn {
     border-radius: var(--radius-main);
 }
 
+.brand-button:hover {
+    background: var(--bg-hover);
+}
+
 .brand-copy strong {
     display: block;
     font-size: 14.5px;
@@ -1799,6 +1803,10 @@ textarea#chatInput {
     color: var(--text-primary);
 }
 
+.settings-ghost-btn:hover {
+    filter: brightness(0.98);
+}
+
 .settings-helper-text {
     color: var(--text-muted);
     font-size: 12px;
@@ -1937,6 +1945,21 @@ textarea#chatInput {
     padding: 3px 6px;
 }
 
+body.dark-mode .neo-settings-overlay {
+    background: rgba(0, 0, 0, 0.52);
+}
+
+body.dark-mode .settings-status-pill {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.12);
+    border-color: rgba(52, 211, 153, 0.2);
+}
+
+body.dark-mode .personality-card.active {
+    background: rgba(96, 165, 250, 0.12);
+    border-color: rgba(96, 165, 250, 0.48);
+}
+
 /* RESPONSIVE */
 @media (max-width: 760px) {
     .neo-settings-overlay {
@@ -1981,6 +2004,36 @@ textarea#chatInput {
 
     .personality-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .top-bar {
+        padding: 0 10px;
+    }
+
+    .scroll-area {
+        padding: 12px 14px 170px 14px;
+    }
+
+    .hero-section {
+        padding: 44px 0 24px 0;
+    }
+
+    .hero-section h1 {
+        font-size: 23px;
+    }
+
+    .starter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .composer-dock {
+        padding: 10px 12px 14px 12px;
+    }
+
+    .message.user .message-wrapper {
+        max-width: 92%;
     }
 }
 
