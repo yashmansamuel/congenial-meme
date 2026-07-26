@@ -1,70 +1,8 @@
-// neo.js
-
 (() => {
   "use strict";
 
   const MAX_FILES = 5;
-  const FREE_MAX_FILE_BYTES = 25 * 1024 * 1024;
-  const PRO_MAX_FILE_BYTES = 100 * 1024 * 1024;
-
-  const FILE_ACCEPT =
-    "image/jpeg,image/png,image/webp," +
-    "application/pdf,text/plain,text/html,text/css," +
-    "text/javascript,application/javascript,application/json," +
-    "video/mp4,video/webm,video/quicktime," +
-    "audio/mpeg,audio/mp3,audio/wav,audio/x-wav," +
-    ".jpg,.jpeg,.png,.webp,.pdf,.txt,.html,.css,.js,.json,.mp4,.webm,.mov,.mp3,.wav";
-
-  const MIME_BY_EXTENSION = {
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    webp: "image/webp",
-    pdf: "application/pdf",
-    txt: "text/plain",
-    html: "text/html",
-    htm: "text/html",
-    css: "text/css",
-    js: "text/javascript",
-    json: "application/json",
-    mp4: "video/mp4",
-    webm: "video/webm",
-    mov: "video/quicktime",
-    mp3: "audio/mpeg",
-    wav: "audio/wav"
-  };
-
-  const SUPPORTED_MIME_TYPES = new Set([
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "application/pdf",
-    "text/plain",
-    "text/html",
-    "text/css",
-    "text/javascript",
-    "application/javascript",
-    "application/json",
-    "video/mp4",
-    "video/webm",
-    "video/quicktime",
-    "audio/mpeg",
-    "audio/mp3",
-    "audio/wav",
-    "audio/x-wav"
-  ]);
-
-  const personalities = {
-    balanced: "Balanced",
-    researcher: "Researcher",
-    strategist: "Strategist",
-    creative: "Creative",
-    teacher: "Teacher",
-    coding_expert: "Coding Expert",
-    business_advisor: "Business Advisor",
-    deep_thinker: "Deep Thinker",
-    warm_companion: "Warm Companion"
-  };
+  const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
   const state = {
     user: null,
@@ -80,6 +18,18 @@
     historySearch: ""
   };
 
+  const personalities = {
+    balanced: "Balanced",
+    researcher: "Researcher",
+    strategist: "Strategist",
+    creative: "Creative",
+    teacher: "Teacher",
+    coding_expert: "Coding Expert",
+    business_advisor: "Business Advisor",
+    deep_thinker: "Deep Thinker",
+    warm_companion: "Warm Companion"
+  };
+
   const $ = id => document.getElementById(id);
 
   const dom = {
@@ -87,39 +37,30 @@
     sidebarScrim: $("sidebarScrim"),
     sidebarToggle: $("sidebarToggleBtn"),
     sidebarClose: $("collapseSidebarBtn"),
-
     history: $("historyList"),
     historySearch: $("historySearchInput"),
     clearHistorySearch: $("clearHistorySearchBtn"),
-    historyMenu: $("historyPopupMenu"),
-    deleteHistory: $("hpDeleteBtn"),
-
     newChat: $("newChatBtn"),
     profile: $("userProfileBtn"),
     profileMenu: $("userPopupMenu"),
     avatar: $("userAvatar"),
     username: $("userNameDisplay"),
     planBadge: $("userPlanBadge"),
-    logout: $("logoutBtn"),
-
     themeTop: $("topBarDarkModeToggle"),
     themeSide: $("sidebarDarkModeToggle"),
-
+    logout: $("logoutBtn"),
     modelBadge: $("modelBadgeBtn"),
     modelMenu: $("modelDropdownMenu"),
     modelText: $("currentModelDisplay"),
     modelL10: $("optL10"),
     modelL12: $("optL12"),
-
     scroll: $("scrollArea"),
     hero: $("heroSection"),
     messages: $("chatMessages"),
-
     input: $("chatInput"),
     send: $("sendBtn"),
     composer: $("glassInputContainer"),
     composerWrapper: $("composerWrapper"),
-
     attached: $("attachedChipsWrapper"),
     suggestions: $("liveSuggestions"),
     attach: $("attachBtn"),
@@ -127,19 +68,18 @@
     addFiles: $("addFilesMenuBtn"),
     fileInput: $("hiddenFileInput"),
     dropOverlay: $("dragDropOverlay"),
-
     deepResearch: $("deepResearchToggleBtn"),
     personalities: $("neoPersonalitiesBtn"),
     personalityModal: $("personalityModal"),
     personalityClose: $("personalityModalCloseBtn"),
-
     upgradeModal: $("upgradeModal"),
     upgradeClose: $("modalCloseBtn"),
     upgradeLater: $("modalMaybeLaterBtn"),
     upgradeAction: $("upgradeActionBtn"),
-
     mic: $("micBtn"),
-    stopMic: $("stopRecBtn")
+    stopMic: $("stopRecBtn"),
+    historyMenu: $("historyPopupMenu"),
+    deleteHistory: $("hpDeleteBtn")
   };
 
   let activeHistoryId = null;
@@ -147,22 +87,16 @@
 
   function toast(message, tone = "info") {
     const element = document.createElement("div");
-
     element.className = `neo-toast neo-toast-${tone}`;
     element.textContent = message;
 
     document.body.appendChild(element);
 
-    requestAnimationFrame(() => {
-      element.classList.add("show");
-    });
+    requestAnimationFrame(() => element.classList.add("show"));
 
     window.setTimeout(() => {
       element.classList.remove("show");
-
-      window.setTimeout(() => {
-        element.remove();
-      }, 220);
+      window.setTimeout(() => element.remove(), 220);
     }, 3600);
   }
 
@@ -233,16 +167,6 @@
     return state.plan === "pro";
   }
 
-  function currentMaxFileBytes() {
-    return isPro()
-      ? PRO_MAX_FILE_BYTES
-      : FREE_MAX_FILE_BYTES;
-  }
-
-  function currentMaxFileMb() {
-    return Math.floor(currentMaxFileBytes() / 1024 / 1024);
-  }
-
   function applyTheme() {
     document.body.classList.toggle(
       "dark-mode",
@@ -289,9 +213,7 @@
 
   function updateComposer() {
     const hasText = Boolean(dom.input?.value.trim());
-    const multiline = Boolean(
-      dom.input && dom.input.scrollHeight > 38
-    );
+    const multiline = Boolean(dom.input && dom.input.scrollHeight > 38);
 
     dom.composer?.classList.toggle(
       "is-expanded",
@@ -300,81 +222,7 @@
   }
 
   function scrollToBottom() {
-    if (dom.scroll) {
-      dom.scroll.scrollTop = dom.scroll.scrollHeight;
-    }
-  }
-
-  function getExtension(filename) {
-    const sections = String(filename || "").split(".");
-    return sections.length > 1
-      ? sections.at(-1).toLowerCase()
-      : "";
-  }
-
-  function getFileMimeType(file) {
-    const browserType = String(file?.type || "")
-      .trim()
-      .toLowerCase();
-
-    if (SUPPORTED_MIME_TYPES.has(browserType)) {
-      return browserType;
-    }
-
-    return MIME_BY_EXTENSION[getExtension(file?.name)] || "";
-  }
-
-  function getFileCategory(mimeType) {
-    if (mimeType.startsWith("image/")) return "image";
-    if (mimeType.startsWith("video/")) return "video";
-    if (mimeType.startsWith("audio/")) return "audio";
-
-    if (
-      [
-        "text/html",
-        "text/css",
-        "text/javascript",
-        "application/javascript",
-        "application/json"
-      ].includes(mimeType)
-    ) {
-      return "code";
-    }
-
-    return "document";
-  }
-
-  function iconForCategory(category) {
-    const icons = {
-      image: "image",
-      video: "film",
-      audio: "audio-lines",
-      code: "code-2",
-      document: "file-text"
-    };
-
-    return icons[category] || "file";
-  }
-
-  function formatFileSize(bytes) {
-    if (!Number.isFinite(bytes)) return "";
-
-    if (bytes < 1024 * 1024) {
-      return `${Math.max(1, Math.round(bytes / 1024))}KB`;
-    }
-
-    return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
-  }
-
-  function releaseFilePreview(file) {
-    if (file?.previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(file.previewUrl);
-    }
-  }
-
-  function clearFiles() {
-    state.files.forEach(releaseFilePreview);
-    state.files = [];
+    if (dom.scroll) dom.scroll.scrollTop = dom.scroll.scrollHeight;
   }
 
   function renderSuggestions() {
@@ -384,8 +232,8 @@
       ? [
           {
             icon: "search",
-            label: "Analyze files",
-            prompt: "Analyze the attached files and give me a clear summary."
+            label: "Summarize / Describe",
+            prompt: "Analyze and describe the attached files."
           }
         ]
       : [
@@ -436,12 +284,7 @@
       const element = document.createElement("div");
 
       const remove = () => {
-        releaseFilePreview(item);
-
-        state.files = state.files.filter(
-          file => file.id !== item.id
-        );
-
+        state.files = state.files.filter(file => file.id !== item.id);
         renderFiles();
         renderSuggestions();
         updateComposer();
@@ -451,53 +294,22 @@
         element.className = "image-preview-chip";
 
         element.innerHTML = `
-          <img src="${item.previewUrl}" alt="">
+          <img src="${item.data}" alt="">
           <button class="chip-remove-btn" type="button" aria-label="Remove image">×</button>
         `;
 
-        element
-          .querySelector("button")
-          ?.addEventListener("click", remove);
-      } else if (item.category === "video") {
-        element.className = "image-preview-chip";
-
-        element.innerHTML = `
-          <video muted playsinline preload="metadata" aria-label="${escapeHtml(item.name)}"></video>
-          <button class="chip-remove-btn" type="button" aria-label="Remove video">×</button>
-        `;
-
-        const video = element.querySelector("video");
-
-        if (video) {
-          video.src = item.previewUrl;
-          video.style.width = "52px";
-          video.style.height = "52px";
-          video.style.objectFit = "cover";
-          video.style.borderRadius = "10px";
-          video.style.background = "#111";
-        }
-
-        element
-          .querySelector("button")
-          ?.addEventListener("click", remove);
+        element.querySelector("button")?.addEventListener("click", remove);
       } else {
         element.className = "file-chip";
 
         element.innerHTML = `
-          <i data-lucide="${iconForCategory(item.category)}" size="14"></i>
+          <i data-lucide="${item.category === "code" ? "code" : "file-text"}" size="14"></i>
           <span></span>
           <button class="file-chip-remove" type="button" aria-label="Remove file">×</button>
         `;
 
-        const label = element.querySelector("span");
-
-        if (label) {
-          label.textContent = `${item.name} · ${formatFileSize(item.size)}`;
-        }
-
-        element
-          .querySelector("button")
-          ?.addEventListener("click", remove);
+        element.querySelector("span").textContent = item.name;
+        element.querySelector("button")?.addEventListener("click", remove);
       }
 
       dom.attached.appendChild(element);
@@ -507,23 +319,45 @@
   }
 
   function supportedFile(file) {
-    const mimeType = getFileMimeType(file);
+    const type = String(file?.type || "").toLowerCase();
+    const extension = String(file?.name || "")
+      .split(".")
+      .pop()
+      .toLowerCase();
 
-    return Boolean(
-      mimeType &&
-      SUPPORTED_MIME_TYPES.has(mimeType)
-    );
+    const types = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "text/plain"
+    ];
+
+    const extensions = ["jpg", "jpeg", "png", "webp", "pdf", "txt"];
+
+    return types.includes(type) && extensions.includes(extension);
+  }
+
+  function readFile(file, image) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Unable to read file."));
+
+      if (image) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
   }
 
   async function addFiles(files) {
     for (const file of files) {
-      if (!file || !(file instanceof File)) {
-        continue;
-      }
-
       if (!supportedFile(file)) {
         toast(
-          `"${file.name}" is not supported. Use image, PDF, TXT, MP4, MP3, or WAV.`,
+          `File "${file.name}" is not supported. Use JPG, PNG, WebP, PDF, or TXT.`,
           "error"
         );
         continue;
@@ -534,44 +368,25 @@
         break;
       }
 
-      if (file.size > currentMaxFileBytes()) {
-        toast(
-          `"${file.name}" exceeds your ${currentMaxFileMb()}MB limit.`,
-          "error"
-        );
+      if (file.size > MAX_FILE_SIZE) {
+        toast(`File "${file.name}" exceeds 4MB limit.`, "error");
         continue;
       }
 
-      const duplicate = state.files.some(
-        item =>
-          item.name === file.name &&
-          item.size === file.size &&
-          item.lastModified === file.lastModified
-      );
+      const image = file.type.startsWith("image/");
+      const extension = file.name.split(".").pop().toLowerCase();
 
-      if (duplicate) {
-        toast(`"${file.name}" is already attached.`, "error");
-        continue;
-      }
-
-      const mimeType = getFileMimeType(file);
-      const category = getFileCategory(mimeType);
+      const category = image
+        ? "image"
+        : ["js", "ts", "py", "java", "html", "css", "json", "cpp"].includes(extension)
+          ? "code"
+          : "document";
 
       state.files.push({
-        id:
-          `file_${crypto.randomUUID?.() || Math.random()
-            .toString(36)
-            .slice(2)}`,
-        file,
+        id: `file_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`,
         name: file.name,
-        size: file.size,
-        lastModified: file.lastModified,
-        mimeType,
         category,
-        previewUrl:
-          category === "image" || category === "video"
-            ? URL.createObjectURL(file)
-            : ""
+        data: await readFile(file, image)
       });
     }
 
@@ -580,79 +395,10 @@
     updateComposer();
   }
 
-  async function requestUpload(fileItem) {
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        filename: fileItem.name,
-        mimeType: fileItem.mimeType,
-        size: fileItem.size
-      })
-    });
-
-    const data = await json(response);
-
-    if (!data?.upload?.signedUrl || !data?.upload?.path) {
-      throw new Error("Secure upload could not be prepared.");
-    }
-
-    return data.upload;
-  }
-
-  async function uploadOneFile(fileItem) {
-    const upload = await requestUpload(fileItem);
-
-    const response = await fetch(upload.signedUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": fileItem.mimeType,
-        "x-upsert": "false"
-      },
-      body: fileItem.file
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `"${fileItem.name}" could not be uploaded. Please try again.`
-      );
-    }
-
-    return {
-      bucket: upload.bucket,
-      path: upload.path,
-      name: fileItem.name,
-      mimeType: fileItem.mimeType,
-      size: fileItem.size
-    };
-  }
-
-  async function uploadFiles(files) {
-    const uploaded = [];
-
-    for (let index = 0; index < files.length; index += 1) {
-      const file = files[index];
-
-      toast(
-        `Uploading ${index + 1} of ${files.length}: ${file.name}`,
-        "info"
-      );
-
-      uploaded.push(await uploadOneFile(file));
-    }
-
-    return uploaded;
-  }
-
   function renderMessage(role, content, thinking = false) {
     const message = document.createElement("div");
 
-    message.className =
-      `message ${role}${thinking ? " is-thinking" : ""}`;
+    message.className = `message ${role}${thinking ? " is-thinking" : ""}`;
 
     if (role === "user") {
       message.innerHTML = `
@@ -686,8 +432,9 @@
     const content = element?.querySelector(".message-content");
 
     if (content) {
-      content.textContent =
-        `Error: ${error?.message || "Unable to complete this request."}`;
+      content.textContent = `Error: ${
+        error?.message || "Unable to complete this request."
+      }`;
 
       content.style.color = "#ef4444";
     }
@@ -700,15 +447,13 @@
   }
 
   function syncPersonality() {
-    document
-      .querySelectorAll("[data-neo-personality]")
-      .forEach(button => {
-        const active =
-          button.dataset.neoPersonality === selectedPersonality();
+    document.querySelectorAll("[data-neo-personality]").forEach(button => {
+      const active =
+        button.dataset.neoPersonality === selectedPersonality();
 
-        button.classList.toggle("is-selected", active);
-        button.setAttribute("aria-selected", String(active));
-      });
+      button.classList.toggle("is-selected", active);
+      button.setAttribute("aria-selected", String(active));
+    });
   }
 
   function closePersonalityModal() {
@@ -838,13 +583,8 @@
         content: item.content || ""
       }));
 
-      if (dom.messages) {
-        dom.messages.innerHTML = "";
-      }
-
-      if (dom.hero) {
-        dom.hero.style.display = "none";
-      }
+      if (dom.messages) dom.messages.innerHTML = "";
+      if (dom.hero) dom.hero.style.display = "none";
 
       state.messages.forEach(item => {
         if (item.role !== "system") {
@@ -864,18 +604,12 @@
 
   function startNewChat() {
     state.messages = [];
+    state.files = [];
     state.conversationId = null;
     activeHistoryId = null;
 
-    clearFiles();
-
-    if (dom.messages) {
-      dom.messages.innerHTML = "";
-    }
-
-    if (dom.hero) {
-      dom.hero.style.display = "block";
-    }
+    if (dom.messages) dom.messages.innerHTML = "";
+    if (dom.hero) dom.hero.style.display = "block";
 
     renderFiles();
     renderSuggestions();
@@ -888,48 +622,54 @@
 
     const text = dom.input?.value.trim() || "";
 
-    if (!text && !state.files.length) {
-      return;
-    }
+    if (!text && !state.files.length) return;
 
     state.generating = true;
 
     const pendingFiles = [...state.files];
+    let content = text;
+
+    if (pendingFiles.length) {
+      content = `${text}
+
+${pendingFiles
+  .map(file => `[Attached ${file.category}: ${file.name}]
+${file.data}`)
+  .join("\n\n")}`.trim();
+    }
+
+    if (content.length > 120000) {
+      state.generating = false;
+      toast("The message and attached files are too large.", "error");
+      return;
+    }
+
+    if (dom.input) {
+      dom.input.value = "";
+      dom.input.style.height = "auto";
+    }
+
+    if (dom.hero) dom.hero.style.display = "none";
+
+    renderMessage(
+      "user",
+      text || `[Uploaded ${pendingFiles.length} file(s)]`
+    );
+
+    state.messages.push({
+      role: "user",
+      content
+    });
+
+    state.files = [];
+
+    renderFiles();
+    renderSuggestions();
+    updateComposer();
+
+    const thinking = renderMessage("assistant", "", true);
 
     try {
-      const attachments = pendingFiles.length
-        ? await uploadFiles(pendingFiles)
-        : [];
-
-      if (dom.input) {
-        dom.input.value = "";
-        dom.input.style.height = "auto";
-      }
-
-      if (dom.hero) {
-        dom.hero.style.display = "none";
-      }
-
-      const visibleText =
-        text ||
-        `Uploaded ${pendingFiles.length} file${
-          pendingFiles.length === 1 ? "" : "s"
-        }: ${pendingFiles.map(file => file.name).join(", ")}`;
-
-      renderMessage("user", visibleText);
-
-      state.messages.push({
-        role: "user",
-        content: text || "Please analyze the attached files."
-      });
-
-      clearFiles();
-      renderFiles();
-      renderSuggestions();
-      updateComposer();
-
-      const thinking = renderMessage("assistant", "", true);
-
       const response = await fetch("/api/chat", {
         method: "POST",
         credentials: "include",
@@ -939,7 +679,6 @@
         },
         body: JSON.stringify({
           messages: state.messages,
-          attachments,
           conversationId: state.conversationId,
           model: state.model,
           isDeepResearch: state.deepResearch,
@@ -977,20 +716,12 @@
 
       await loadHistory();
     } catch (error) {
-      const lastThinking = dom.messages?.lastElementChild;
+      setThinkingError(thinking, error);
 
-      if (lastThinking?.classList.contains("is-thinking")) {
-        setThinkingError(lastThinking, error);
-      } else {
-        toast(error.message || "Unable to send message.", "error");
-      }
-
-      if (!state.files.length && pendingFiles.length) {
-        state.files = pendingFiles;
-        renderFiles();
-        renderSuggestions();
-        updateComposer();
-      }
+      state.files = pendingFiles;
+      renderFiles();
+      renderSuggestions();
+      updateComposer();
     } finally {
       state.generating = false;
       window.lucide?.createIcons();
@@ -1024,10 +755,7 @@
 
       window.location.assign(data.url);
     } catch (error) {
-      toast(
-        error.message || "Checkout could not be opened.",
-        "error"
-      );
+      toast(error.message || "Checkout could not be opened.", "error");
     } finally {
       dom.upgradeAction.disabled = false;
       dom.upgradeAction.textContent = original;
@@ -1062,9 +790,7 @@
         .map(result => result[0].transcript)
         .join("");
 
-      if (dom.input) {
-        dom.input.value = text;
-      }
+      if (dom.input) dom.input.value = text;
 
       updateComposer();
     };
@@ -1126,14 +852,11 @@
     }
 
     if (dom.planBadge) {
-      dom.planBadge.textContent = isPro()
-        ? "Pro Plan"
-        : "Free Plan";
+      dom.planBadge.textContent = isPro() ? "Pro Plan" : "Free Plan";
     }
 
     if (dom.avatar) {
-      dom.avatar.textContent =
-        username.charAt(0).toUpperCase() || "U";
+      dom.avatar.textContent = username.charAt(0).toUpperCase() || "U";
     }
   }
 
@@ -1156,10 +879,6 @@
 
   function setupEvents() {
     applyTheme();
-
-    if (dom.fileInput) {
-      dom.fileInput.accept = FILE_ACCEPT;
-    }
 
     dom.themeTop?.addEventListener("click", toggleTheme);
     dom.themeSide?.addEventListener("click", toggleTheme);
@@ -1222,8 +941,7 @@
 
     dom.input?.addEventListener("input", () => {
       dom.input.style.height = "auto";
-      dom.input.style.height =
-        `${Math.min(dom.input.scrollHeight, 160)}px`;
+      dom.input.style.height = `${Math.min(dom.input.scrollHeight, 160)}px`;
 
       updateComposer();
     });
@@ -1269,7 +987,6 @@
         .filter(Boolean);
 
       if (files.length) {
-        event.preventDefault();
         addFiles(files);
       }
     });
@@ -1333,16 +1050,10 @@
       button.addEventListener("click", () => {
         const personality = button.dataset.neoPersonality;
 
-        if (!personalities[personality]) {
-          return;
-        }
+        if (!personalities[personality]) return;
 
         state.personality = personality;
-
-        localStorage.setItem(
-          "neo_personality",
-          personality
-        );
+        localStorage.setItem("neo_personality", personality);
 
         syncPersonality();
         closePersonalityModal();
@@ -1481,9 +1192,7 @@
     updateComposer();
     syncPersonality();
 
-    if (!await restoreSession()) {
-      return;
-    }
+    if (!await restoreSession()) return;
 
     state.ready = true;
 
