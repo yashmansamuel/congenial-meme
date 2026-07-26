@@ -1,1215 +1,4037 @@
-(() => {
-  "use strict";
+(function () {
+    "use strict";
 
-  const MAX_FILES = 5;
-  const MAX_FILE_SIZE = 4 * 1024 * 1024;
+    // SECURITY CONSTANTS & CONFIGS
+    const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+    const MAX_ATTACHED_FILES = 5;
 
-  const state = {
-    user: null,
-    plan: "free",
-    model: "l1.0",
-    personality: "balanced",
-    deepResearch: false,
-    conversationId: null,
-    messages: [],
-    files: [],
-    generating: false,
-    ready: false,
-    historySearch: ""
-  };
+    const SUPABASE_URL =
+        "https://ujclhweqqifgoiscvqmd.supabase.co";
 
-  const personalities = {
-    balanced: "Balanced",
-    researcher: "Researcher",
-    strategist: "Strategist",
-    creative: "Creative",
-    teacher: "Teacher",
-    coding_expert: "Coding Expert",
-    business_advisor: "Business Advisor",
-    deep_thinker: "Deep Thinker",
-    warm_companion: "Warm Companion"
-  };
+    const SUPABASE_ANON_KEY =
+        "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf";
 
-  const $ = id => document.getElementById(id);
+    let supabaseClient = null;
 
-  const dom = {
-    sidebar: $("sidebar"),
-    sidebarScrim: $("sidebarScrim"),
-    sidebarToggle: $("sidebarToggleBtn"),
-    sidebarClose: $("collapseSidebarBtn"),
-    history: $("historyList"),
-    historySearch: $("historySearchInput"),
-    clearHistorySearch: $("clearHistorySearchBtn"),
-    newChat: $("newChatBtn"),
-    profile: $("userProfileBtn"),
-    profileMenu: $("userPopupMenu"),
-    avatar: $("userAvatar"),
-    username: $("userNameDisplay"),
-    planBadge: $("userPlanBadge"),
-    themeTop: $("topBarDarkModeToggle"),
-    themeSide: $("sidebarDarkModeToggle"),
-    logout: $("logoutBtn"),
-    modelBadge: $("modelBadgeBtn"),
-    modelMenu: $("modelDropdownMenu"),
-    modelText: $("currentModelDisplay"),
-    modelL10: $("optL10"),
-    modelL12: $("optL12"),
-    scroll: $("scrollArea"),
-    hero: $("heroSection"),
-    messages: $("chatMessages"),
-    input: $("chatInput"),
-    send: $("sendBtn"),
-    composer: $("glassInputContainer"),
-    composerWrapper: $("composerWrapper"),
-    attached: $("attachedChipsWrapper"),
-    suggestions: $("liveSuggestions"),
-    attach: $("attachBtn"),
-    attachMenu: $("attachPopupMenu"),
-    addFiles: $("addFilesMenuBtn"),
-    fileInput: $("hiddenFileInput"),
-    dropOverlay: $("dragDropOverlay"),
-    deepResearch: $("deepResearchToggleBtn"),
-    personalities: $("neoPersonalitiesBtn"),
-    personalityModal: $("personalityModal"),
-    personalityClose: $("personalityModalCloseBtn"),
-    upgradeModal: $("upgradeModal"),
-    upgradeClose: $("modalCloseBtn"),
-    upgradeLater: $("modalMaybeLaterBtn"),
-    upgradeAction: $("upgradeActionBtn"),
-    mic: $("micBtn"),
-    stopMic: $("stopRecBtn"),
-    historyMenu: $("historyPopupMenu"),
-    deleteHistory: $("hpDeleteBtn")
-  };
-
-  let activeHistoryId = null;
-  let recognition = null;
-
-  function toast(message, tone = "info") {
-    const element = document.createElement("div");
-    element.className = `neo-toast neo-toast-${tone}`;
-    element.textContent = message;
-
-    document.body.appendChild(element);
-
-    requestAnimationFrame(() => element.classList.add("show"));
-
-    window.setTimeout(() => {
-      element.classList.remove("show");
-      window.setTimeout(() => element.remove(), 220);
-    }, 3600);
-  }
-
-  function escapeHtml(value) {
-    const element = document.createElement("div");
-    element.textContent = String(value || "");
-    return element.innerHTML;
-  }
-
-  function markdown(value) {
-    const text = String(value || "");
-
-    if (!window.marked || !window.DOMPurify) {
-      return escapeHtml(text).replace(/\n/g, "<br>");
+    if (
+        window.supabase &&
+        window.supabase.createClient
+    ) {
+        supabaseClient =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_ANON_KEY
+            );
     }
 
-    try {
-      return window.DOMPurify.sanitize(window.marked.parse(text), {
-        USE_PROFILES: { html: true },
-        FORBID_TAGS: [
-          "script",
-          "style",
-          "iframe",
-          "object",
-          "embed",
-          "form",
-          "input",
-          "button",
-          "textarea",
-          "select"
-        ],
-        FORBID_ATTR: [
-          "style",
-          "srcdoc",
-          "formaction",
-          "onerror",
-          "onload",
-          "onclick",
-          "onmouseover",
-          "onfocus"
-        ]
-      });
-    } catch {
-      return escapeHtml(text).replace(/\n/g, "<br>");
-    }
-  }
+    // AUTHENTICATED USER COMES FROM SECURE SERVER COOKIE
+    let currentUser = {
+        id: null,
+        username: "user"
+    };
 
-  async function json(response) {
-    const data = await response.json().catch(() => ({}));
+    // STATE VARIABLES
+    let conversation = [];
+    let attachedFiles = [];
+    let currentConversationId = null;
+    let isGenerating = false;
+    let activePopupChatId = null;
+    let isDeepResearchMode = false;
+    let recognition = null;
+    let isListening = false;
 
-    if (response.status === 401) {
-      window.location.replace("signup.html");
-      throw new Error("Your session has expired. Please log in again.");
-    }
+    // REAL-TIME AUDIO VISUALIZER STATE
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let animFrameId = null;
 
-    if (!response.ok) {
-      throw new Error(
-        typeof data?.error === "string"
-          ? data.error
-          : data?.error?.message || "The request failed."
-      );
-    }
+    // FREEMIUM STATE
+    let selectedModel = "l1.0";
+    let userPlan = "free";
 
-    return data;
-  }
+    // DOM ELEMENTS
+    const chatInput =
+        document.getElementById("chatInput");
 
-  function isPro() {
-    return state.plan === "pro";
-  }
+    const sendBtn =
+        document.getElementById("sendBtn");
 
-  function applyTheme() {
-    document.body.classList.toggle(
-      "dark-mode",
-      localStorage.getItem("neo_theme") === "dark"
-    );
-  }
+    const chatMessages =
+        document.getElementById("chatMessages");
 
-  function toggleTheme() {
-    const dark = !document.body.classList.contains("dark-mode");
+    const scrollArea =
+        document.getElementById("scrollArea");
 
-    document.body.classList.toggle("dark-mode", dark);
-    localStorage.setItem("neo_theme", dark ? "dark" : "light");
-  }
+    const heroSection =
+        document.getElementById("heroSection");
 
-  function setSidebar(open) {
-    if (!dom.sidebar) return;
+    const historyList =
+        document.getElementById("historyList");
 
-    dom.sidebar.classList.toggle("collapsed", !open);
-    document.body.classList.toggle("sidebar-collapsed", !open);
+    const sidebar =
+        document.getElementById("sidebar");
 
-    dom.sidebarScrim?.classList.toggle(
-      "visible",
-      open && window.innerWidth < 768
-    );
-
-    if (window.innerWidth >= 768) {
-      localStorage.setItem(
-        "neo_desktop_sidebar",
-        open ? "open" : "collapsed"
-      );
-    }
-  }
-
-  function initialiseSidebar() {
-    if (window.innerWidth < 768) {
-      setSidebar(false);
-      return;
-    }
-
-    setSidebar(
-      localStorage.getItem("neo_desktop_sidebar") !== "collapsed"
-    );
-  }
-
-  function updateComposer() {
-    const hasText = Boolean(dom.input?.value.trim());
-    const multiline = Boolean(dom.input && dom.input.scrollHeight > 38);
-
-    dom.composer?.classList.toggle(
-      "is-expanded",
-      hasText || multiline || state.files.length > 0
-    );
-  }
-
-  function scrollToBottom() {
-    if (dom.scroll) dom.scroll.scrollTop = dom.scroll.scrollHeight;
-  }
-
-  function renderSuggestions() {
-    if (!dom.suggestions) return;
-
-    const items = state.files.length
-      ? [
-          {
-            icon: "search",
-            label: "Summarize / Describe",
-            prompt: "Analyze and describe the attached files."
-          }
-        ]
-      : [
-          {
-            icon: "search",
-            label: "Research",
-            prompt: "Research on: "
-          },
-          {
-            icon: "lightbulb",
-            label: "Brainstorm",
-            prompt: "Brainstorm ideas for: "
-          }
-        ];
-
-    dom.suggestions.innerHTML = "";
-
-    items.forEach(item => {
-      const button = document.createElement("button");
-
-      button.className = "suggestion-chip";
-      button.type = "button";
-      button.innerHTML = `
-        <i data-lucide="${item.icon}" size="14"></i>
-        <span>${item.label}</span>
-      `;
-
-      button.addEventListener("click", () => {
-        if (!dom.input) return;
-
-        dom.input.value = item.prompt;
-        dom.input.focus();
-        updateComposer();
-      });
-
-      dom.suggestions.appendChild(button);
-    });
-
-    window.lucide?.createIcons();
-  }
-
-  function renderFiles() {
-    if (!dom.attached) return;
-
-    dom.attached.innerHTML = "";
-
-    state.files.forEach(item => {
-      const element = document.createElement("div");
-
-      const remove = () => {
-        state.files = state.files.filter(file => file.id !== item.id);
-        renderFiles();
-        renderSuggestions();
-        updateComposer();
-      };
-
-      if (item.category === "image") {
-        element.className = "image-preview-chip";
-
-        element.innerHTML = `
-          <img src="${item.data}" alt="">
-          <button class="chip-remove-btn" type="button" aria-label="Remove image">×</button>
-        `;
-
-        element.querySelector("button")?.addEventListener("click", remove);
-      } else {
-        element.className = "file-chip";
-
-        element.innerHTML = `
-          <i data-lucide="${item.category === "code" ? "code" : "file-text"}" size="14"></i>
-          <span></span>
-          <button class="file-chip-remove" type="button" aria-label="Remove file">×</button>
-        `;
-
-        element.querySelector("span").textContent = item.name;
-        element.querySelector("button")?.addEventListener("click", remove);
-      }
-
-      dom.attached.appendChild(element);
-    });
-
-    window.lucide?.createIcons();
-  }
-
-  function supportedFile(file) {
-    const type = String(file?.type || "").toLowerCase();
-    const extension = String(file?.name || "")
-      .split(".")
-      .pop()
-      .toLowerCase();
-
-    const types = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "application/pdf",
-      "text/plain"
-    ];
-
-    const extensions = ["jpg", "jpeg", "png", "webp", "pdf", "txt"];
-
-    return types.includes(type) && extensions.includes(extension);
-  }
-
-  function readFile(file, image) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("Unable to read file."));
-
-      if (image) {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
-      }
-    });
-  }
-
-  async function addFiles(files) {
-    for (const file of files) {
-      if (!supportedFile(file)) {
-        toast(
-          `File "${file.name}" is not supported. Use JPG, PNG, WebP, PDF, or TXT.`,
-          "error"
+    const sidebarToggleBtn =
+        document.getElementById(
+            "sidebarToggleBtn"
         );
-        continue;
-      }
-
-      if (state.files.length >= MAX_FILES) {
-        toast(`Maximum ${MAX_FILES} files allowed.`, "error");
-        break;
-      }
-
-      if (file.size > MAX_FILE_SIZE) {
-        toast(`File "${file.name}" exceeds 4MB limit.`, "error");
-        continue;
-      }
-
-      const image = file.type.startsWith("image/");
-      const extension = file.name.split(".").pop().toLowerCase();
-
-      const category = image
-        ? "image"
-        : ["js", "ts", "py", "java", "html", "css", "json", "cpp"].includes(extension)
-          ? "code"
-          : "document";
-
-      state.files.push({
-        id: `file_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`,
-        name: file.name,
-        category,
-        data: await readFile(file, image)
-      });
-    }
-
-    renderFiles();
-    renderSuggestions();
-    updateComposer();
-  }
-
-  function renderMessage(role, content, thinking = false) {
-    const message = document.createElement("div");
-
-    message.className = `message ${role}${thinking ? " is-thinking" : ""}`;
-
-    if (role === "user") {
-      message.innerHTML = `
-        <div class="message-wrapper">
-          <div class="message-content"></div>
-        </div>
-      `;
-
-      message.querySelector(".message-content").textContent = content;
-    } else {
-      message.innerHTML = `
-        <div class="message-content">
-          ${
-            thinking
-              ? '<span class="thinking-shimmer">Thinking...</span>'
-              : markdown(content)
-          }
-        </div>
-      `;
-    }
-
-    dom.messages?.appendChild(message);
-    scrollToBottom();
-
-    return message;
-  }
-
-  function setThinkingError(element, error) {
-    element?.classList.remove("is-thinking");
-
-    const content = element?.querySelector(".message-content");
-
-    if (content) {
-      content.textContent = `Error: ${
-        error?.message || "Unable to complete this request."
-      }`;
-
-      content.style.color = "#ef4444";
-    }
-  }
-
-  function selectedPersonality() {
-    return personalities[state.personality]
-      ? state.personality
-      : "balanced";
-  }
-
-  function syncPersonality() {
-    document.querySelectorAll("[data-neo-personality]").forEach(button => {
-      const active =
-        button.dataset.neoPersonality === selectedPersonality();
-
-      button.classList.toggle("is-selected", active);
-      button.setAttribute("aria-selected", String(active));
-    });
-  }
-
-  function closePersonalityModal() {
-    dom.personalityModal?.classList.remove("show");
-    dom.personalityModal?.setAttribute("aria-hidden", "true");
-  }
-
-  function openPersonalityModal() {
-    syncPersonality();
-    dom.personalityModal?.classList.add("show");
-    dom.personalityModal?.setAttribute("aria-hidden", "false");
-  }
-
-  async function loadHistory() {
-    if (!dom.history) return;
-
-    try {
-      const response = await fetch("/api/history", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          action: "list",
-          limit: 100
-        })
-      });
-
-      const data = await json(response);
-
-      const conversations = Array.isArray(data.conversations)
-        ? data.conversations
-        : [];
-
-      const visible = state.historySearch
-        ? conversations.filter(item =>
-            String(item.title || "")
-              .toLowerCase()
-              .includes(state.historySearch)
-          )
-        : conversations;
-
-      dom.history.innerHTML = "";
-
-      if (!visible.length) {
-        dom.history.textContent = conversations.length
-          ? "No matching chats"
-          : "No recent chats";
-
-        dom.history.style.cssText =
-          "padding:10px;color:var(--text-muted);font-size:12px";
-
-        return;
-      }
-
-      dom.history.removeAttribute("style");
-
-      visible.forEach(item => {
-        const row = document.createElement("div");
-
-        row.className = `history-item${
-          state.conversationId === item.id ? " active" : ""
-        }`;
-
-        row.innerHTML = `
-          <span class="history-item-title"></span>
-          <div class="history-item-actions">
-            <button class="history-action-btn" type="button" aria-label="Conversation options">
-              <i data-lucide="more-horizontal" size="14"></i>
-            </button>
-          </div>
-        `;
-
-        row.querySelector(".history-item-title").textContent =
-          item.title || "New Chat";
-
-        row.addEventListener("click", () => {
-          loadConversation(item.id);
-        });
-
-        row.querySelector("button")?.addEventListener("click", event => {
-          event.stopPropagation();
-
-          activeHistoryId = item.id;
-
-          const rect = event.currentTarget.getBoundingClientRect();
-
-          if (dom.historyMenu) {
-            dom.historyMenu.style.top = `${rect.bottom}px`;
-            dom.historyMenu.style.left = `${rect.left}px`;
-            dom.historyMenu.classList.add("show");
-          }
-        });
-
-        dom.history.appendChild(row);
-      });
-
-      window.lucide?.createIcons();
-    } catch (error) {
-      console.error("History load failed:", error);
-    }
-  }
-
-  async function loadConversation(id) {
-    try {
-      const response = await fetch("/api/history", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          action: "get",
-          conversationId: id
-        })
-      });
-
-      const data = await json(response);
-
-      state.conversationId = id;
-
-      state.messages = (data.messages || []).map(item => ({
-        role: item.role,
-        content: item.content || ""
-      }));
-
-      if (dom.messages) dom.messages.innerHTML = "";
-      if (dom.hero) dom.hero.style.display = "none";
-
-      state.messages.forEach(item => {
-        if (item.role !== "system") {
-          renderMessage(item.role, item.content);
-        }
-      });
-
-      await loadHistory();
-
-      if (window.innerWidth < 768) {
-        setSidebar(false);
-      }
-    } catch (error) {
-      toast(error.message, "error");
-    }
-  }
-
-  function startNewChat() {
-    state.messages = [];
-    state.files = [];
-    state.conversationId = null;
-    activeHistoryId = null;
-
-    if (dom.messages) dom.messages.innerHTML = "";
-    if (dom.hero) dom.hero.style.display = "block";
-
-    renderFiles();
-    renderSuggestions();
-    updateComposer();
-    loadHistory();
-  }
-
-  async function sendMessage() {
-    if (!state.ready || state.generating) return;
-
-    const text = dom.input?.value.trim() || "";
-
-    if (!text && !state.files.length) return;
-
-    state.generating = true;
-
-    const pendingFiles = [...state.files];
-    let content = text;
-
-    if (pendingFiles.length) {
-      content = `${text}
-
-${pendingFiles
-  .map(file => `[Attached ${file.category}: ${file.name}]
-${file.data}`)
-  .join("\n\n")}`.trim();
-    }
-
-    if (content.length > 120000) {
-      state.generating = false;
-      toast("The message and attached files are too large.", "error");
-      return;
-    }
-
-    if (dom.input) {
-      dom.input.value = "";
-      dom.input.style.height = "auto";
-    }
-
-    if (dom.hero) dom.hero.style.display = "none";
-
-    renderMessage(
-      "user",
-      text || `[Uploaded ${pendingFiles.length} file(s)]`
-    );
-
-    state.messages.push({
-      role: "user",
-      content
-    });
-
-    state.files = [];
-
-    renderFiles();
-    renderSuggestions();
-    updateComposer();
-
-    const thinking = renderMessage("assistant", "", true);
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          messages: state.messages,
-          conversationId: state.conversationId,
-          model: state.model,
-          isDeepResearch: state.deepResearch,
-          personality: selectedPersonality()
-        })
-      });
-
-      const data = await json(response);
-
-      const reply = String(
-        data.reply || data?.choices?.[0]?.message?.content || ""
-      ).trim();
-
-      if (!reply) {
-        throw new Error("The AI response was empty.");
-      }
-
-      state.conversationId =
-        typeof data.conversationId === "string"
-          ? data.conversationId
-          : state.conversationId;
-
-      thinking.classList.remove("is-thinking");
-
-      const output = thinking.querySelector(".message-content");
-
-      if (output) {
-        output.innerHTML = markdown(reply);
-      }
-
-      state.messages.push({
-        role: "assistant",
-        content: reply
-      });
-
-      await loadHistory();
-    } catch (error) {
-      setThinkingError(thinking, error);
-
-      state.files = pendingFiles;
-      renderFiles();
-      renderSuggestions();
-      updateComposer();
-    } finally {
-      state.generating = false;
-      window.lucide?.createIcons();
-    }
-  }
-
-  async function startCheckout() {
-    if (!dom.upgradeAction) return;
-
-    const original = dom.upgradeAction.textContent;
-
-    dom.upgradeAction.disabled = true;
-    dom.upgradeAction.textContent = "Opening secure checkout...";
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: "{}"
-      });
-
-      const data = await json(response);
-
-      if (!data.url) {
-        throw new Error("Checkout URL was not returned.");
-      }
-
-      window.location.assign(data.url);
-    } catch (error) {
-      toast(error.message || "Checkout could not be opened.", "error");
-    } finally {
-      dom.upgradeAction.disabled = false;
-      dom.upgradeAction.textContent = original;
-    }
-  }
-
-  function setupSpeech() {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) return;
-
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      document
-        .querySelector(".composer-input-row")
-        ?.classList.add("is-transcribing");
-    };
-
-    recognition.onend = recognition.onerror = () => {
-      document
-        .querySelector(".composer-input-row")
-        ?.classList.remove("is-transcribing");
-    };
-
-    recognition.onresult = event => {
-      const text = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join("");
-
-      if (dom.input) dom.input.value = text;
-
-      updateComposer();
-    };
-
-    dom.mic?.addEventListener("click", () => {
-      try {
-        recognition.start();
-      } catch {
-        recognition.stop();
-      }
-    });
-
-    dom.stopMic?.addEventListener("click", () => {
-      recognition.stop();
-    });
-  }
-
-  async function restoreSession() {
-    const response = await fetch("/api/auth", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || !data.authenticated || !data.user) {
-      window.location.replace("signup.html");
-      return false;
-    }
-
-    const plan = String(data.user.planType || "free").toLowerCase();
-
-    state.plan = [
-      "pro",
-      "neo_pro",
-      "neo-pro",
-      "premium",
-      "business",
-      "suite"
-    ].includes(plan)
-      ? "pro"
-      : "free";
-
-    state.user = data.user;
-
-    return true;
-  }
-
-  async function renderProfile() {
-    const username = String(state.user?.username || "user")
-      .replace(/^@/, "")
-      .replace(/@bean$/i, "");
-
-    if (dom.username) {
-      dom.username.textContent = `@${username}`;
-    }
-
-    if (dom.planBadge) {
-      dom.planBadge.textContent = isPro() ? "Pro Plan" : "Free Plan";
-    }
-
-    if (dom.avatar) {
-      dom.avatar.textContent = username.charAt(0).toUpperCase() || "U";
-    }
-  }
-
-  async function logout() {
-    try {
-      await fetch("/api/auth", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          action: "logout"
-        })
-      });
-    } finally {
-      window.location.replace("signup.html");
-    }
-  }
-
-  function setupEvents() {
-    applyTheme();
-
-    dom.themeTop?.addEventListener("click", toggleTheme);
-    dom.themeSide?.addEventListener("click", toggleTheme);
-
-    dom.sidebarToggle?.addEventListener("click", () => {
-      setSidebar(true);
-    });
-
-    dom.sidebarClose?.addEventListener("click", () => {
-      setSidebar(false);
-    });
-
-    dom.sidebarScrim?.addEventListener("click", () => {
-      setSidebar(false);
-    });
-
-    dom.newChat?.addEventListener("click", startNewChat);
-
-    dom.profile?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.profileMenu?.classList.toggle("show");
-    });
-
-    dom.logout?.addEventListener("click", logout);
-
-    dom.modelBadge?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.modelMenu?.classList.toggle("show");
-    });
-
-    dom.modelL10?.addEventListener("click", () => {
-      state.model = "l1.0";
-
-      if (dom.modelText) {
-        dom.modelText.textContent = "NEO L1.0";
-      }
-
-      dom.modelL10.classList.add("active");
-      dom.modelL12?.classList.remove("active");
-      dom.modelMenu?.classList.remove("show");
-    });
-
-    dom.modelL12?.addEventListener("click", () => {
-      dom.modelMenu?.classList.remove("show");
-
-      if (!isPro()) {
-        dom.upgradeModal?.classList.add("show");
-        return;
-      }
-
-      state.model = "l1.2";
-
-      if (dom.modelText) {
-        dom.modelText.textContent = "NEO L1.2 Pro";
-      }
-
-      dom.modelL12.classList.add("active");
-      dom.modelL10?.classList.remove("active");
-    });
-
-    dom.input?.addEventListener("input", () => {
-      dom.input.style.height = "auto";
-      dom.input.style.height = `${Math.min(dom.input.scrollHeight, 160)}px`;
-
-      updateComposer();
-    });
-
-    dom.input?.addEventListener("keydown", event => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
-
-    dom.send?.addEventListener("click", sendMessage);
-
-    document.querySelectorAll("[data-prompt]").forEach(button => {
-      button.addEventListener("click", () => {
-        if (dom.input) {
-          dom.input.value = button.dataset.prompt || "";
+
+    const collapseSidebarBtn =
+        document.getElementById(
+            "collapseSidebarBtn"
+        );
+
+    const newChatBtn =
+        document.getElementById("newChatBtn");
+
+    const topBarDarkModeToggle =
+        document.getElementById(
+            "topBarDarkModeToggle"
+        );
+
+    const sidebarDarkModeToggle =
+        document.getElementById(
+            "sidebarDarkModeToggle"
+        );
+
+    const sidebarScrim =
+        document.getElementById(
+            "sidebarScrim"
+        );
+
+    const userAvatar =
+        document.getElementById(
+            "userAvatar"
+        );
+
+    const userNameDisplay =
+        document.getElementById(
+            "userNameDisplay"
+        );
+
+    const userPlanBadge =
+        document.getElementById(
+            "userPlanBadge"
+        );
+
+    const userProfileBtn =
+        document.getElementById(
+            "userProfileBtn"
+        );
+
+    const userPopupMenu =
+        document.getElementById(
+            "userPopupMenu"
+        );
+
+    const historyPopupMenu =
+        document.getElementById(
+            "historyPopupMenu"
+        );
+
+    const hpDeleteBtn =
+        document.getElementById(
+            "hpDeleteBtn"
+        );
+
+    // COMPOSER ELEMENTS
+    const attachBtn =
+        document.getElementById(
+            "attachBtn"
+        );
+
+    const attachPopupMenu =
+        document.getElementById(
+            "attachPopupMenu"
+        );
+
+    const addFilesMenuBtn =
+        document.getElementById(
+            "addFilesMenuBtn"
+        );
+
+    const deepResearchToggleBtn =
+        document.getElementById(
+            "deepResearchToggleBtn"
+        );
+
+    const personalMemoryBtn =
+        document.getElementById(
+            "personalMemoryBtn"
+        );
+
+    const hiddenFileInput =
+        document.getElementById(
+            "hiddenFileInput"
+        );
+
+    const liveSuggestions =
+        document.getElementById(
+            "liveSuggestions"
+        );
+
+    const attachedChipsWrapper =
+        document.getElementById(
+            "attachedChipsWrapper"
+        );
+
+    const composerWrapper =
+        document.getElementById(
+            "composerWrapper"
+        );
+
+    const dragDropOverlay =
+        document.getElementById(
+            "dragDropOverlay"
+        );
+
+    const micBtn =
+        document.getElementById("micBtn");
+
+    const stopRecBtn =
+        document.getElementById(
+            "stopRecBtn"
+        );
+
+    const composerInputRow =
+        document.querySelector(
+            ".composer-input-row"
+        );
+
+    const glassInputContainer =
+        document.getElementById(
+            "glassInputContainer"
+        );
+
+    // FREEMIUM ELEMENTS
+    const modelBadgeBtn =
+        document.getElementById(
+            "modelBadgeBtn"
+        );
+
+    const modelDropdownMenu =
+        document.getElementById(
+            "modelDropdownMenu"
+        );
+
+    const currentModelDisplay =
+        document.getElementById(
+            "currentModelDisplay"
+        );
+
+    const optL10 =
+        document.getElementById(
+            "optL10"
+        );
+
+    const optL12 =
+        document.getElementById(
+            "optL12"
+        );
+
+    const upgradeModal =
+        document.getElementById(
+            "upgradeModal"
+        );
+
+    const modalCloseBtn =
+        document.getElementById(
+            "modalCloseBtn"
+        );
+
+    const modalMaybeLaterBtn =
+        document.getElementById(
+            "modalMaybeLaterBtn"
+        );
+
+    const upgradeActionBtn =
+        document.getElementById(
+            "upgradeActionBtn"
+        );
+
+    async function init() {
+        if (window.lucide) {
+            window.lucide.createIcons();
         }
 
-        sendMessage();
-      });
-    });
+        setupTheme();
+        configureSecurityHooks();
+        initializeSidebarState();
+        setupEventListeners();
+        setupFreemiumLogic();
+        setupDragAndDrop();
+        setupPasteUpload();
+        setupSpeechRecognition();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
 
-    dom.attach?.addEventListener("click", event => {
-      event.stopPropagation();
-      dom.attachMenu?.classList.toggle("show");
-    });
+        const authenticated =
+            await restoreSecureSession();
 
-    dom.addFiles?.addEventListener("click", () => {
-      dom.attachMenu?.classList.remove("show");
-      dom.fileInput?.click();
-    });
+        if (!authenticated) {
+            return;
+        }
 
-    dom.fileInput?.addEventListener("change", event => {
-      addFiles(Array.from(event.target.files || []));
-      event.target.value = "";
-    });
+        try {
+            await renderUserProfile();
+        } catch (error) {
+            console.warn(
+                "Profile initialization failed:",
+                error
+            );
+        }
 
-    dom.input?.addEventListener("paste", event => {
-      const files = Array.from(event.clipboardData?.items || [])
-        .filter(item => item.kind === "file")
-        .map(item => item.getAsFile())
-        .filter(Boolean);
+        try {
+            await loadHistoryFromSupabase();
+        } catch (error) {
+            console.warn(
+                "History initialization failed:",
+                error
+            );
+        }
 
-      if (files.length) {
-        addFiles(files);
-      }
-    });
+        chatInput?.focus();
+    }
 
-    ["dragenter", "dragover", "dragleave", "drop"].forEach(name => {
-      dom.composerWrapper?.addEventListener(name, event => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-    });
+    async function restoreSecureSession() {
+        try {
+            const response =
+                await fetch(
+                    "/api/auth",
+                    {
+                        method: "GET",
+                        credentials: "include",
 
-    dom.composerWrapper?.addEventListener("dragenter", () => {
-      dom.dropOverlay?.classList.add("active");
-    });
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
 
-    dom.composerWrapper?.addEventListener("dragover", () => {
-      dom.dropOverlay?.classList.add("active");
-    });
+                        cache: "no-store"
+                    }
+                );
 
-    dom.dropOverlay?.addEventListener("dragleave", () => {
-      dom.dropOverlay?.classList.remove("active");
-    });
+            const data =
+                await response
+                    .json()
+                    .catch(() => ({}));
 
-    dom.composerWrapper?.addEventListener("drop", event => {
-      dom.dropOverlay?.classList.remove("active");
+            if (
+                !response.ok ||
+                !data.authenticated ||
+                !data.user
+            ) {
+                clearLegacyUserStorage();
 
-      addFiles(Array.from(event.dataTransfer?.files || []));
-    });
+                window.location.replace(
+                    "signup.html"
+                );
 
-    dom.deepResearch?.addEventListener("click", () => {
-      if (!isPro()) {
-        dom.upgradeModal?.classList.add("show");
-        return;
-      }
+                return false;
+            }
 
-      state.deepResearch = !state.deepResearch;
+            const rawPlan =
+                String(
+                    data.user.planType ||
+                        "free"
+                )
+                    .trim()
+                    .toLowerCase();
 
-      dom.deepResearch.classList.toggle(
-        "active-mode",
-        state.deepResearch
-      );
-    });
+            userPlan = [
+                "pro",
+                "neo_pro",
+                "neo-pro",
+                "premium",
+                "business",
+                "suite"
+            ].includes(rawPlan)
+                ? "pro"
+                : "free";
 
-    dom.personalities?.addEventListener("click", () => {
-      dom.attachMenu?.classList.remove("show");
-      openPersonalityModal();
-    });
+            currentUser = {
+                id:
+                    data.user.id,
 
-    dom.personalityClose?.addEventListener(
-      "click",
-      closePersonalityModal
-    );
+                username:
+                    data.user.username ||
+                    "user",
 
-    dom.personalityModal?.addEventListener("click", event => {
-      if (event.target === dom.personalityModal) {
-        closePersonalityModal();
-      }
-    });
+                planType:
+                    userPlan
+            };
 
-    document.querySelectorAll("[data-neo-personality]").forEach(button => {
-      button.addEventListener("click", () => {
-        const personality = button.dataset.neoPersonality;
+            localStorage.setItem(
+                "signaturesi_user",
+                JSON.stringify(
+                    currentUser
+                )
+            );
 
-        if (!personalities[personality]) return;
+            return true;
+        } catch (error) {
+            console.error(
+                "Session restore failed:",
+                error
+            );
 
-        state.personality = personality;
-        localStorage.setItem("neo_personality", personality);
+            window.location.replace(
+                "signup.html"
+            );
 
-        syncPersonality();
-        closePersonalityModal();
+            return false;
+        }
+    }
 
-        toast(`${personalities[personality]} personality selected.`);
-      });
-    });
+    function clearLegacyUserStorage() {
+        localStorage.removeItem(
+            "signaturesi_user"
+        );
 
-    dom.upgradeClose?.addEventListener("click", () => {
-      dom.upgradeModal?.classList.remove("show");
-    });
+        localStorage.removeItem(
+            "bean_user"
+        );
 
-    dom.upgradeLater?.addEventListener("click", () => {
-      dom.upgradeModal?.classList.remove("show");
-    });
+        localStorage.removeItem(
+            "user"
+        );
 
-    dom.upgradeModal?.addEventListener("click", event => {
-      if (event.target === dom.upgradeModal) {
-        dom.upgradeModal.classList.remove("show");
-      }
-    });
+        localStorage.removeItem(
+            "userData"
+        );
+    }
 
-    dom.upgradeAction?.addEventListener("click", startCheckout);
+    function configureSecurityHooks() {
+        if (!window.DOMPurify) {
+            return;
+        }
 
-    dom.historySearch?.addEventListener("input", event => {
-      state.historySearch = String(event.target.value || "")
-        .trim()
-        .toLowerCase();
+        window.DOMPurify.addHook(
+            "afterSanitizeAttributes",
 
-      if (dom.clearHistorySearch) {
-        dom.clearHistorySearch.hidden = !state.historySearch;
-      }
+            function (node) {
+                if ("target" in node) {
+                    node.setAttribute(
+                        "target",
+                        "_blank"
+                    );
 
-      loadHistory();
-    });
+                    node.setAttribute(
+                        "rel",
+                        "noopener noreferrer"
+                    );
+                }
+            }
+        );
+    }
 
-    dom.clearHistorySearch?.addEventListener("click", () => {
-      if (dom.historySearch) {
-        dom.historySearch.value = "";
-      }
+    function setupTheme() {
+        const isDark =
+            localStorage.getItem(
+                "neo_theme"
+            ) === "dark";
 
-      state.historySearch = "";
+        document.body.classList.toggle(
+            "dark-mode",
+            isDark
+        );
 
-      if (dom.clearHistorySearch) {
-        dom.clearHistorySearch.hidden = true;
-      }
+        const toggle = () => {
+            document.body.classList.toggle(
+                "dark-mode"
+            );
 
-      loadHistory();
-    });
+            localStorage.setItem(
+                "neo_theme",
 
-    dom.deleteHistory?.addEventListener("click", async () => {
-      if (!activeHistoryId) return;
+                document.body.classList.contains(
+                    "dark-mode"
+                )
+                    ? "dark"
+                    : "light"
+            );
+        };
 
-      try {
-        const response = await fetch("/api/history", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action: "delete",
-            conversationId: activeHistoryId
-          })
-        });
+        topBarDarkModeToggle
+            ?.addEventListener(
+                "click",
+                toggle
+            );
 
-        await json(response);
+        sidebarDarkModeToggle
+            ?.addEventListener(
+                "click",
+                toggle
+            );
+    }
 
-        if (state.conversationId === activeHistoryId) {
-          startNewChat();
+    // SAFE MARKDOWN & SANITIZATION FUNCTIONS
+    function sanitizeHTML(value) {
+        const source =
+            String(value || "");
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+        element.textContent = source;
+
+        return element.innerHTML;
+    }
+
+    function safeParseMarkdown(text) {
+        const source =
+            String(text || "");
+
+        if (
+            window.marked &&
+            window.DOMPurify
+        ) {
+            let parsed;
+
+            try {
+                parsed =
+                    window.marked.parse(
+                        source
+                    );
+            } catch (error) {
+                console.warn(
+                    "Markdown parsing failed:",
+                    error
+                );
+
+                return sanitizeHTML(
+                    source
+                ).replace(
+                    /\n/g,
+                    "<br>"
+                );
+            }
+
+            return window.DOMPurify.sanitize(
+                parsed,
+
+                {
+                    USE_PROFILES: {
+                        html: true
+                    },
+
+                    FORBID_TAGS: [
+                        "script",
+                        "style",
+                        "iframe",
+                        "object",
+                        "embed",
+                        "form",
+                        "input",
+                        "button",
+                        "textarea",
+                        "select",
+                        "option"
+                    ],
+
+                    FORBID_ATTR: [
+                        "style",
+                        "srcdoc",
+                        "formaction",
+                        "onerror",
+                        "onload",
+                        "onclick",
+                        "onmouseover",
+                        "onfocus"
+                    ]
+                }
+            );
+        }
+
+        return sanitizeHTML(
+            source
+        ).replace(
+            /\n/g,
+            "<br>"
+        );
+    }
+
+    async function readJsonResponse(
+        response
+    ) {
+        const data =
+            await response
+                .json()
+                .catch(() => ({}));
+
+        if (response.status === 401) {
+            clearLegacyUserStorage();
+
+            window.location.replace(
+                "signup.html"
+            );
+
+            throw new Error(
+                "Your session has expired. Please log in again."
+            );
+        }
+
+        if (!response.ok) {
+            const errorValue =
+                data?.error;
+
+            const errorMessage =
+                typeof errorValue ===
+                "string"
+                    ? errorValue
+                    : errorValue
+                          ?.message ||
+                      "The request failed.";
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+        return data;
+    }
+
+    // DYNAMIC COMPOSER SHAPE MANAGEMENT
+    function updateComposerShape() {
+        if (!glassInputContainer) {
+            return;
+        }
+
+        const hasText =
+            Boolean(
+                chatInput?.value.trim()
+            );
+
+        const isMultiLine =
+            Boolean(
+                chatInput &&
+                    chatInput.scrollHeight >
+                        38
+            );
+
+        const hasFiles =
+            attachedFiles.length > 0;
+
+        glassInputContainer
+            .classList
+            .toggle(
+                "is-expanded",
+
+                hasText ||
+                    isMultiLine ||
+                    hasFiles
+            );
+    }
+
+    // FREEMIUM LOGIC
+    function setupFreemiumLogic() {
+        modelBadgeBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event.stopPropagation();
+
+                    modelDropdownMenu
+                        ?.classList
+                        .toggle(
+                            "show"
+                        );
+                }
+            );
+
+        optL10
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    selectedModel =
+                        "l1.0";
+
+                    if (
+                        currentModelDisplay
+                    ) {
+                        currentModelDisplay
+                            .textContent =
+                            "NEO L1.0";
+                    }
+
+                    optL10.classList.add(
+                        "active"
+                    );
+
+                    optL12
+                        ?.classList
+                        .remove(
+                            "active"
+                        );
+
+                    modelDropdownMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+            );
+
+        optL12
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    modelDropdownMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+
+                    if (
+                        userPlan ===
+                        "free"
+                    ) {
+                        upgradeModal
+                            ?.classList
+                            .add(
+                                "show"
+                            );
+
+                        return;
+                    }
+
+                    selectedModel =
+                        "l1.2";
+
+                    if (
+                        currentModelDisplay
+                    ) {
+                        currentModelDisplay
+                            .textContent =
+                            "NEO L1.2 Pro";
+                    }
+
+                    optL12.classList.add(
+                        "active"
+                    );
+
+                    optL10
+                        ?.classList
+                        .remove(
+                            "active"
+                        );
+                }
+            );
+
+        const closeModal = () => {
+            upgradeModal
+                ?.classList
+                .remove(
+                    "show"
+                );
+        };
+
+        modalCloseBtn
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+        modalMaybeLaterBtn
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+        upgradeModal
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    if (
+                        event.target ===
+                        upgradeModal
+                    ) {
+                        closeModal();
+                    }
+                }
+            );
+
+        async function startNeoProCheckout() {
+            if (!upgradeActionBtn) {
+                return;
+            }
+
+            const originalText =
+                upgradeActionBtn
+                    .textContent;
+
+            upgradeActionBtn.disabled =
+                true;
+
+            upgradeActionBtn.textContent =
+                "Opening secure checkout...";
+
+            try {
+                const response =
+                    await fetch(
+                        "/api/checkout",
+
+                        {
+                            method:
+                                "POST",
+
+                            credentials:
+                                "include",
+
+                            cache:
+                                "no-store",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                Accept:
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    {}
+                                )
+                        }
+                    );
+
+                const data =
+                    await response
+                        .json()
+                        .catch(
+                            () => ({})
+                        );
+
+                if (
+                    !response.ok ||
+                    !data?.url
+                ) {
+                    throw new Error(
+                        data?.error ||
+                            "Unable to open secure checkout."
+                    );
+                }
+
+                window.location.assign(
+                    data.url
+                );
+            } catch (error) {
+                console.error(
+                    "NEO Pro checkout failed:",
+                    error
+                );
+
+                alert(
+                    error?.message ||
+                        "Checkout could not be opened. Please try again."
+                );
+            } finally {
+                upgradeActionBtn.disabled =
+                    false;
+
+                upgradeActionBtn.textContent =
+                    originalText;
+            }
+        }
+
+        upgradeActionBtn
+            ?.addEventListener(
+                "click",
+                startNeoProCheckout
+            );
+    }
+
+    function checkFilePermissionForPlan(
+        file
+    ) {
+        const extension =
+            file.name
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+        const isAudioVideo = [
+            "mp3",
+            "wav",
+            "mp4",
+            "webm",
+            "mov",
+            "m4a"
+        ].includes(extension);
+
+        if (
+            isAudioVideo &&
+            userPlan === "free"
+        ) {
+            upgradeModal
+                ?.classList
+                .add(
+                    "show"
+                );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // REAL-TIME MICROPHONE AUDIO VISUALIZER
+    async function startAudioVisualizer() {
+        try {
+            micStream =
+                await navigator
+                    .mediaDevices
+                    .getUserMedia({
+                        audio: true,
+                        video: false
+                    });
+
+            const AudioContextClass =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            audioCtx =
+                new AudioContextClass();
+
+            analyser =
+                audioCtx.createAnalyser();
+
+            analyser.fftSize = 64;
+
+            analyser
+                .smoothingTimeConstant =
+                0.75;
+
+            const source =
+                audioCtx
+                    .createMediaStreamSource(
+                        micStream
+                    );
+
+            source.connect(
+                analyser
+            );
+
+            const waveSpans =
+                document.querySelectorAll(
+                    ".wave-dots-bar span"
+                );
+
+            const dataArray =
+                new Uint8Array(
+                    analyser
+                        .frequencyBinCount
+                );
+
+            function updateWave() {
+                if (!isListening) {
+                    return;
+                }
+
+                analyser
+                    .getByteFrequencyData(
+                        dataArray
+                    );
+
+                waveSpans.forEach(
+                    (
+                        span,
+                        index
+                    ) => {
+                        const value =
+                            dataArray[
+                                index %
+                                    dataArray
+                                        .length
+                            ] || 0;
+
+                        const height =
+                            Math.max(
+                                4,
+
+                                Math.min(
+                                    26,
+
+                                    (
+                                        value /
+                                        255
+                                    ) * 28
+                                )
+                            );
+
+                        span.style.height =
+                            `${height}px`;
+
+                        span.style.opacity =
+                            value > 12
+                                ? "1"
+                                : "0.4";
+
+                        span.style
+                            .backgroundColor =
+                            value > 12
+                                ? "var(--focus-ring)"
+                                : "var(--text-muted)";
+                    }
+                );
+
+                animFrameId =
+                    requestAnimationFrame(
+                        updateWave
+                    );
+            }
+
+            updateWave();
+        } catch (error) {
+            console.warn(
+                "Microphone visualizer initialization failed:",
+                error
+            );
+        }
+    }
+
+    function stopAudioVisualizer() {
+        if (animFrameId) {
+            cancelAnimationFrame(
+                animFrameId
+            );
+
+            animFrameId = null;
+        }
+
+        if (micStream) {
+            micStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+            micStream = null;
+        }
+
+        if (
+            audioCtx &&
+            audioCtx.state !==
+                "closed"
+        ) {
+            audioCtx.close();
+            audioCtx = null;
+        }
+
+        const waveSpans =
+            document.querySelectorAll(
+                ".wave-dots-bar span"
+            );
+
+        waveSpans.forEach(
+            span => {
+                span.style.height =
+                    "4px";
+
+                span.style.opacity =
+                    "0.4";
+
+                span.style
+                    .backgroundColor =
+                    "var(--text-muted)";
+            }
+        );
+    }
+
+    // SPEECH RECOGNITION
+    function setupSpeechRecognition() {
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            return;
+        }
+
+        try {
+            recognition =
+                new SpeechRecognition();
+
+            recognition.continuous =
+                true;
+
+            recognition.interimResults =
+                true;
+
+            recognition.lang =
+                "en-US";
+
+            recognition.onstart =
+                () => {
+                    isListening =
+                        true;
+
+                    composerInputRow
+                        ?.classList
+                        .add(
+                            "is-transcribing"
+                        );
+
+                    startAudioVisualizer();
+                };
+
+            recognition.onresult =
+                event => {
+                    const transcript =
+                        Array.from(
+                            event.results
+                        )
+                            .map(
+                                result =>
+                                    result[0]
+                                        .transcript
+                            )
+                            .join("");
+
+                    if (chatInput) {
+                        chatInput.value =
+                            transcript;
+
+                        chatInput.style
+                            .height =
+                            "auto";
+
+                        chatInput.style
+                            .height =
+                            `${Math.min(
+                                chatInput
+                                    .scrollHeight,
+                                160
+                            )}px`;
+
+                        updateComposerShape();
+                    }
+                };
+
+            recognition.onerror =
+                stopListening;
+
+            recognition.onend =
+                stopListening;
+
+            micBtn
+                ?.addEventListener(
+                    "click",
+
+                    event => {
+                        event
+                            .stopPropagation();
+
+                        if (
+                            isListening
+                        ) {
+                            recognition.stop();
+                            return;
+                        }
+
+                        try {
+                            recognition.start();
+                        } catch {
+                            stopListening();
+                        }
+                    }
+                );
+
+            stopRecBtn
+                ?.addEventListener(
+                    "click",
+
+                    event => {
+                        event
+                            .stopPropagation();
+
+                        recognition
+                            ?.stop();
+
+                        stopListening();
+                    }
+                );
+          (function () {
+    "use strict";
+
+    // SECURITY CONSTANTS & CONFIGS
+    const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+    const MAX_ATTACHED_FILES = 5;
+
+    const SUPABASE_URL =
+        "https://ujclhweqqifgoiscvqmd.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf";
+
+    let supabaseClient = null;
+
+    if (
+        window.supabase &&
+        window.supabase.createClient
+    ) {
+        supabaseClient =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_ANON_KEY
+            );
+    }
+
+    // AUTHENTICATED USER COMES FROM SECURE SERVER COOKIE
+    let currentUser = {
+        id: null,
+        username: "user"
+    };
+
+    // STATE VARIABLES
+    let conversation = [];
+    let attachedFiles = [];
+    let currentConversationId = null;
+    let isGenerating = false;
+    let activePopupChatId = null;
+    let isDeepResearchMode = false;
+    let recognition = null;
+    let isListening = false;
+
+    // REAL-TIME AUDIO VISUALIZER STATE
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let animFrameId = null;
+
+    // FREEMIUM STATE
+    let selectedModel = "l1.0";
+    let userPlan = "free";
+
+    // DOM ELEMENTS
+    const chatInput =
+        document.getElementById("chatInput");
+
+    const sendBtn =
+        document.getElementById("sendBtn");
+
+    const chatMessages =
+        document.getElementById("chatMessages");
+
+    const scrollArea =
+        document.getElementById("scrollArea");
+
+    const heroSection =
+        document.getElementById("heroSection");
+
+    const historyList =
+        document.getElementById("historyList");
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const sidebarToggleBtn =
+        document.getElementById(
+            "sidebarToggleBtn"
+        );
+
+    const collapseSidebarBtn =
+        document.getElementById(
+            "collapseSidebarBtn"
+        );
+
+    const newChatBtn =
+        document.getElementById("newChatBtn");
+
+    const topBarDarkModeToggle =
+        document.getElementById(
+            "topBarDarkModeToggle"
+        );
+
+    const sidebarDarkModeToggle =
+        document.getElementById(
+            "sidebarDarkModeToggle"
+        );
+
+    const sidebarScrim =
+        document.getElementById(
+            "sidebarScrim"
+        );
+
+    const userAvatar =
+        document.getElementById(
+            "userAvatar"
+        );
+
+    const userNameDisplay =
+        document.getElementById(
+            "userNameDisplay"
+        );
+
+    const userPlanBadge =
+        document.getElementById(
+            "userPlanBadge"
+        );
+
+    const userProfileBtn =
+        document.getElementById(
+            "userProfileBtn"
+        );
+
+    const userPopupMenu =
+        document.getElementById(
+            "userPopupMenu"
+        );
+
+    const historyPopupMenu =
+        document.getElementById(
+            "historyPopupMenu"
+        );
+
+    const hpDeleteBtn =
+        document.getElementById(
+            "hpDeleteBtn"
+        );
+
+    // COMPOSER ELEMENTS
+    const attachBtn =
+        document.getElementById(
+            "attachBtn"
+        );
+
+    const attachPopupMenu =
+        document.getElementById(
+            "attachPopupMenu"
+        );
+
+    const addFilesMenuBtn =
+        document.getElementById(
+            "addFilesMenuBtn"
+        );
+
+    const deepResearchToggleBtn =
+        document.getElementById(
+            "deepResearchToggleBtn"
+        );
+
+    const personalMemoryBtn =
+        document.getElementById(
+            "personalMemoryBtn"
+        );
+
+    const hiddenFileInput =
+        document.getElementById(
+            "hiddenFileInput"
+        );
+
+    const liveSuggestions =
+        document.getElementById(
+            "liveSuggestions"
+        );
+
+    const attachedChipsWrapper =
+        document.getElementById(
+            "attachedChipsWrapper"
+        );
+
+    const composerWrapper =
+        document.getElementById(
+            "composerWrapper"
+        );
+
+    const dragDropOverlay =
+        document.getElementById(
+            "dragDropOverlay"
+        );
+
+    const micBtn =
+        document.getElementById("micBtn");
+
+    const stopRecBtn =
+        document.getElementById(
+            "stopRecBtn"
+        );
+
+    const composerInputRow =
+        document.querySelector(
+            ".composer-input-row"
+        );
+
+    const glassInputContainer =
+        document.getElementById(
+            "glassInputContainer"
+        );
+
+    // FREEMIUM ELEMENTS
+    const modelBadgeBtn =
+        document.getElementById(
+            "modelBadgeBtn"
+        );
+
+    const modelDropdownMenu =
+        document.getElementById(
+            "modelDropdownMenu"
+        );
+
+    const currentModelDisplay =
+        document.getElementById(
+            "currentModelDisplay"
+        );
+
+    const optL10 =
+        document.getElementById(
+            "optL10"
+        );
+
+    const optL12 =
+        document.getElementById(
+            "optL12"
+        );
+
+    const upgradeModal =
+        document.getElementById(
+            "upgradeModal"
+        );
+
+    const modalCloseBtn =
+        document.getElementById(
+            "modalCloseBtn"
+        );
+
+    const modalMaybeLaterBtn =
+        document.getElementById(
+            "modalMaybeLaterBtn"
+        );
+
+    const upgradeActionBtn =
+        document.getElementById(
+            "upgradeActionBtn"
+        );
+
+    async function init() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        setupTheme();
+        configureSecurityHooks();
+        initializeSidebarState();
+        setupEventListeners();
+        setupFreemiumLogic();
+        setupDragAndDrop();
+        setupPasteUpload();
+        setupSpeechRecognition();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
+
+        const authenticated =
+            await restoreSecureSession();
+
+        if (!authenticated) {
+            return;
+        }
+
+        try {
+            await renderUserProfile();
+        } catch (error) {
+            console.warn(
+                "Profile initialization failed:",
+                error
+            );
+        }
+
+        try {
+            await loadHistoryFromSupabase();
+        } catch (error) {
+            console.warn(
+                "History initialization failed:",
+                error
+            );
+        }
+
+        chatInput?.focus();
+    }
+
+    async function restoreSecureSession() {
+        try {
+            const response =
+                await fetch(
+                    "/api/auth",
+                    {
+                        method: "GET",
+                        credentials: "include",
+
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
+
+                        cache: "no-store"
+                    }
+                );
+
+            const data =
+                await response
+                    .json()
+                    .catch(() => ({}));
+
+            if (
+                !response.ok ||
+                !data.authenticated ||
+                !data.user
+            ) {
+                clearLegacyUserStorage();
+
+                window.location.replace(
+                    "signup.html"
+                );
+
+                return false;
+            }
+
+            const rawPlan =
+                String(
+                    data.user.planType ||
+                        "free"
+                )
+                    .trim()
+                    .toLowerCase();
+
+            userPlan = [
+                "pro",
+                "neo_pro",
+                "neo-pro",
+                "premium",
+                "business",
+                "suite"
+            ].includes(rawPlan)
+                ? "pro"
+                : "free";
+
+            currentUser = {
+                id:
+                    data.user.id,
+
+                username:
+                    data.user.username ||
+                    "user",
+
+                planType:
+                    userPlan
+            };
+
+            localStorage.setItem(
+                "signaturesi_user",
+                JSON.stringify(
+                    currentUser
+                )
+            );
+
+            return true;
+        } catch (error) {
+            console.error(
+                "Session restore failed:",
+                error
+            );
+
+            window.location.replace(
+                "signup.html"
+            );
+
+            return false;
+        }
+    }
+
+    function clearLegacyUserStorage() {
+        localStorage.removeItem(
+            "signaturesi_user"
+        );
+
+        localStorage.removeItem(
+            "bean_user"
+        );
+
+        localStorage.removeItem(
+            "user"
+        );
+
+        localStorage.removeItem(
+            "userData"
+        );
+    }
+
+    function configureSecurityHooks() {
+        if (!window.DOMPurify) {
+            return;
+        }
+
+        window.DOMPurify.addHook(
+            "afterSanitizeAttributes",
+
+            function (node) {
+                if ("target" in node) {
+                    node.setAttribute(
+                        "target",
+                        "_blank"
+                    );
+
+                    node.setAttribute(
+                        "rel",
+                        "noopener noreferrer"
+                    );
+                }
+            }
+        );
+    }
+
+    function setupTheme() {
+        const isDark =
+            localStorage.getItem(
+                "neo_theme"
+            ) === "dark";
+
+        document.body.classList.toggle(
+            "dark-mode",
+            isDark
+        );
+
+        const toggle = () => {
+            document.body.classList.toggle(
+                "dark-mode"
+            );
+
+            localStorage.setItem(
+                "neo_theme",
+
+                document.body.classList.contains(
+                    "dark-mode"
+                )
+                    ? "dark"
+                    : "light"
+            );
+        };
+
+        topBarDarkModeToggle
+            ?.addEventListener(
+                "click",
+                toggle
+            );
+
+        sidebarDarkModeToggle
+            ?.addEventListener(
+                "click",
+                toggle
+            );
+    }
+
+    // SAFE MARKDOWN & SANITIZATION FUNCTIONS
+    function sanitizeHTML(value) {
+        const source =
+            String(value || "");
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+        element.textContent = source;
+
+        return element.innerHTML;
+    }
+
+    function safeParseMarkdown(text) {
+        const source =
+            String(text || "");
+
+        if (
+            window.marked &&
+            window.DOMPurify
+        ) {
+            let parsed;
+
+            try {
+                parsed =
+                    window.marked.parse(
+                        source
+                    );
+            } catch (error) {
+                console.warn(
+                    "Markdown parsing failed:",
+                    error
+                );
+
+                return sanitizeHTML(
+                    source
+                ).replace(
+                    /\n/g,
+                    "<br>"
+                );
+            }
+
+            return window.DOMPurify.sanitize(
+                parsed,
+
+                {
+                    USE_PROFILES: {
+                        html: true
+                    },
+
+                    FORBID_TAGS: [
+                        "script",
+                        "style",
+                        "iframe",
+                        "object",
+                        "embed",
+                        "form",
+                        "input",
+                        "button",
+                        "textarea",
+                        "select",
+                        "option"
+                    ],
+
+                    FORBID_ATTR: [
+                        "style",
+                        "srcdoc",
+                        "formaction",
+                        "onerror",
+                        "onload",
+                        "onclick",
+                        "onmouseover",
+                        "onfocus"
+                    ]
+                }
+            );
+        }
+
+        return sanitizeHTML(
+            source
+        ).replace(
+            /\n/g,
+            "<br>"
+        );
+    }
+
+    async function readJsonResponse(
+        response
+    ) {
+        const data =
+            await response
+                .json()
+                .catch(() => ({}));
+
+        if (response.status === 401) {
+            clearLegacyUserStorage();
+
+            window.location.replace(
+                "signup.html"
+            );
+
+            throw new Error(
+                "Your session has expired. Please log in again."
+            );
+        }
+
+        if (!response.ok) {
+            const errorValue =
+                data?.error;
+
+            const errorMessage =
+                typeof errorValue ===
+                "string"
+                    ? errorValue
+                    : errorValue
+                          ?.message ||
+                      "The request failed.";
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+        return data;
+    }
+
+    // DYNAMIC COMPOSER SHAPE MANAGEMENT
+    function updateComposerShape() {
+        if (!glassInputContainer) {
+            return;
+        }
+
+        const hasText =
+            Boolean(
+                chatInput?.value.trim()
+            );
+
+        const isMultiLine =
+            Boolean(
+                chatInput &&
+                    chatInput.scrollHeight >
+                        38
+            );
+
+        const hasFiles =
+            attachedFiles.length > 0;
+
+        glassInputContainer
+            .classList
+            .toggle(
+                "is-expanded",
+
+                hasText ||
+                    isMultiLine ||
+                    hasFiles
+            );
+    }
+
+    // FREEMIUM LOGIC
+    function setupFreemiumLogic() {
+        modelBadgeBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event.stopPropagation();
+
+                    modelDropdownMenu
+                        ?.classList
+                        .toggle(
+                            "show"
+                        );
+                }
+            );
+
+        optL10
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    selectedModel =
+                        "l1.0";
+
+                    if (
+                        currentModelDisplay
+                    ) {
+                        currentModelDisplay
+                            .textContent =
+                            "NEO L1.0";
+                    }
+
+                    optL10.classList.add(
+                        "active"
+                    );
+
+                    optL12
+                        ?.classList
+                        .remove(
+                            "active"
+                        );
+
+                    modelDropdownMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+            );
+
+        optL12
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    modelDropdownMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+
+                    if (
+                        userPlan ===
+                        "free"
+                    ) {
+                        upgradeModal
+                            ?.classList
+                            .add(
+                                "show"
+                            );
+
+                        return;
+                    }
+
+                    selectedModel =
+                        "l1.2";
+
+                    if (
+                        currentModelDisplay
+                    ) {
+                        currentModelDisplay
+                            .textContent =
+                            "NEO L1.2 Pro";
+                    }
+
+                    optL12.classList.add(
+                        "active"
+                    );
+
+                    optL10
+                        ?.classList
+                        .remove(
+                            "active"
+                        );
+                }
+            );
+
+        const closeModal = () => {
+            upgradeModal
+                ?.classList
+                .remove(
+                    "show"
+                );
+        };
+
+        modalCloseBtn
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+        modalMaybeLaterBtn
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+        upgradeModal
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    if (
+                        event.target ===
+                        upgradeModal
+                    ) {
+                        closeModal();
+                    }
+                }
+            );
+
+        async function startNeoProCheckout() {
+            if (!upgradeActionBtn) {
+                return;
+            }
+
+            const originalText =
+                upgradeActionBtn
+                    .textContent;
+
+            upgradeActionBtn.disabled =
+                true;
+
+            upgradeActionBtn.textContent =
+                "Opening secure checkout...";
+
+            try {
+                const response =
+                    await fetch(
+                        "/api/checkout",
+
+                        {
+                            method:
+                                "POST",
+
+                            credentials:
+                                "include",
+
+                            cache:
+                                "no-store",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                Accept:
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    {}
+                                )
+                        }
+                    );
+
+                const data =
+                    await response
+                        .json()
+                        .catch(
+                            () => ({})
+                        );
+
+                if (
+                    !response.ok ||
+                    !data?.url
+                ) {
+                    throw new Error(
+                        data?.error ||
+                            "Unable to open secure checkout."
+                    );
+                }
+
+                window.location.assign(
+                    data.url
+                );
+            } catch (error) {
+                console.error(
+                    "NEO Pro checkout failed:",
+                    error
+                );
+
+                alert(
+                    error?.message ||
+                        "Checkout could not be opened. Please try again."
+                );
+            } finally {
+                upgradeActionBtn.disabled =
+                    false;
+
+                upgradeActionBtn.textContent =
+                    originalText;
+            }
+        }
+
+        upgradeActionBtn
+            ?.addEventListener(
+                "click",
+                startNeoProCheckout
+            );
+    }
+
+    function checkFilePermissionForPlan(
+        file
+    ) {
+        const extension =
+            file.name
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+        const isAudioVideo = [
+            "mp3",
+            "wav",
+            "mp4",
+            "webm",
+            "mov",
+            "m4a"
+        ].includes(extension);
+
+        if (
+            isAudioVideo &&
+            userPlan === "free"
+        ) {
+            upgradeModal
+                ?.classList
+                .add(
+                    "show"
+                );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // REAL-TIME MICROPHONE AUDIO VISUALIZER
+    async function startAudioVisualizer() {
+        try {
+            micStream =
+                await navigator
+                    .mediaDevices
+                    .getUserMedia({
+                        audio: true,
+                        video: false
+                    });
+
+            const AudioContextClass =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            audioCtx =
+                new AudioContextClass();
+
+            analyser =
+                audioCtx.createAnalyser();
+
+            analyser.fftSize = 64;
+
+            analyser
+                .smoothingTimeConstant =
+                0.75;
+
+            const source =
+                audioCtx
+                    .createMediaStreamSource(
+                        micStream
+                    );
+
+            source.connect(
+                analyser
+            );
+
+            const waveSpans =
+                document.querySelectorAll(
+                    ".wave-dots-bar span"
+                );
+
+            const dataArray =
+                new Uint8Array(
+                    analyser
+                        .frequencyBinCount
+                );
+
+            function updateWave() {
+                if (!isListening) {
+                    return;
+                }
+
+                analyser
+                    .getByteFrequencyData(
+                        dataArray
+                    );
+
+                waveSpans.forEach(
+                    (
+                        span,
+                        index
+                    ) => {
+                        const value =
+                            dataArray[
+                                index %
+                                    dataArray
+                                        .length
+                            ] || 0;
+
+                        const height =
+                            Math.max(
+                                4,
+
+                                Math.min(
+                                    26,
+
+                                    (
+                                        value /
+                                        255
+                                    ) * 28
+                                )
+                            );
+
+                        span.style.height =
+                            `${height}px`;
+
+                        span.style.opacity =
+                            value > 12
+                                ? "1"
+                                : "0.4";
+
+                        span.style
+                            .backgroundColor =
+                            value > 12
+                                ? "var(--focus-ring)"
+                                : "var(--text-muted)";
+                    }
+                );
+
+                animFrameId =
+                    requestAnimationFrame(
+                        updateWave
+                    );
+            }
+
+            updateWave();
+        } catch (error) {
+            console.warn(
+                "Microphone visualizer initialization failed:",
+                error
+            );
+        }
+    }
+
+    function stopAudioVisualizer() {
+        if (animFrameId) {
+            cancelAnimationFrame(
+                animFrameId
+            );
+
+            animFrameId = null;
+        }
+
+        if (micStream) {
+            micStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+            micStream = null;
+        }
+
+        if (
+            audioCtx &&
+            audioCtx.state !==
+                "closed"
+        ) {
+            audioCtx.close();
+            audioCtx = null;
+        }
+
+        const waveSpans =
+            document.querySelectorAll(
+                ".wave-dots-bar span"
+            );
+
+        waveSpans.forEach(
+            span => {
+                span.style.height =
+                    "4px";
+
+                span.style.opacity =
+                    "0.4";
+
+                span.style
+                    .backgroundColor =
+                    "var(--text-muted)";
+            }
+        );
+    }
+
+    // SPEECH RECOGNITION
+    function setupSpeechRecognition() {
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            return;
+        }
+
+        try {
+            recognition =
+                new SpeechRecognition();
+
+            recognition.continuous =
+                true;
+
+            recognition.interimResults =
+                true;
+
+            recognition.lang =
+                "en-US";
+
+            recognition.onstart =
+                () => {
+                    isListening =
+                        true;
+
+                    composerInputRow
+                        ?.classList
+                        .add(
+                            "is-transcribing"
+                        );
+
+                    startAudioVisualizer();
+                };
+
+            recognition.onresult =
+                event => {
+                    const transcript =
+                        Array.from(
+                            event.results
+                        )
+                            .map(
+                                result =>
+                                    result[0]
+                                        .transcript
+                            )
+                            .join("");
+
+                    if (chatInput) {
+                        chatInput.value =
+                            transcript;
+
+                        chatInput.style
+                            .height =
+                            "auto";
+
+                        chatInput.style
+                            .height =
+                            `${Math.min(
+                                chatInput
+                                    .scrollHeight,
+                                160
+                            )}px`;
+
+                        updateComposerShape();
+                    }
+                };
+
+            recognition.onerror =
+                stopListening;
+
+            recognition.onend =
+                stopListening;
+
+            micBtn
+                ?.addEventListener(
+                    "click",
+
+                    event => {
+                        event
+                            .stopPropagation();
+
+                        if (
+                            isListening
+                        ) {
+                            recognition.stop();
+                            return;
+                        }
+
+                        try {
+                            recognition.start();
+                        } catch {
+                            stopListening();
+                        }
+                    }
+                );
+
+            stopRecBtn
+                ?.addEventListener(
+                    "click",
+
+                    event => {
+                        event
+                            .stopPropagation();
+
+                        recognition
+                            ?.stop();
+
+                        stopListening();
+                    }
+                );
+              hpDeleteBtn
+        ?.addEventListener(
+            "click",
+
+            async () => {
+                if (
+                    !activePopupChatId
+                ) {
+                    return;
+                }
+
+                const conversationToDelete =
+                    activePopupChatId;
+
+                try {
+                    const response =
+                        await fetch(
+                            "/api/history",
+
+                            {
+                                method:
+                                    "POST",
+
+                                credentials:
+                                    "include",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    Accept:
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            action:
+                                                "delete",
+
+                                            conversationId:
+                                                conversationToDelete
+                                        }
+                                    )
+                            }
+                        );
+
+                    await readJsonResponse(
+                        response
+                    );
+
+                    if (
+                        currentConversationId ===
+                        conversationToDelete
+                    ) {
+                        startNewConversation();
+                    } else {
+                        await loadHistoryFromSupabase();
+                    }
+                } catch (error) {
+                    console.error(
+                        "Conversation deletion failed:",
+                        error
+                    );
+
+                    alert(
+                        error.message
+                    );
+                } finally {
+                    activePopupChatId =
+                        null;
+
+                    historyPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+            }
+        );
+
+    async function loadChatMessages(
+        conversationId
+    ) {
+        if (!conversationId) {
+            return;
+        }
+
+        try {
+            const response =
+                await fetch(
+                    "/api/history",
+
+                    {
+                        method:
+                            "POST",
+
+                        credentials:
+                            "include",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            Accept:
+                                "application/json"
+                        },
+
+                        cache:
+                            "no-store",
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    action:
+                                        "get",
+
+                                    conversationId
+                                }
+                            )
+                    }
+                );
+
+            const data =
+                await readJsonResponse(
+                    response
+                );
+
+            currentConversationId =
+                conversationId;
+
+            conversation =
+                (
+                    data.messages ||
+                    []
+                ).map(
+                    message => ({
+                        role:
+                            message.role,
+
+                        content:
+                            message.content ||
+                            ""
+                    })
+                );
+
+            if (chatMessages) {
+                chatMessages.innerHTML =
+                    "";
+            }
+
+            if (heroSection) {
+                heroSection.style.display =
+                    "none";
+            }
+
+            conversation.forEach(
+                (
+                    message,
+                    index
+                ) => {
+                    if (
+                        message.role !==
+                        "system"
+                    ) {
+                        renderMessageToUI(
+                            message.role,
+                            message.content,
+                            index
+                        );
+                    }
+                }
+            );
+
+            await loadHistoryFromSupabase();
+
+            if (
+                window.innerWidth <
+                768
+            ) {
+                sidebar
+                    ?.classList
+                    .add(
+                        "collapsed"
+                    );
+
+                sidebarScrim
+                    ?.classList
+                    .remove(
+                        "visible"
+                    );
+
+                updateBodySidebarState();
+            }
+        } catch (error) {
+            console.error(
+                "Conversation loading failed:",
+                error
+            );
+
+            alert(
+                error.message
+            );
+        }
+    }
+
+    function renderMessageToUI(
+        role,
+        content,
+        messageIndex = null,
+        isThinking = false
+    ) {
+        if (!chatMessages) {
+            return null;
+        }
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+        message.className =
+            `message ${role} ${
+                isThinking
+                    ? "is-thinking"
+                    : ""
+            }`;
+
+        if (
+            messageIndex !== null
+        ) {
+            message.setAttribute(
+                "data-msg-index",
+                String(
+                    messageIndex
+                )
+            );
+        }
+
+        if (role === "user") {
+            renderUserMessageWrapper(
+                message,
+                content,
+                messageIndex
+            );
         } else {
-          loadHistory();
+            const contentElement =
+                document
+                    .createElement(
+                        "div"
+                    );
+
+            contentElement.className =
+                "message-content";
+
+            if (isThinking) {
+                const thinking =
+                    document
+                        .createElement(
+                            "span"
+                        );
+
+                thinking.className =
+                    "thinking-shimmer";
+
+                thinking.textContent =
+                    "Thinking...";
+
+                contentElement
+                    .appendChild(
+                        thinking
+                    );
+            } else {
+                contentElement.innerHTML =
+                    safeParseMarkdown(
+                        content
+                    );
+            }
+
+            message.appendChild(
+                contentElement
+            );
+
+            const actions =
+                document
+                    .createElement(
+                        "div"
+                    );
+
+            actions.className =
+                "message-actions";
+
+            actions.innerHTML = `
+                <button class="msg-action-btn copy-msg-btn" title="Copy" type="button">
+                    <i data-lucide="copy" size="16"></i>
+                </button>
+
+                <button class="msg-action-btn share-msg-btn" title="Share" type="button">
+                    <i data-lucide="share-2" size="16"></i>
+                </button>
+
+                <button class="msg-action-btn regen-msg-btn" title="Regenerate" type="button">
+                    <i data-lucide="rotate-cw" size="16"></i>
+                </button>
+            `;
+
+            message.appendChild(
+                actions
+            );
         }
-      } catch (error) {
-        toast(error.message, "error");
-      } finally {
-        activeHistoryId = null;
-        dom.historyMenu?.classList.remove("show");
-      }
-    });
 
-    document.addEventListener("click", event => {
-      if (
-        !dom.profile?.contains(event.target) &&
-        !dom.profileMenu?.contains(event.target)
-      ) {
-        dom.profileMenu?.classList.remove("show");
-      }
+        chatMessages.appendChild(
+            message
+        );
 
-      if (
-        !dom.attach?.contains(event.target) &&
-        !dom.attachMenu?.contains(event.target)
-      ) {
-        dom.attachMenu?.classList.remove("show");
-      }
+        if (scrollArea) {
+            scrollArea.scrollTop =
+                scrollArea.scrollHeight;
+        }
 
-      if (
-        !dom.modelBadge?.contains(event.target) &&
-        !dom.modelMenu?.contains(event.target)
-      ) {
-        dom.modelMenu?.classList.remove("show");
-      }
+        if (window.lucide) {
+            window.lucide
+                .createIcons();
+        }
 
-      if (
-        !dom.historyMenu?.contains(event.target) &&
-        !event.target.closest(".history-action-btn")
-      ) {
-        dom.historyMenu?.classList.remove("show");
-      }
-    });
-
-    window.addEventListener("resize", initialiseSidebar, {
-      passive: true
-    });
-
-    $("brandBtn")?.addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
-
-    setupSpeech();
-  }
-
-  async function init() {
-    window.lucide?.createIcons();
-
-    state.personality =
-      localStorage.getItem("neo_personality") || "balanced";
-
-    if (!personalities[state.personality]) {
-      state.personality = "balanced";
+        return message;
     }
 
-    initialiseSidebar();
-    setupEvents();
-    renderSuggestions();
-    updateComposer();
-    syncPersonality();
+    function renderUserMessageWrapper(
+        containerElement,
+        textContent,
+        index
+    ) {
+        containerElement.innerHTML =
+            "";
 
-    if (!await restoreSession()) return;
+        const wrapper =
+            document.createElement(
+                "div"
+            );
 
-    state.ready = true;
+        wrapper.className =
+            "message-wrapper";
 
-    await renderProfile();
-    await loadHistory();
+        const content =
+            document.createElement(
+                "div"
+            );
 
-    dom.input?.focus();
-  }
+        content.className =
+            "message-content";
 
-  document.addEventListener("DOMContentLoaded", () => {
-    init().catch(error => {
-      console.error("NEO initialization failed:", error);
+        content.textContent =
+            textContent;
 
-      if (dom.input) {
-        dom.input.placeholder =
-          "NEO could not initialize. Please refresh.";
-      }
-    });
-  });
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+        actions.className =
+            "user-msg-actions";
+
+        const editButton =
+            document.createElement(
+                "button"
+            );
+
+        editButton.className =
+            "user-action-btn user-edit-btn";
+
+        editButton.type =
+            "button";
+
+        editButton.title =
+            "Edit message";
+
+        editButton.innerHTML =
+            '<i data-lucide="pencil" size="14"></i>';
+
+        editButton.onclick =
+            () => {
+                enableUserMessageEdit(
+                    containerElement,
+                    textContent,
+                    index
+                );
+            };
+
+        const copyButton =
+            document.createElement(
+                "button"
+            );
+
+        copyButton.className =
+            "user-action-btn user-copy-btn";
+
+        copyButton.type =
+            "button";
+
+        copyButton.title =
+            "Copy text";
+
+        copyButton.innerHTML =
+            '<i data-lucide="copy" size="14"></i>';
+
+        copyButton.onclick =
+            () => {
+                copyWithFeedback(
+                    textContent,
+                    copyButton,
+                    14
+                );
+            };
+
+        actions.appendChild(
+            editButton
+        );
+
+        actions.appendChild(
+            copyButton
+        );
+
+        wrapper.appendChild(
+            content
+        );
+
+        wrapper.appendChild(
+            actions
+        );
+
+        containerElement
+            .appendChild(
+                wrapper
+            );
+
+        if (window.lucide) {
+            window.lucide
+                .createIcons();
+        }
+    }
+
+    function enableUserMessageEdit(
+        messageElement,
+        originalText,
+        index
+    ) {
+        if (isGenerating) {
+            return;
+        }
+
+        messageElement.innerHTML =
+            "";
+
+        const editBox =
+            document.createElement(
+                "div"
+            );
+
+        editBox.className =
+            "edit-message-box";
+
+        const textarea =
+            document.createElement(
+                "textarea"
+            );
+
+        textarea.className =
+            "edit-textarea";
+
+        textarea.rows = 2;
+
+        textarea.value =
+            originalText;
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+        actions.className =
+            "edit-actions";
+
+        const cancelButton =
+            document.createElement(
+                "button"
+            );
+
+        cancelButton.className =
+            "edit-btn-cancel";
+
+        cancelButton.type =
+            "button";
+
+        cancelButton.textContent =
+            "Cancel";
+
+        const saveButton =
+            document.createElement(
+                "button"
+            );
+
+        saveButton.className =
+            "edit-btn-save";
+
+        saveButton.type =
+            "button";
+
+        saveButton.textContent =
+            "Save & Submit";
+
+        actions.appendChild(
+            cancelButton
+        );
+
+        actions.appendChild(
+            saveButton
+        );
+
+        editBox.appendChild(
+            textarea
+        );
+
+        editBox.appendChild(
+            actions
+        );
+
+        messageElement.appendChild(
+            editBox
+        );
+
+        textarea.focus();
+
+        cancelButton.onclick =
+            () => {
+                renderUserMessageWrapper(
+                    messageElement,
+                    originalText,
+                    index
+                );
+            };
+
+        saveButton.onclick =
+            () => {
+                const updatedText =
+                    textarea.value.trim();
+
+                if (updatedText) {
+                    handleEditedSend(
+                        updatedText,
+                        index,
+                        messageElement
+                    );
+                }
+            };
+    }
+
+    async function handleEditedSend(
+        newText,
+        targetIndex,
+        messageElement
+    ) {
+        if (isGenerating) {
+            return;
+        }
+
+        const cleanedText =
+            String(
+                newText || ""
+            ).trim();
+
+        if (!cleanedText) {
+            return;
+        }
+
+        isGenerating = true;
+
+        try {
+            let actualIndex =
+                Number.isInteger(
+                    targetIndex
+                )
+                    ? targetIndex
+                    : -1;
+
+            if (
+                actualIndex < 0 ||
+                actualIndex >=
+                    conversation.length
+            ) {
+                actualIndex =
+                    conversation
+                        .findIndex(
+                            message =>
+                                message.role ===
+                                    "user" &&
+                                message.content ===
+                                    cleanedText
+                        );
+            }
+
+            if (
+                actualIndex >= 0 &&
+                actualIndex <
+                    conversation.length
+            ) {
+                conversation =
+                    conversation.slice(
+                        0,
+                        actualIndex
+                    );
+
+                let current =
+                    messageElement;
+
+                while (
+                    current
+                        ?.nextElementSibling
+                ) {
+                    current
+                        .nextElementSibling
+                        .remove();
+                }
+            }
+
+            renderUserMessageWrapper(
+                messageElement,
+                cleanedText,
+                conversation.length
+            );
+
+            conversation.push({
+                role:
+                    "user",
+
+                content:
+                    cleanedText
+            });
+
+            const aiBubble =
+                renderMessageToUI(
+                    "assistant",
+                    "",
+                    null,
+                    true
+                );
+
+            await submitChatRequest(
+                aiBubble
+            );
+        } catch (error) {
+            console.error(
+                "Edited message send failed:",
+                error
+            );
+
+            isGenerating =
+                false;
+        }
+    }
+
+    function copyWithFeedback(
+        text,
+        button,
+        size = 16
+    ) {
+        if (
+            !navigator.clipboard ||
+            !button
+        ) {
+            return;
+        }
+
+        navigator.clipboard
+            .writeText(text)
+            .then(
+                () => {
+                    button.innerHTML =
+                        `<i data-lucide="check" size="${size}" style="color:#10b981;"></i>`;
+
+                    if (
+                        window.lucide
+                    ) {
+                        window.lucide
+                            .createIcons();
+                    }
+
+                    setTimeout(
+                        () => {
+                            button.innerHTML =
+                                `<i data-lucide="copy" size="${size}"></i>`;
+
+                            if (
+                                window.lucide
+                            ) {
+                                window.lucide
+                                    .createIcons();
+                            }
+                        },
+                        2000
+                    );
+                }
+            )
+            .catch(
+                () => {}
+            );
+    }
+
+    chatMessages
+        ?.addEventListener(
+            "click",
+
+            event => {
+                const button =
+                    event.target
+                        .closest(
+                            ".msg-action-btn"
+                        );
+
+                if (!button) {
+                    return;
+                }
+
+                const message =
+                    button.closest(
+                        ".message"
+                    );
+
+                const text =
+                    message
+                        ?.querySelector(
+                            ".message-content"
+                        )
+                        ?.innerText ||
+                    "";
+
+                if (
+                    button.classList
+                        .contains(
+                            "copy-msg-btn"
+                        )
+                ) {
+                    copyWithFeedback(
+                        text,
+                        button
+                    );
+
+                    return;
+                }
+
+                if (
+                    button.classList
+                        .contains(
+                            "share-msg-btn"
+                        ) &&
+                    navigator.share
+                ) {
+                    navigator
+                        .share({
+                            text
+                        })
+                        .catch(
+                            () => {}
+                        );
+
+                    return;
+                }
+
+                if (
+                    button.classList
+                        .contains(
+                            "regen-msg-btn"
+                        )
+                ) {
+                    const lastUser =
+                        conversation
+                            .slice()
+                            .reverse()
+                            .find(
+                                item =>
+                                    item.role ===
+                                    "user"
+                            );
+
+                    if (
+                        lastUser &&
+                        !isGenerating &&
+                        chatInput
+                    ) {
+                        chatInput.value =
+                            lastUser.content;
+
+                        handleSend();
+                    }
+                }
+            }
+        );
+
+    async function handleSend() {
+        if (isGenerating) {
+            return;
+        }
+
+        const text =
+            chatInput
+                ?.value
+                .trim() ||
+            "";
+
+        if (
+            !text &&
+            attachedFiles.length ===
+                0
+        ) {
+            return;
+        }
+
+        isGenerating = true;
+
+        const pendingFiles =
+            [...attachedFiles];
+
+        try {
+            let fullContent =
+                text;
+
+            if (
+                pendingFiles.length >
+                0
+            ) {
+                const attachments =
+                    pendingFiles
+                        .map(
+                            file => {
+                                return (
+                                    `[Attached ${file.category}: ${file.name}]\n` +
+                                    `${file.data}`
+                                );
+                            }
+                        )
+                        .join(
+                            "\n\n"
+                        );
+
+                fullContent =
+                    `${text}\n\n${attachments}`
+                        .trim();
+            }
+
+            if (
+                fullContent.length >
+                120000
+            ) {
+                throw new Error(
+                    "The message and attached files are too large."
+                );
+            }
+
+            const messageIndex =
+                conversation.length;
+
+            if (chatInput) {
+                chatInput.value =
+                    "";
+
+                chatInput.style.height =
+                    "auto";
+            }
+
+            if (heroSection) {
+                heroSection.style.display =
+                    "none";
+            }
+
+            renderMessageToUI(
+                "user",
+
+                text ||
+                    `[Uploaded ${pendingFiles.length} file(s)]`,
+
+                messageIndex
+            );
+
+            conversation.push({
+                role:
+                    "user",
+
+                content:
+                    fullContent
+            });
+
+            attachedFiles = [];
+
+            renderAttachedChips();
+            renderAdaptiveSuggestions();
+            updateComposerShape();
+
+            const aiBubble =
+                renderMessageToUI(
+                    "assistant",
+                    "",
+                    null,
+                    true
+                );
+
+            await submitChatRequest(
+                aiBubble
+            );
+        } catch (error) {
+            console.error(
+                "Send failed:",
+                error
+            );
+
+            if (
+                attachedFiles.length ===
+                    0 &&
+                pendingFiles.length >
+                    0
+            ) {
+                attachedFiles =
+                    pendingFiles;
+
+                renderAttachedChips();
+                renderAdaptiveSuggestions();
+                updateComposerShape();
+            }
+
+            isGenerating = false;
+
+            alert(
+                error?.message ||
+                    "Unable to send the message."
+            );
+        }
+    }
+
+    function showAssistantError(
+        aiBubble,
+        error
+    ) {
+        if (!aiBubble) {
+            isGenerating = false;
+            return;
+        }
+
+        aiBubble.classList.remove(
+            "is-thinking"
+        );
+
+        const content =
+            aiBubble.querySelector(
+                ".message-content"
+            );
+
+        if (content) {
+            content.textContent =
+                `Error: ${
+                    error?.message ||
+                    "The request failed."
+                }`;
+
+            content.style.color =
+                "#ef4444";
+        }
+
+        isGenerating = false;
+    }
+
+    async function submitChatRequest(
+        aiBubble
+    ) {
+        let data;
+
+        try {
+            const response =
+                await fetch(
+                    "/api/chat",
+
+                    {
+                        method:
+                            "POST",
+
+                        credentials:
+                            "include",
+
+                        cache:
+                            "no-store",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            Accept:
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    messages:
+                                        conversation,
+
+                                    conversationId:
+                                        currentConversationId,
+
+                                    model:
+                                        selectedModel,
+
+                                    isDeepResearch:
+                                        isDeepResearchMode
+                                }
+                            )
+                    }
+                );
+
+            data =
+                await readJsonResponse(
+                    response
+                );
+        } catch (error) {
+            console.error(
+                "Chat API request failed:",
+                error
+            );
+
+            showAssistantError(
+                aiBubble,
+                error
+            );
+
+            return;
+        }
+
+        const replyValue =
+            data?.reply ??
+            data?.choices?.[0]
+                ?.message
+                ?.content ??
+            data?.message?.content ??
+            data?.content ??
+            data?.text;
+
+        const reply =
+            typeof replyValue ===
+            "string"
+                ? replyValue.trim()
+                : "";
+
+        if (!reply) {
+            const error =
+                new Error(
+                    "The AI response was empty."
+                );
+
+            console.error(
+                "Invalid AI response:",
+                data
+            );
+
+            showAssistantError(
+                aiBubble,
+                error
+            );
+
+            return;
+        }
+
+        if (
+            typeof data
+                .conversationId ===
+                "string" &&
+            data.conversationId
+                .trim()
+        ) {
+            currentConversationId =
+                data.conversationId
+                    .trim();
+        }
+
+        try {
+            if (aiBubble) {
+                aiBubble.classList
+                    .remove(
+                        "is-thinking"
+                    );
+
+                const content =
+                    aiBubble
+                        .querySelector(
+                            ".message-content"
+                        );
+
+                if (content) {
+                    content.style.color =
+                        "";
+
+                    content.innerHTML =
+                        safeParseMarkdown(
+                            reply
+                        );
+                }
+            }
+
+            conversation.push({
+                role:
+                    "assistant",
+
+                content:
+                    reply
+            });
+
+            if (scrollArea) {
+                scrollArea.scrollTop =
+                    scrollArea
+                        .scrollHeight;
+            }
+        } catch (
+            renderError
+        ) {
+            console.error(
+                "AI reply rendering failed:",
+                renderError
+            );
+
+            if (aiBubble) {
+                aiBubble.classList
+                    .remove(
+                        "is-thinking"
+                    );
+
+                const content =
+                    aiBubble
+                        .querySelector(
+                            ".message-content"
+                        );
+
+                if (content) {
+                    content.textContent =
+                        reply;
+
+                    content.style.color =
+                        "";
+                }
+            }
+
+            const alreadyStored =
+                conversation.some(
+                    message =>
+                        message.role ===
+                            "assistant" &&
+                        message.content ===
+                            reply
+                );
+
+            if (!alreadyStored) {
+                conversation.push({
+                    role:
+                        "assistant",
+
+                    content:
+                        reply
+                });
+            }
+        } finally {
+            isGenerating =
+                false;
+        }
+
+        if (window.lucide) {
+            try {
+                window.lucide
+                    .createIcons();
+            } catch (
+                iconError
+            ) {
+                console.warn(
+                    "Icon refresh failed:",
+                    iconError
+                );
+            }
+        }
+
+        try {
+            await loadHistoryFromSupabase();
+        } catch (
+            historyError
+        ) {
+            console.warn(
+                "History refresh failed after successful reply:",
+                historyError
+            );
+        }
+    }
+              function startNewConversation() {
+        conversation = [];
+        attachedFiles = [];
+        currentConversationId = null;
+        activePopupChatId = null;
+
+        if (chatMessages) {
+            chatMessages.innerHTML =
+                "";
+        }
+
+        if (heroSection) {
+            heroSection.style.display =
+                "block";
+        }
+
+        renderAttachedChips();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
+        loadHistoryFromSupabase();
+    }
+
+    async function logoutUser() {
+        try {
+            await fetch(
+                "/api/auth",
+
+                {
+                    method:
+                        "POST",
+
+                    credentials:
+                        "include",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        Accept:
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            {
+                                action:
+                                    "logout"
+                            }
+                        )
+                }
+            );
+        } catch (error) {
+            console.warn(
+                "Server logout failed:",
+                error
+            );
+        } finally {
+            clearLegacyUserStorage();
+
+            localStorage.removeItem(
+                "neo_user_memories"
+            );
+
+            window.location.replace(
+                "signup.html"
+            );
+        }
+    }
+
+    function setupEventListeners() {
+        sendBtn
+            ?.addEventListener(
+                "click",
+                handleSend
+            );
+
+        chatInput
+            ?.addEventListener(
+                "keydown",
+
+                event => {
+                    if (
+                        event.key ===
+                            "Enter" &&
+                        !event.shiftKey
+                    ) {
+                        event
+                            .preventDefault();
+
+                        handleSend();
+                    }
+                }
+            );
+
+        chatInput
+            ?.addEventListener(
+                "input",
+
+                function () {
+                    this.style.height =
+                        "auto";
+
+                    this.style.height =
+                        `${Math.min(
+                            this.scrollHeight,
+                            160
+                        )}px`;
+
+                    updateComposerShape();
+                }
+            );
+
+        attachBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event
+                        .stopPropagation();
+
+                    attachPopupMenu
+                        ?.classList
+                        .toggle(
+                            "show"
+                        );
+                }
+            );
+
+        addFilesMenuBtn
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    attachPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+
+                    hiddenFileInput
+                        ?.click();
+                }
+            );
+
+        deepResearchToggleBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event
+                        .stopPropagation();
+
+                    isDeepResearchMode =
+                        !isDeepResearchMode;
+
+                    deepResearchToggleBtn
+                        .classList
+                        .toggle(
+                            "active-mode",
+                            isDeepResearchMode
+                        );
+                }
+            );
+
+        personalMemoryBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event
+                        .stopPropagation();
+
+                    attachPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+
+                    const memory =
+                        prompt(
+                            "Update Memory:",
+
+                            localStorage
+                                .getItem(
+                                    "neo_user_memories"
+                                ) ||
+                                ""
+                        );
+
+                    if (
+                        memory !== null
+                    ) {
+                        localStorage
+                            .setItem(
+                                "neo_user_memories",
+                                memory.trim()
+                            );
+                    }
+                }
+            );
+
+        hiddenFileInput
+            ?.addEventListener(
+                "change",
+
+                event => {
+                    if (
+                        event.target
+                            .files
+                    ) {
+                        handleFileProcessing(
+                            Array.from(
+                                event
+                                    .target
+                                    .files
+                            )
+                        );
+                    }
+
+                    event.target.value =
+                        "";
+                }
+            );
+
+        const toggleSidebar =
+            () => {
+                if (!sidebar) {
+                    return;
+                }
+
+                sidebar
+                    .classList
+                    .toggle(
+                        "collapsed"
+                    );
+
+                const isOpen =
+                    !sidebar
+                        .classList
+                        .contains(
+                            "collapsed"
+                        );
+
+                const mobile =
+                    window
+                        .matchMedia(
+                            "(max-width: 767px)"
+                        )
+                        .matches;
+
+                sidebarScrim
+                    ?.classList
+                    .toggle(
+                        "visible",
+
+                        mobile &&
+                            isOpen
+                    );
+
+                updateBodySidebarState();
+            };
+
+        sidebarToggleBtn
+            ?.addEventListener(
+                "click",
+                toggleSidebar
+            );
+
+        collapseSidebarBtn
+            ?.addEventListener(
+                "click",
+                toggleSidebar
+            );
+
+        sidebarScrim
+            ?.addEventListener(
+                "click",
+                toggleSidebar
+            );
+
+        newChatBtn
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    startNewConversation();
+
+                    if (
+                        window.innerWidth <
+                        768
+                    ) {
+                        sidebar
+                            ?.classList
+                            .add(
+                                "collapsed"
+                            );
+
+                        sidebarScrim
+                            ?.classList
+                            .remove(
+                                "visible"
+                            );
+
+                        updateBodySidebarState();
+                    }
+                }
+            );
+
+        document
+            .querySelectorAll(
+                "[data-prompt]"
+            )
+            .forEach(
+                button => {
+                    button
+                        .addEventListener(
+                            "click",
+
+                            () => {
+                                if (
+                                    !chatInput
+                                ) {
+                                    return;
+                                }
+
+                                chatInput.value =
+                                    button
+                                        .getAttribute(
+                                            "data-prompt"
+                                        ) ||
+                                    "";
+
+                                handleSend();
+                            }
+                        );
+                }
+            );
+
+        userProfileBtn
+            ?.addEventListener(
+                "click",
+
+                event => {
+                    event
+                        .stopPropagation();
+
+                    userPopupMenu
+                        ?.classList
+                        .toggle(
+                            "show"
+                        );
+                }
+            );
+
+        document.addEventListener(
+            "click",
+
+            event => {
+                if (
+                    !userProfileBtn
+                        ?.contains(
+                            event.target
+                        ) &&
+                    !userPopupMenu
+                        ?.contains(
+                            event.target
+                        )
+                ) {
+                    userPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+
+                if (
+                    !historyPopupMenu
+                        ?.contains(
+                            event.target
+                        ) &&
+                    !event.target.closest(
+                        ".history-action-btn"
+                    )
+                ) {
+                    historyPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+
+                if (
+                    !attachBtn
+                        ?.contains(
+                            event.target
+                        ) &&
+                    !attachPopupMenu
+                        ?.contains(
+                            event.target
+                        )
+                ) {
+                    attachPopupMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+
+                if (
+                    !modelBadgeBtn
+                        ?.contains(
+                            event.target
+                        ) &&
+                    !modelDropdownMenu
+                        ?.contains(
+                            event.target
+                        )
+                ) {
+                    modelDropdownMenu
+                        ?.classList
+                        .remove(
+                            "show"
+                        );
+                }
+            }
+        );
+
+        let lastResponsiveMode =
+            window
+                .matchMedia(
+                    "(max-width: 767px)"
+                )
+                .matches;
+
+        window.addEventListener(
+            "resize",
+
+            () => {
+                const mobile =
+                    window
+                        .matchMedia(
+                            "(max-width: 767px)"
+                        )
+                        .matches;
+
+                if (
+                    mobile ===
+                    lastResponsiveMode
+                ) {
+                    return;
+                }
+
+                lastResponsiveMode =
+                    mobile;
+
+                initializeSidebarState();
+            },
+
+            {
+                passive:
+                    true
+            }
+        );
+
+        document
+            .getElementById(
+                "brandBtn"
+            )
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    window.location.href =
+                        "index.html";
+                }
+            );
+
+        document
+            .getElementById(
+                "logoutBtn"
+            )
+            ?.addEventListener(
+                "click",
+                logoutUser
+            );
+    }
+
+    document.addEventListener(
+        "DOMContentLoaded",
+
+        () => {
+            document
+                .documentElement
+                .dataset
+                .neoRuntime =
+                "ready";
+
+            init().catch(
+                error => {
+                    console.error(
+                        "NEO initialization failed:",
+                        error
+                    );
+
+                    const input =
+                        document
+                            .getElementById(
+                                "chatInput"
+                            );
+
+                    if (input) {
+                        input.placeholder =
+                            "NEO could not initialize. Check console.";
+                    }
+                }
+            );
+        }
+    );
 })();
