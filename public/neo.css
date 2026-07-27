@@ -2133,3 +2133,104 @@ body.dark-mode .personality-card.active {
   box-shadow: none !important;
   background: transparent !important;
 }
+#userAvatar {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  background: var(--bg-active) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+#userAvatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+  border-radius: 50% !important;
+}
+
+.sidebar-personality-btn {
+  width: 100%;
+  min-height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
+
+.sidebar-personality-btn:hover {
+  background: var(--bg-hover);
+}
+
+.history-popup-menu {
+  display: none;
+  position: fixed;
+  width: 220px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-popup);
+  z-index: 50000;
+}
+
+.history-popup-menu.show {
+  display: block;
+}
+
+.history-popup-item {
+  min-height: 38px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.history-popup-item:hover {
+  background: var(--bg-hover);
+}
+
+.history-popup-item.danger {
+  color: #ef4444;
+}
+
+.history-item {
+  position: relative !important;
+}
+
+.history-item::after {
+  content: "•••";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-56%);
+  color: var(--text-muted);
+  font-size: 13px;
+  opacity: 0;
+  letter-spacing: 1px;
+}
+
+.history-item:hover::after,
+.history-item.active::after {
+  opacity: 1;
+}
