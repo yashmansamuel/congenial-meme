@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -34,7 +34,8 @@ function safeMessage(message) {
     };
 }
 
-module.exports = async (req, res) => {
+// ------ Main Handler ------
+export default async (req, res) => {
     try {
         const user = req.user;
         if (!user || !user.id) {
