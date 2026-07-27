@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
+import { getAuthenticatedUser } from "../lib/auth.js";
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -36,10 +37,18 @@ function safeMessage(message) {
 
 export default async (req, res) => {
     try {
-        const user = req.user;
-        if (!user || !user.id) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        // --- AUTH FIX START ---
+        const auth = getAuthenticatedUser(req);
+        if (!auth?.userId) {
+            return res.status(401).json({
+                error: "Authentication required. Please log in."
+            });
         }
+        const user = {
+            id: auth.userId,
+            username: auth.username || "user"
+        };
+        // --- AUTH FIX END ---
 
         const { method, body } = req;
         const { action, conversationId, title } = body || {};
