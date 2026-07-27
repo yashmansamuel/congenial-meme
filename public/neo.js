@@ -1283,6 +1283,58 @@
             }
         );
 
+    // ----- RENAME conversation -----
+    async function renameConversation(conversationId, newTitle) {
+        try {
+            const response = await fetch("/api/history", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json"
+                },
+                body: JSON.stringify({
+                    action: "rename",
+                    conversationId,
+                    title: newTitle
+                })
+            });
+            await readJsonResponse(response);
+            await loadHistoryFromSupabase();
+            // Update conversation title in current list if it matches
+            if (currentConversationId === conversationId) {
+                // Optionally update UI header if needed
+            }
+        } catch (error) {
+            console.error("Rename failed:", error);
+            alert(error.message);
+        }
+    }
+
+    // ----- PIN / UNPIN conversation -----
+    async function togglePinConversation(conversationId, pin) {
+        try {
+            const response = await fetch("/api/history", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json"
+                },
+                body: JSON.stringify({
+                    action: pin ? "pin" : "unpin",
+                    conversationId
+                })
+            });
+            await readJsonResponse(response);
+            await loadHistoryFromSupabase();
+        } catch (error) {
+            console.error("Pin toggle failed:", error);
+            alert(error.message);
+        }
+    }
+
+    // ----- loadChatMessages (with signed URLs) -----
     async function loadChatMessages(
         conversationId
     ) {
@@ -1333,7 +1385,6 @@
             currentConversationId =
                 conversationId;
 
-            // FIXED: load attachments too
             conversation =
                 (data.messages || []).map(message => ({
                     role: message.role,
@@ -1362,7 +1413,7 @@
                         message.role !==
                         "system"
                     ) {
-                        // FIXED: pass attachments
+                        // Pass attachments (with signedUrl if any)
                         renderMessageToUI(
                             message.role,
                             message.content,
@@ -1410,7 +1461,23 @@
     //  UI RENDERERS
     // --------------------------------------------------------
 
-    // ----- UPDATED renderMessageToUI with attachments support -----
+    // ----- File icon helper -----
+    function getFileIcon(file) {
+        const mime = (file.mimeType || file.type || "").toLowerCase();
+        const name = (file.name || "").toLowerCase();
+        if (mime.startsWith("image/")) return "image";
+        if (mime.startsWith("audio/")) return "audio-lines";
+        if (mime.startsWith("video/")) return "video";
+        if (mime.includes("pdf")) return "file-text";
+        if (mime.includes("zip") || mime.includes("rar") || name.endsWith(".zip") || name.endsWith(".rar")) return "archive";
+        if (mime.includes("doc") || name.endsWith(".doc") || name.endsWith(".docx")) return "file-text";
+        if (mime.includes("sheet") || name.endsWith(".xls") || name.endsWith(".xlsx")) return "table";
+        if (mime.includes("presentation") || name.endsWith(".ppt") || name.endsWith(".pptx")) return "presentation";
+        if (mime.includes("javascript") || mime.includes("json") || name.endsWith(".js") || name.endsWith(".ts") || name.endsWith(".py") || name.endsWith(".java") || name.endsWith(".cpp") || name.endsWith(".c") || name.endsWith(".html") || name.endsWith(".css")) return "code";
+        return "file";
+    }
+
+    // ----- renderMessageToUI (with signed URLs) -----
     function renderMessageToUI(
         role,
         content,
@@ -1535,7 +1602,7 @@
         return message;
     }
 
-    // ----- UPDATED renderUserMessageWrapper with attachments support -----
+    // ----- renderUserMessageWrapper (with signed URLs and icons) -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
@@ -1584,13 +1651,15 @@
                     } else {
                         const pill = document.createElement("div");
                         pill.className = "message-file-pill";
-                        pill.textContent = file.name || "Uploaded image";
+                        const icon = getFileIcon(file);
+                        pill.innerHTML = `<i data-lucide="${icon}" size="14"></i> <span>${file.name || "Uploaded image"}</span>`;
                         mediaGrid.appendChild(pill);
                     }
                 } else {
                     const pill = document.createElement("div");
                     pill.className = "message-file-pill";
-                    pill.textContent = file.name || "Attached file";
+                    const icon = getFileIcon(file);
+                    pill.innerHTML = `<i data-lucide="${icon}" size="14"></i> <span>${file.name || "Attached file"}</span>`;
                     mediaGrid.appendChild(pill);
                 }
             });
@@ -1682,6 +1751,7 @@
         }
     }
 
+    // ----- enableUserMessageEdit (unchanged) -----
     function enableUserMessageEdit(
         messageElement,
         originalText,
@@ -1797,6 +1867,7 @@
             };
     }
 
+    // ----- handleEditedSend (unchanged) -----
     async function handleEditedSend(
         newText,
         targetIndex,
@@ -1901,6 +1972,7 @@
         }
     }
 
+    // ----- copyWithFeedback (unchanged) -----
     function copyWithFeedback(
         text,
         button,
@@ -1949,7 +2021,7 @@
     }
 
     // --------------------------------------------------------
-    //  CHAT ACTIONS
+    //  CHAT ACTIONS (unchanged)
     // --------------------------------------------------------
     chatMessages
         ?.addEventListener(
@@ -2042,7 +2114,7 @@
         );
 
     // --------------------------------------------------------
-    //  UPLOAD FUNCTION (replaces readFileAsPayload)
+    //  UPLOAD FUNCTION (unchanged)
     // --------------------------------------------------------
     async function uploadFileToStorage(fileEntry) {
         const file = fileEntry?.rawFile;
@@ -2128,7 +2200,7 @@
     }
 
     // --------------------------------------------------------
-    //  HANDLE SEND (replaced)
+    //  HANDLE SEND (unchanged)
     // --------------------------------------------------------
     async function handleSend() {
         if (isGenerating) {
@@ -2259,7 +2331,7 @@
     }
 
     // --------------------------------------------------------
-    //  SUBMIT CHAT REQUEST (with attachments)
+    //  SUBMIT CHAT REQUEST (unchanged)
     // --------------------------------------------------------
     async function submitChatRequest(
         aiBubble,
@@ -2930,6 +3002,9 @@
                         ) &&
                     !event.target.closest(
                         ".history-action-btn"
+                    ) &&
+                    !event.target.closest(
+                        ".history-three-dot"
                     )
                 ) {
                     historyPopupMenu
@@ -3039,7 +3114,7 @@
     //  ADDITIONAL FUNCTIONS
     // --------------------------------------------------------
 
-    // --- Dynamic adaptive suggestions ---
+    // --- Dynamic adaptive suggestions (unchanged) ---
     function renderAdaptiveSuggestions() {
         if (!liveSuggestions || !chatInput) return;
 
@@ -3109,7 +3184,7 @@
         });
     }
 
-    // --- Sidebar state management ---
+    // --- Sidebar state management (unchanged) ---
     function initializeSidebarState() {
         const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
@@ -3131,7 +3206,7 @@
         document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
     }
 
-    // --- Enhanced drag & drop ---
+    // --- Enhanced drag & drop (unchanged) ---
     function setupDragAndDrop() {
         if (!composerWrapper) return;
 
@@ -3157,7 +3232,7 @@
         });
     }
 
-    // --- Paste upload ---
+    // --- Paste upload (unchanged) ---
     function setupPasteUpload() {
         document.addEventListener("paste", event => {
             const files = Array.from(event.clipboardData?.files || []);
@@ -3187,8 +3262,10 @@
     function getAttachmentPreviewUrl(file) {
         if (!file) return "";
 
-        // Support persistent URL from backend
-        if (file.url) return file.url;
+        // Use signedUrl from backend first
+        if (file.signedUrl) return file.signedUrl;
+
+        // Fallback to existing previewUrl or data
         if (file.previewUrl) return file.previewUrl;
 
         if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
@@ -3205,7 +3282,7 @@
         return "";
     }
 
-    // --- Enhanced renderAttachedChips ---
+    // --- renderAttachedChips (with icons and horizontal layout) ---
     function renderAttachedChips() {
         if (!attachedChipsWrapper) return;
 
@@ -3215,6 +3292,10 @@
             const card = document.createElement("div");
             card.className = "attachment-preview-card";
 
+            // Determine icon
+            const icon = getFileIcon(file);
+
+            // For images, show thumbnail; otherwise show icon + name
             if (isImageAttachment(file)) {
                 const img = document.createElement("img");
                 img.alt = file.name || "Uploaded image";
@@ -3223,7 +3304,7 @@
             } else {
                 const box = document.createElement("div");
                 box.className = "attachment-preview-file";
-                box.textContent = file.name || "Attached file";
+                box.innerHTML = `<i data-lucide="${icon}" size="18"></i><span>${file.name || "Attached file"}</span>`;
                 card.appendChild(box);
             }
 
@@ -3247,6 +3328,10 @@
             card.appendChild(remove);
             attachedChipsWrapper.appendChild(card);
         });
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     }
 
     // --- getFileCategory (unchanged) ---
@@ -3261,7 +3346,7 @@
         return "text";
     }
 
-    // --- UPDATED handleFileProcessing (replaces original) ---
+    // --- handleFileProcessing (unchanged) ---
     async function handleFileProcessing(files) {
         const selected =
             Array.from(files || [])
@@ -3308,7 +3393,7 @@
         updateComposerShape();
     }
 
-    // --- Profile rendering ---
+    // --- Profile rendering (unchanged) ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -3360,7 +3445,7 @@
         }
     }
 
-    // --- History loading (with contextmenu) ---
+    // --- loadHistoryFromSupabase (with three-dot button, rename, pin/unpin) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -3378,27 +3463,121 @@
             historyList.innerHTML = "";
 
             conversations.forEach(item => {
-                const row = document.createElement("button");
-                row.type = "button";
-                row.className = "history-item";
-                row.textContent = item.title || "New conversation";
+                const row = document.createElement("div");
+                row.className = "history-item-wrapper";
+                row.style.position = "relative";
+                row.style.display = "flex";
+                row.style.alignItems = "center";
+                row.style.gap = "4px";
+                row.style.padding = "2px 4px";
+                row.style.borderRadius = "10px";
+                row.style.transition = "background 0.15s ease";
 
-                row.addEventListener("click", () => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "history-item";
+                button.textContent = item.title || "New conversation";
+                button.style.flex = "1";
+                button.style.minHeight = "38px";
+                button.style.padding = "9px 10px";
+                button.style.background = "transparent";
+                button.style.border = "none";
+                button.style.color = "var(--text-primary)";
+                button.style.textAlign = "left";
+                button.style.cursor = "pointer";
+                button.style.overflow = "hidden";
+                button.style.whiteSpace = "nowrap";
+                button.style.textOverflow = "ellipsis";
+                button.style.borderRadius = "10px";
+
+                button.addEventListener("click", () => {
                     loadChatMessages(item.id);
                 });
 
-                // NEW: contextmenu listener for each history row
-                row.addEventListener("contextmenu", event => {
-                    event.preventDefault();
+                // Three-dot button (always visible)
+                const dotBtn = document.createElement("button");
+                dotBtn.type = "button";
+                dotBtn.className = "history-three-dot";
+                dotBtn.innerHTML = '<i data-lucide="more-vertical" size="16"></i>';
+                dotBtn.style.background = "transparent";
+                dotBtn.style.border = "none";
+                dotBtn.style.color = "var(--text-muted)";
+                dotBtn.style.cursor = "pointer";
+                dotBtn.style.padding = "4px 6px";
+                dotBtn.style.borderRadius = "6px";
+                dotBtn.style.display = "flex";
+                dotBtn.style.alignItems = "center";
+                dotBtn.style.justifyContent = "center";
+                dotBtn.style.transition = "background 0.12s ease, color 0.12s ease";
+                dotBtn.style.flexShrink = "0";
+
+                dotBtn.addEventListener("click", (event) => {
+                    event.stopPropagation();
                     activePopupChatId = item.id;
                     historyPopupMenu.style.display = "block";
                     historyPopupMenu.classList.add("show");
-                    historyPopupMenu.style.left = `${event.clientX}px`;
-                    historyPopupMenu.style.top = `${event.clientY}px`;
+                    // Position near the dot button
+                    const rect = dotBtn.getBoundingClientRect();
+                    historyPopupMenu.style.left = `${rect.left - 140}px`;
+                    historyPopupMenu.style.top = `${rect.bottom + 6}px`;
                 });
 
+                dotBtn.addEventListener("mouseenter", () => {
+                    dotBtn.style.background = "var(--bg-hover)";
+                    dotBtn.style.color = "var(--text-primary)";
+                });
+                dotBtn.addEventListener("mouseleave", () => {
+                    dotBtn.style.background = "transparent";
+                    dotBtn.style.color = "var(--text-muted)";
+                });
+
+                row.appendChild(button);
+                row.appendChild(dotBtn);
                 historyList.appendChild(row);
+
+                // Pin indicator (optional)
+                if (item.is_pinned) {
+                    const pinIcon = document.createElement("span");
+                    pinIcon.style.marginLeft = "6px";
+                    pinIcon.style.color = "var(--text-muted)";
+                    pinIcon.innerHTML = '<i data-lucide="pin" size="12"></i>';
+                    button.appendChild(pinIcon);
+                    // Lucide will be created after loop
+                }
+
+                // Store conversation ID on the row for later use
+                row.dataset.id = item.id;
             });
+
+            // Re-create Lucide icons after adding new elements
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+            // ---- Popup menu actions (rename, pin, unpin, delete) ----
+            // Delete is already wired via hpDeleteBtn; we add rename and pin/unpin
+            const hpRenameBtn = document.getElementById("hpRenameBtn");
+            const hpPinBtn = document.getElementById("hpPinBtn");
+
+            hpRenameBtn?.addEventListener("click", async () => {
+                if (!activePopupChatId) return;
+                const newTitle = prompt("Rename conversation:", "");
+                if (newTitle && newTitle.trim()) {
+                    await renameConversation(activePopupChatId, newTitle.trim());
+                }
+                historyPopupMenu.classList.remove("show");
+                activePopupChatId = null;
+            });
+
+            hpPinBtn?.addEventListener("click", async () => {
+                if (!activePopupChatId) return;
+                const currentItem = conversations.find(c => c.id === activePopupChatId);
+                const isPinned = currentItem?.is_pinned || false;
+                await togglePinConversation(activePopupChatId, !isPinned);
+                historyPopupMenu.classList.remove("show");
+                activePopupChatId = null;
+            });
+
         } catch (error) {
             console.warn("History load failed:", error);
         }
