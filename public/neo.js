@@ -1571,8 +1571,7 @@
         content.className =
             "message-content";
 
-        content.textContent =
-            textContent;
+        content.textContent = textContent || "";
 
         wrapper.appendChild(content);
 
