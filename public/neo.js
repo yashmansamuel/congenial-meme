@@ -1363,20 +1363,15 @@
             currentConversationId =
                 conversationId;
 
+            // FIXED: load attachments too
             conversation =
-                (
-                    data.messages ||
-                    []
-                ).map(
-                    message => ({
-                        role:
-                            message.role,
-
-                        content:
-                            message.content ||
-                            ""
-                    })
-                );
+                (data.messages || []).map(message => ({
+                    role: message.role,
+                    content: message.content || "",
+                    attachments: Array.isArray(message.attachments)
+                        ? message.attachments
+                        : []
+                }));
 
             if (chatMessages) {
                 chatMessages.innerHTML =
@@ -1397,10 +1392,13 @@
                         message.role !==
                         "system"
                     ) {
+                        // FIXED: pass attachments
                         renderMessageToUI(
                             message.role,
                             message.content,
-                            index
+                            index,
+                            false,
+                            message.attachments || []
                         );
                     }
                 }
@@ -2088,40 +2086,16 @@
             [...attachedFiles];
 
         try {
-            let fullContent =
-                text;
+            // FIXED: do NOT embed attachment data into message content
+            const fullContent = text || "";
 
-            if (
-                pendingFiles.length >
-                0
-            ) {
-                const attachments =
-                    pendingFiles
-                        .map(
-                            file => {
-                                return (
-                                    `[Attached ${file.category}: ${file.name}]\n` +
-                                    `${file.data}`
-                                );
-                            }
-                        )
-                        .join(
-                            "\n\n"
-                        );
-
-                fullContent =
-                    `${text}\n\n${attachments}`
-                        .trim();
-            }
-
-            if (
-                fullContent.length >
-                120000
-            ) {
-                throw new Error(
-                    "The message and attached files are too large."
-                );
-            }
+            // FIXED: store attachments separately in the conversation
+            const storedAttachments = pendingFiles.map(file => ({
+                name: file.name,
+                type: file.type,
+                category: file.category,
+                data: file.data
+            }));
 
             const messageIndex =
                 conversation.length;
@@ -2139,21 +2113,20 @@
                     "none";
             }
 
-            // ----- UPDATED: pass pendingFiles as attachments -----
+            // Render user message with attachments
             renderMessageToUI(
                 "user",
                 text || "",
                 messageIndex,
                 false,
-                pendingFiles
+                pendingFiles   // we pass the original file objects (with previewUrl) for display
             );
 
+            // Push to conversation with separate attachments
             conversation.push({
-                role:
-                    "user",
-
-                content:
-                    fullContent
+                role: "user",
+                content: fullContent,
+                attachments: storedAttachments  // store only serializable data (no blob URLs)
             });
 
             attachedFiles = [];
@@ -2173,7 +2146,7 @@
             await submitChatRequest(
                 aiBubble,
                 text,
-                pendingFiles   // pass for title generation
+                pendingFiles
             );
         } catch (error) {
             console.error(
@@ -2271,7 +2244,7 @@
                             JSON.stringify(
                                 {
                                     messages:
-                                        conversation,
+                                        conversation, // now includes attachments
 
                                     conversationId:
                                         currentConversationId,
@@ -3125,6 +3098,8 @@
     function getAttachmentPreviewUrl(file) {
         if (!file) return "";
 
+        // Support persistent URL from backend
+        if (file.url) return file.url;
         if (file.previewUrl) return file.previewUrl;
 
         if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
