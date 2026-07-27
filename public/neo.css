@@ -2227,3 +2227,51 @@ body.dark-mode .personality-card.active {
         grid-template-columns: 1fr;
     }
 }
+
+/* SAFE UPLOAD UI PATCH */
+
+.attached-chips-wrapper {
+    min-height: 0;
+}
+
+.attachment-preview-card {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.attachment-preview-file {
+    overflow: hidden;
+    word-break: break-word;
+    text-overflow: ellipsis;
+}
+
+.message-media-grid img {
+    cursor: pointer;
+}
+
+.message-file-pill {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.attachment-remove-btn {
+    z-index: 2;
+}
+
+@media (max-width: 520px) {
+    .attachment-preview-card {
+        width: 92px !important;
+        height: 92px !important;
+    }
+
+    .message-media-grid img {
+        max-width: 100%;
+        max-height: 320px;
+    }
+
+    .message-file-pill {
+        max-width: 100%;
+    }
+}
