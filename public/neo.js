@@ -1418,11 +1418,14 @@
     // --------------------------------------------------------
     //  UI RENDERERS
     // --------------------------------------------------------
+
+    // ----- UPDATED renderMessageToUI with attachments support -----
     function renderMessageToUI(
         role,
         content,
         messageIndex = null,
-        isThinking = false
+        isThinking = false,
+        attachments = []
     ) {
         if (!chatMessages) {
             return null;
@@ -1455,7 +1458,8 @@
             renderUserMessageWrapper(
                 message,
                 content,
-                messageIndex
+                messageIndex,
+                attachments
             );
         } else {
             const contentElement =
@@ -1540,10 +1544,12 @@
         return message;
     }
 
+    // ----- UPDATED renderUserMessageWrapper with attachments support -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
-        index
+        index,
+        attachments = []
     ) {
         containerElement.innerHTML =
             "";
@@ -1556,6 +1562,7 @@
         wrapper.className =
             "message-wrapper";
 
+        // Text content
         const content =
             document.createElement(
                 "div"
@@ -1567,6 +1574,31 @@
         content.textContent =
             textContent;
 
+        wrapper.appendChild(content);
+
+        // Attachments (media grid)
+        if (attachments && attachments.length > 0) {
+            const mediaGrid = document.createElement("div");
+            mediaGrid.className = "message-media-grid";
+
+            attachments.forEach(file => {
+                if (isImageAttachment(file)) {
+                    const img = document.createElement("img");
+                    img.alt = file.name || "Uploaded image";
+                    img.src = getAttachmentPreviewUrl(file);
+                    mediaGrid.appendChild(img);
+                } else {
+                    const pill = document.createElement("div");
+                    pill.className = "message-file-pill";
+                    pill.textContent = file.name || "Attached file";
+                    mediaGrid.appendChild(pill);
+                }
+            });
+
+            wrapper.appendChild(mediaGrid);
+        }
+
+        // Actions (edit/copy)
         const actions =
             document.createElement(
                 "div"
@@ -1633,10 +1665,6 @@
 
         actions.appendChild(
             copyButton
-        );
-
-        wrapper.appendChild(
-            content
         );
 
         wrapper.appendChild(
@@ -2089,13 +2117,13 @@
                     "none";
             }
 
+            // ----- UPDATED: pass pendingFiles as attachments -----
             renderMessageToUI(
                 "user",
-
-                text ||
-                    `[Uploaded ${pendingFiles.length} file(s)]`,
-
-                messageIndex
+                text || "",
+                messageIndex,
+                false,
+                pendingFiles
             );
 
             conversation.push({
@@ -3046,7 +3074,7 @@
     }
 
     // --------------------------------------------------------
-    //  NEW: Image attachment helpers & enhanced rendering
+    //  Image attachment helpers & enhanced rendering
     // --------------------------------------------------------
 
     function isImageAttachment(file) {
@@ -3127,7 +3155,7 @@
         });
     }
 
-    // --- getFileCategory (unchanged, but used for reading) ---
+    // --- getFileCategory (unchanged) ---
     function getFileCategory(file) {
         const type = file.type || "";
 
