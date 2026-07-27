@@ -128,6 +128,7 @@ function safeConversation(conversation) {
   };
 }
 
+// ---------- UPDATED safeMessage with attachments ----------
 function safeMessage(message) {
   return {
     id: String(message.id),
@@ -138,9 +139,13 @@ function safeMessage(message) {
         ? 'user'
         : 'system',
     content: cleanString(message.content, 50_000),
+    attachments: Array.isArray(message.attachments)
+      ? message.attachments
+      : [],
     createdAt: message.created_at || null
   };
 }
+// ----------------------------------------------------------
 
 async function verifyConversationOwnership(
   supabase,
@@ -184,13 +189,14 @@ async function listConversations(
   return (data || []).map(safeConversation);
 }
 
+// ---------- UPDATED loadConversationMessages with attachments ----------
 async function loadConversationMessages(
   supabase,
   conversationId
 ) {
   const { data, error } = await supabase
     .from('chat_messages')
-    .select('id, role, content, created_at')
+    .select('id, role, content, attachments, created_at')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true })
     .limit(500);
@@ -201,6 +207,7 @@ async function loadConversationMessages(
 
   return (data || []).map(safeMessage);
 }
+// ----------------------------------------------------------------------
 
 async function renameConversation(
   supabase,
