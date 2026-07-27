@@ -4,6 +4,9 @@
     // SECURITY CONSTANTS & CONFIGS
     const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
     const MAX_ATTACHED_FILES = 5;
+    const MEDIA_BUCKET = "uploads";
+    const SIGNED_URL_EXPIRY_SECONDS = 300;
+    const MEDIA_UPLOAD_TIMEOUT_MS = 60_000;
 
     const SUPABASE_URL =
         "https://ujclhweqqifgoiscvqmd.supabase.co";
@@ -49,6 +52,9 @@
     // FREEMIUM STATE
     let selectedModel = "l1.0";
     let userPlan = "free";
+
+    // MEDIA PREVIEW MAP (local session only)
+    const sessionMediaPreviews = new Map();
 
     // DOM ELEMENTS
     const chatInput =
@@ -134,6 +140,13 @@
         document.getElementById(
             "hpDeleteBtn"
         );
+
+    const hpShareBtn =
+        document.getElementById("hpShareBtn");
+    const hpPinBtn =
+        document.getElementById("hpPinBtn");
+    const hpRenameBtn =
+        document.getElementById("hpRenameBtn");
 
     // COMPOSER ELEMENTS
     const attachBtn =
@@ -261,6 +274,22 @@
             "sidebarPersonalitiesBtn"
         );
 
+    // ---- Settings UI Elements (assumed present) ----
+    const settingsCloseBtn =
+        document.getElementById("settingsCloseBtn");
+    const settingsTabs =
+        document.querySelectorAll(".neo-settings-tab");
+    const settingsPanels =
+        document.querySelectorAll(".neo-settings-panel");
+    const settingsSaveBtn =
+        document.getElementById("settingsSaveBtn");
+    const settingsResetBtn =
+        document.getElementById("settingsResetBtn");
+    const settingsBillingBtn =
+        document.getElementById("settingsBillingBtn");
+    const settingsThemeBtn =
+        document.getElementById("settingsThemeBtn");
+
     // --------------------------------------------------------
     //  HELPER: makeConversationTitle
     // --------------------------------------------------------
@@ -302,6 +331,7 @@
         setupSpeechRecognition();
         renderAdaptiveSuggestions();
         updateComposerShape();
+        setupSettingsUI(); // added
 
         const authenticated =
             await restoreSecureSession();
@@ -749,7 +779,7 @@
                             .add(
                                 "show"
                             );
-                                                return;
+                        return;
                     }
 
                     selectedModel =
@@ -1313,6 +1343,48 @@
             }
         );
 
+    // History popup actions (Share, Pin, Rename)
+    if (hpShareBtn) {
+        hpShareBtn.addEventListener("click", () => {
+            alert("Share conversation – not implemented yet");
+            historyPopupMenu?.classList.remove("show");
+        });
+    }
+    if (hpPinBtn) {
+        hpPinBtn.addEventListener("click", () => {
+            alert("Pin conversation – not implemented yet");
+            historyPopupMenu?.classList.remove("show");
+        });
+    }
+    if (hpRenameBtn) {
+        hpRenameBtn.addEventListener("click", async () => {
+            if (!activePopupChatId) return;
+            const newTitle = prompt("Enter new title:");
+            if (newTitle !== null && newTitle.trim()) {
+                try {
+                    const response = await fetch("/api/history", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json"
+                        },
+                        body: JSON.stringify({
+                            action: "rename",
+                            conversationId: activePopupChatId,
+                            title: newTitle.trim()
+                        })
+                    });
+                    await readJsonResponse(response);
+                    await loadHistoryFromSupabase();
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+            historyPopupMenu?.classList.remove("show");
+        });
+    }
+
     async function loadChatMessages(
         conversationId
     ) {
@@ -1363,13 +1435,15 @@
             currentConversationId =
                 conversationId;
 
-            // FIXED: load attachments too
             conversation =
                 (data.messages || []).map(message => ({
                     role: message.role,
                     content: message.content || "",
+                    displayContent: typeof message.displayContent === "string"
+                        ? message.displayContent
+                        : message.content || "",
                     attachments: Array.isArray(message.attachments)
-                        ? message.attachments
+                        ? message.attachments.map(serializeAttachment)
                         : []
                 }));
 
@@ -1392,10 +1466,14 @@
                         message.role !==
                         "system"
                     ) {
-                        // FIXED: pass attachments
+                        // Use displayContent for user messages
+                        const contentToRender =
+                            message.role === "user"
+                                ? message.displayContent
+                                : message.content;
                         renderMessageToUI(
                             message.role,
-                            message.content,
+                            contentToRender,
                             index,
                             false,
                             message.attachments || []
@@ -1439,8 +1517,6 @@
     // --------------------------------------------------------
     //  UI RENDERERS
     // --------------------------------------------------------
-
-    // ----- UPDATED renderMessageToUI with attachments support -----
     function renderMessageToUI(
         role,
         content,
@@ -1467,7 +1543,7 @@
         if (
             messageIndex !== null
         ) {
-                        message.setAttribute(
+            message.setAttribute(
                 "data-msg-index",
                 String(
                     messageIndex
@@ -1565,7 +1641,6 @@
         return message;
     }
 
-    // ----- UPDATED renderUserMessageWrapper with attachments support -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
@@ -1603,10 +1678,26 @@
 
             attachments.forEach(file => {
                 if (isImageAttachment(file)) {
-                    const img = document.createElement("img");
-                    img.alt = file.name || "Uploaded image";
-                    img.src = getAttachmentPreviewUrl(file);
-                    mediaGrid.appendChild(img);
+                    const previewUrl = getAttachmentPreviewUrl(file);
+                    if (previewUrl) {
+                        const img = document.createElement("img");
+                        img.alt = file.name || "Uploaded image";
+                        img.src = previewUrl;
+                        mediaGrid.appendChild(img);
+                    } else {
+                        // Fallback: show pill with image icon
+                        const pill = document.createElement("div");
+                        pill.className = "message-file-pill image-file-pill";
+
+                        const icon = document.createElement("i");
+                        icon.setAttribute("data-lucide", "image");
+
+                        const name = document.createElement("span");
+                        name.textContent = file.name || "Uploaded image";
+
+                        pill.append(icon, name);
+                        mediaGrid.appendChild(pill);
+                    }
                 } else {
                     const pill = document.createElement("div");
                     pill.className = "message-file-pill";
@@ -1649,7 +1740,8 @@
                 enableUserMessageEdit(
                     containerElement,
                     textContent,
-                    index
+                    index,
+                    attachments
                 );
             };
 
@@ -1705,7 +1797,8 @@
     function enableUserMessageEdit(
         messageElement,
         originalText,
-        index
+        index,
+        originalAttachments = []
     ) {
         if (isGenerating) {
             return;
@@ -1798,7 +1891,8 @@
                 renderUserMessageWrapper(
                     messageElement,
                     originalText,
-                    index
+                    index,
+                    originalAttachments
                 );
             };
 
@@ -1811,7 +1905,8 @@
                     handleEditedSend(
                         updatedText,
                         index,
-                        messageElement
+                        messageElement,
+                        originalAttachments
                     );
                 }
             };
@@ -1820,7 +1915,8 @@
     async function handleEditedSend(
         newText,
         targetIndex,
-        messageElement
+        messageElement,
+        originalAttachments
     ) {
         if (isGenerating) {
             return;
@@ -1831,7 +1927,7 @@
                 newText || ""
             ).trim();
 
-        if (!cleanedText) {
+        if (!cleanedText && originalAttachments.length === 0) {
             return;
         }
 
@@ -1888,15 +1984,23 @@
             renderUserMessageWrapper(
                 messageElement,
                 cleanedText,
-                conversation.length
+                conversation.length,
+                originalAttachments
             );
+
+            // Build API content
+            const apiContent =
+                cleanedText ||
+                createAttachmentPrompt(
+                    originalAttachments
+                );
 
             conversation.push({
                 role:
                     "user",
-
-                content:
-                    cleanedText
+                content: apiContent,
+                displayContent: cleanedText,
+                attachments: originalAttachments.map(serializeAttachment)
             });
 
             const aiBubble =
@@ -1908,7 +2012,9 @@
                 );
 
             await submitChatRequest(
-                aiBubble
+                aiBubble,
+                cleanedText,
+                originalAttachments
             );
         } catch (error) {
             console.error(
@@ -2037,45 +2143,512 @@
                             "regen-msg-btn"
                         )
                 ) {
-                    const lastUser =
-                        conversation
-                            .slice()
-                            .reverse()
-                            .find(
-                                item =>
-                                    item.role ===
-                                    "user"
-                            );
+                    // Proper regenerate: find last user message, truncate after it, and re-submit
+                    if (isGenerating) return;
+                    const lastUserIndex = findLastUserMessageIndex();
+                    if (lastUserIndex === -1) return;
 
-                    if (
-                        lastUser &&
-                        !isGenerating &&
-                        chatInput
-                    ) {
-                        chatInput.value =
-                            lastUser.content;
-
-                        handleSend();
+                    const lastUserMsg = conversation[lastUserIndex];
+                    // Remove the user message and any assistant messages after it
+                    conversation = conversation.slice(0, lastUserIndex);
+                    // Remove UI messages after the user message
+                    let current = message;
+                    while (current?.nextElementSibling) {
+                        current.nextElementSibling.remove();
                     }
+                    // Re-render the user message (preserve attachments)
+                    renderUserMessageWrapper(
+                        message,
+                        lastUserMsg.displayContent || lastUserMsg.content,
+                        conversation.length,
+                        lastUserMsg.attachments
+                    );
+
+                    // Re-add user message to conversation
+                    conversation.push({
+                        role: "user",
+                        content: lastUserMsg.content,
+                        displayContent: lastUserMsg.displayContent || lastUserMsg.content,
+                        attachments: lastUserMsg.attachments
+                    });
+
+                    const aiBubble = renderMessageToUI("assistant", "", null, true);
+                    submitChatRequest(aiBubble, lastUserMsg.displayContent || lastUserMsg.content, lastUserMsg.attachments);
                 }
             }
         );
 
+    function findLastUserMessageIndex() {
+        for (let i = conversation.length - 1; i >= 0; i--) {
+            if (conversation[i].role === "user") return i;
+        }
+        return -1;
+    }
+
+    // --------------------------------------------------------
+    //  MEDIA SERVICE
+    // --------------------------------------------------------
+    const mediaService = {
+        async upload(file) {
+            if (!(file instanceof File)) {
+                throw new Error("Invalid file selected.");
+            }
+
+            if (!currentUser?.id) {
+                throw new Error("User session is not ready.");
+            }
+
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                throw new Error(
+                    `${file.name} is too large. Maximum file size is 4MB.`
+                );
+            }
+
+            const category = getFileCategory(file);
+
+            const safeName = sanitizeStorageFileName(file.name);
+
+            const objectPath = [
+                "users",
+                currentUser.id,
+                category,
+                `${crypto.randomUUID()}-${safeName}`
+            ].join("/");
+
+            const controller = new AbortController();
+
+            const timeoutId = window.setTimeout(() => {
+                controller.abort();
+            }, MEDIA_UPLOAD_TIMEOUT_MS);
+
+            try {
+                const signedResponse = await fetch(
+                    "/api/media/upload-url",
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        cache: "no-store",
+                        signal: controller.signal,
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            bucket: MEDIA_BUCKET,
+                            path: objectPath,
+                            fileName: file.name,
+                            mimeType:
+                                file.type ||
+                                "application/octet-stream",
+                            size: file.size
+                        })
+                    }
+                );
+
+                const signedData =
+                    await readJsonResponse(signedResponse);
+
+                if (
+                    !signedData?.uploadUrl ||
+                    !signedData?.path
+                ) {
+                    throw new Error(
+                        "The media upload URL was not returned."
+                    );
+                }
+
+                const uploadResponse = await fetch(
+                    signedData.uploadUrl,
+                    {
+                        method: "PUT",
+                        signal: controller.signal,
+
+                        headers: {
+                            "Content-Type":
+                                file.type ||
+                                "application/octet-stream"
+                        },
+
+                        body: file
+                    }
+                );
+
+                if (!uploadResponse.ok) {
+                    throw new Error(
+                        `Upload failed with status ${uploadResponse.status}.`
+                    );
+                }
+
+                return {
+                    provider: "supabase",
+                    bucket: MEDIA_BUCKET,
+                    path: signedData.path,
+                    name: file.name,
+                    mimeType:
+                        file.type ||
+                        "application/octet-stream",
+                    type:
+                        file.type ||
+                        "application/octet-stream",
+                    category,
+                    size: file.size
+                };
+            } catch (error) {
+                if (error?.name === "AbortError") {
+                    throw new Error(
+                        "Media upload timed out. Please try again."
+                    );
+                }
+
+                throw error;
+            } finally {
+                window.clearTimeout(timeoutId);
+            }
+        },
+
+        async getSignedUrl(path) {
+            const cleanPath = String(path || "").trim();
+
+            if (!cleanPath) {
+                throw new Error("Media path is missing.");
+            }
+
+            const response = await fetch(
+                "/api/media/download-url",
+                {
+                    method: "POST",
+                    credentials: "include",
+                    cache: "no-store",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        bucket: MEDIA_BUCKET,
+                        path: cleanPath,
+                        expiresIn:
+                            SIGNED_URL_EXPIRY_SECONDS
+                    })
+                }
+            );
+
+            const data =
+                await readJsonResponse(response);
+
+            if (!data?.signedUrl) {
+                throw new Error(
+                    "The media download URL was not returned."
+                );
+            }
+
+            return data.signedUrl;
+        },
+
+        async delete(path) {
+            const cleanPath = String(path || "").trim();
+
+            if (!cleanPath) {
+                return;
+            }
+
+            const response = await fetch(
+                "/api/media/delete",
+                {
+                    method: "POST",
+                    credentials: "include",
+                    cache: "no-store",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        bucket: MEDIA_BUCKET,
+                        path: cleanPath
+                    })
+                }
+            );
+
+            await readJsonResponse(response);
+        }
+    };
+
+    function sanitizeStorageFileName(fileName) {
+        const original =
+            String(fileName || "file")
+                .trim()
+                .toLowerCase();
+
+        const dotIndex =
+            original.lastIndexOf(".");
+
+        const extension =
+            dotIndex >= 0
+                ? original
+                      .slice(dotIndex + 1)
+                      .replace(/[^a-z0-9]/g, "")
+                      .slice(0, 10)
+                : "";
+
+        const baseName =
+            (dotIndex >= 0
+                ? original.slice(0, dotIndex)
+                : original
+            )
+                .normalize("NFKD")
+                .replace(/[^\w.-]+/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^[.-]+|[.-]+$/g, "")
+                .slice(0, 80) || "file";
+
+        return extension
+            ? `${baseName}.${extension}`
+            : baseName;
+    }
+
+    function readFileAsPayload(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => {
+                reject(new Error(`Unable to read ${file.name}`));
+            };
+
+            reader.onload = () => {
+                resolve(reader.result || "");
+            };
+
+            const category = getFileCategory(file);
+
+            if (category === "text") {
+                reader.readAsText(file);
+            } else {
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // --------------------------------------------------------
+    //  FILE PROCESSING & HELPERS
+    // --------------------------------------------------------
+    async function handleFileProcessing(files) {
+        const selected =
+            Array.from(files || [])
+                .slice(
+                    0,
+                    MAX_ATTACHED_FILES
+                );
+
+        for (const file of selected) {
+            if (
+                attachedFiles.length >=
+                MAX_ATTACHED_FILES
+            ) {
+                alert(
+                    `Maximum ${MAX_ATTACHED_FILES} files can be attached.`
+                );
+
+                break;
+            }
+
+            if (!(file instanceof File)) {
+                continue;
+            }
+
+            if (
+                file.size >
+                MAX_FILE_SIZE_BYTES
+            ) {
+                alert(
+                    `${file.name} is too large. Maximum file size is 4MB.`
+                );
+
+                continue;
+            }
+
+            if (
+                !checkFilePermissionForPlan(
+                    file
+                )
+            ) {
+                continue;
+            }
+
+            const category =
+                getFileCategory(file);
+
+            let previewUrl = "";
+
+            if (category === "image") {
+                previewUrl =
+                    URL.createObjectURL(file);
+            }
+
+            attachedFiles.push({
+                localId:
+                    crypto.randomUUID(),
+
+                name:
+                    file.name,
+
+                type:
+                    file.type ||
+                    "application/octet-stream",
+
+                mimeType:
+                    file.type ||
+                    "application/octet-stream",
+
+                category,
+
+                size:
+                    file.size,
+
+                rawFile:
+                    file,
+
+                previewUrl,
+
+                uploadState:
+                    "ready"
+            });
+        }
+
+        renderAttachedChips();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
+    }
+
+    function getAttachmentPreviewUrl(file) {
+        if (!file) {
+            return "";
+        }
+
+        // Current session preview only.
+        if (
+            typeof file.previewUrl === "string" &&
+            file.previewUrl.startsWith("blob:")
+        ) {
+            return file.previewUrl;
+        }
+
+        if (
+            file.localId &&
+            sessionMediaPreviews.has(
+                file.localId
+            )
+        ) {
+            return sessionMediaPreviews.get(
+                file.localId
+            );
+        }
+
+        // Never automatically return persistent URLs here.
+        // This prevents old chat images from downloading after refresh.
+        return "";
+    }
+
+    function isImageAttachment(file) {
+        if (!file) return false;
+
+        if (file.type && file.type.startsWith("image/")) return true;
+        if (file.mimeType && file.mimeType.startsWith("image/")) return true;
+        if (file.category === "image") return true;
+
+        if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
+            return true;
+        }
+
+        const name = (file.name || "").toLowerCase();
+        return /\.(png|jpg|jpeg|webp|gif)$/i.test(name);
+    }
+
+    function getFileCategory(file) {
+        const type = file.type || "";
+
+        if (type.startsWith("image/")) return "image";
+        if (type.startsWith("audio/")) return "audio";
+        if (type.startsWith("video/")) return "video";
+        if (type.includes("pdf")) return "pdf";
+
+        return "text";
+    }
+
+    function getCategoryFromMimeType(mimeType) {
+        if (!mimeType) return "file";
+        if (mimeType.startsWith("image/")) return "image";
+        if (mimeType.startsWith("audio/")) return "audio";
+        if (mimeType.startsWith("video/")) return "video";
+        if (mimeType.includes("pdf")) return "pdf";
+        return "file";
+    }
+
+    // --------------------------------------------------------
+    //  ATTACHMENT CHIPS & PREVIEW
+    // --------------------------------------------------------
+    function renderAttachedChips() {
+        if (!attachedChipsWrapper) return;
+
+        attachedChipsWrapper.innerHTML = "";
+
+        attachedFiles.forEach((file, index) => {
+            const card = document.createElement("div");
+            card.className = "attachment-preview-card";
+
+            if (isImageAttachment(file)) {
+                const img = document.createElement("img");
+                img.alt = file.name || "Uploaded image";
+                img.src = getAttachmentPreviewUrl(file) || "";
+                card.appendChild(img);
+            } else {
+                const box = document.createElement("div");
+                box.className = "attachment-preview-file";
+                box.textContent = file.name || "Attached file";
+                card.appendChild(box);
+            }
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "attachment-remove-btn";
+            remove.textContent = "×";
+
+            remove.addEventListener("click", () => {
+                const previewUrl = attachedFiles[index]?.previewUrl;
+
+                if (previewUrl && previewUrl.startsWith("blob:")) {
+                    URL.revokeObjectURL(previewUrl);
+                }
+
+                attachedFiles.splice(index, 1);
+                renderAttachedChips();
+                updateComposerShape();
+            });
+
+            card.appendChild(remove);
+            attachedChipsWrapper.appendChild(card);
+        });
+    }
+
+    // --------------------------------------------------------
+    //  HANDLE SEND (with upload)
+    // --------------------------------------------------------
     async function handleSend() {
         if (isGenerating) {
             return;
         }
 
         const text =
-            chatInput
-                ?.value
-                .trim() ||
+            chatInput?.value.trim() ||
             "";
 
         if (
             !text &&
-            attachedFiles.length ===
-                0
+            attachedFiles.length === 0
         ) {
             return;
         }
@@ -2085,25 +2658,11 @@
         const pendingFiles =
             [...attachedFiles];
 
+        let userMessageElement = null;
+
         try {
-            // FIXED: do NOT embed attachment data into message content
-            const fullContent = text || "";
-
-            // FIXED: store attachments separately in the conversation
-            const storedAttachments = pendingFiles.map(file => ({
-                name: file.name,
-                type: file.type,
-                category: file.category,
-                data: file.data
-            }));
-
-            const messageIndex =
-                conversation.length;
-
             if (chatInput) {
-                chatInput.value =
-                    "";
-
+                chatInput.value = "";
                 chatInput.style.height =
                     "auto";
             }
@@ -2113,27 +2672,100 @@
                     "none";
             }
 
-            // Render user message with attachments
-            renderMessageToUI(
-                "user",
-                text || "",
-                messageIndex,
-                false,
-                pendingFiles   // we pass the original file objects (with previewUrl) for display
-            );
+            const messageIndex =
+                conversation.length;
 
-            // Push to conversation with separate attachments
-            conversation.push({
-                role: "user",
-                content: fullContent,
-                attachments: storedAttachments  // store only serializable data (no blob URLs)
-            });
+            // Immediately show local previews before network upload.
+            userMessageElement =
+                renderMessageToUI(
+                    "user",
+                    text,
+                    messageIndex,
+                    false,
+                    pendingFiles
+                );
 
             attachedFiles = [];
 
             renderAttachedChips();
             renderAdaptiveSuggestions();
             updateComposerShape();
+
+            // Upload all selected files to Supabase Storage.
+            const uploadedAttachments = [];
+            const successfullyUploaded = []; // for rollback
+
+            try {
+                for (
+                    const pendingFile
+                    of pendingFiles
+                ) {
+                    pendingFile.uploadState =
+                        "uploading";
+
+                    const uploaded =
+                        await mediaService.upload(
+                            pendingFile.rawFile
+                        );
+
+                    uploaded.localId =
+                        pendingFile.localId;
+
+                    if (
+                        pendingFile.previewUrl
+                    ) {
+                        sessionMediaPreviews.set(
+                            pendingFile.localId,
+                            pendingFile.previewUrl
+                        );
+
+                        uploaded.previewUrl =
+                            pendingFile.previewUrl;
+                    }
+
+                    uploadedAttachments.push(
+                        uploaded
+                    );
+                    successfullyUploaded.push(uploaded);
+                }
+            } catch (uploadError) {
+                // Rollback: delete already uploaded files
+                for (const uploaded of successfullyUploaded) {
+                    try {
+                        await mediaService.delete(uploaded.path);
+                    } catch (deleteError) {
+                        console.warn("Failed to delete orphan file:", uploaded.path, deleteError);
+                    }
+                }
+                throw uploadError;
+            }
+
+            // Attachment-only messages must still have valid text for the AI API.
+            const apiContent =
+                text ||
+                createAttachmentPrompt(
+                    uploadedAttachments
+                );
+
+            conversation.push({
+                role: "user",
+                content: apiContent,
+                displayContent: text,
+                attachments:
+                    uploadedAttachments.map(
+                        serializeAttachment
+                    )
+            });
+
+            // Re-render the user bubble with the final uploaded metadata.
+            if (userMessageElement) {
+                renderUserMessageWrapper(
+                    userMessageElement,
+                    text,
+                    messageIndex,
+                    uploadedAttachments
+                );
+            }
 
             const aiBubble =
                 renderMessageToUI(
@@ -2145,8 +2777,8 @@
 
             await submitChatRequest(
                 aiBubble,
-                text,
-                pendingFiles
+                apiContent,
+                uploadedAttachments
             );
         } catch (error) {
             console.error(
@@ -2154,26 +2786,103 @@
                 error
             );
 
+            // Remove the unsaved optimistic message.
+            userMessageElement?.remove();
+
             if (
-                attachedFiles.length ===
-                    0 &&
-                pendingFiles.length >
-                    0
+                attachedFiles.length === 0 &&
+                pendingFiles.length > 0
             ) {
                 attachedFiles =
                     pendingFiles;
-
-                renderAttachedChips();
-                renderAdaptiveSuggestions();
-                updateComposerShape();
             }
+
+            renderAttachedChips();
+            renderAdaptiveSuggestions();
+            updateComposerShape();
 
             isGenerating = false;
 
-            alert(                error?.message ||
-                    "Unable to send the message."
+            alert(
+                error?.message ||
+                    "Unable to upload or send the message."
             );
         }
+    }
+
+    function serializeAttachment(file) {
+        return {
+            localId: file.localId || "",
+            provider:
+                file.provider ||
+                "supabase",
+
+            bucket:
+                file.bucket ||
+                MEDIA_BUCKET,
+
+            path:
+                file.path ||
+                "",
+
+            name:
+                file.name ||
+                "Attached file",
+
+            mimeType:
+                file.mimeType ||
+                file.type ||
+                "application/octet-stream",
+
+            type:
+                file.type ||
+                file.mimeType ||
+                "application/octet-stream",
+
+            category:
+                file.category ||
+                getCategoryFromMimeType(
+                    file.mimeType ||
+                    file.type
+                ),
+
+            size:
+                Number(
+                    file.size || 0
+                )
+        };
+    }
+
+    function createAttachmentPrompt(
+        attachments
+    ) {
+        if (
+            !Array.isArray(attachments) ||
+            attachments.length === 0
+        ) {
+            return "The user sent an attachment.";
+        }
+
+        const descriptions =
+            attachments.map(
+                attachment => {
+                    const category =
+                        attachment.category ||
+                        "file";
+
+                    const name =
+                        attachment.name ||
+                        "unnamed file";
+
+                    return `${category}: ${name}`;
+                }
+            );
+
+        return `The user uploaded the following attachment${
+            descriptions.length > 1
+                ? "s"
+                : ""
+        }: ${descriptions.join(", ")}.`;
     }
 
     function showAssistantError(
@@ -2217,6 +2926,62 @@
 
         const title = makeConversationTitle(userText, files);
 
+        // Prepare messages: filter, map with attachments
+        const apiMessages =
+            conversation
+                .filter(message => {
+                    return (
+                        message &&
+                        ["user", "assistant", "system"]
+                            .includes(
+                                message.role
+                            )
+                    );
+                })
+                .map(message => ({
+                    role:
+                        message.role,
+
+                    content:
+                        String(
+                            message.content || ""
+                        ).trim(),
+
+                    attachments:
+                        Array.isArray(
+                            message.attachments
+                        )
+                            ? message.attachments.map(
+                                  serializeAttachment
+                              )
+                            : []
+                }))
+                .filter(message => {
+                    return (
+                        Boolean(message.content) ||
+                        message.attachments.length > 0
+                    );
+                });
+
+        const finalMessage =
+            apiMessages[
+                apiMessages.length - 1
+            ];
+
+        if (
+            !finalMessage ||
+            finalMessage.role !== "user"
+        ) {
+            showAssistantError(
+                aiBubble,
+                new Error(
+                    "Your final message must be a valid user message."
+                )
+            );
+
+            return;
+        }
+
         try {
             const response =
                 await fetch(
@@ -2244,7 +3009,7 @@
                             JSON.stringify(
                                 {
                                     messages:
-                                        conversation, // now includes attachments
+                                        apiMessages,
 
                                     conversationId:
                                         currentConversationId,
@@ -2255,7 +3020,7 @@
                                     isDeepResearch:
                                         isDeepResearchMode,
 
-                                    title   // send clean title for new conversations
+                                    title
                                 }
                             )
                     }
@@ -2510,6 +3275,48 @@
     }
 
     // --------------------------------------------------------
+    //  SETTINGS UI
+    // --------------------------------------------------------
+    function setupSettingsUI() {
+        // Close settings overlay
+        settingsCloseBtn?.addEventListener("click", () => {
+            neoSettingsOverlay?.classList.remove("show");
+        });
+        neoSettingsOverlay?.addEventListener("click", (e) => {
+            if (e.target === neoSettingsOverlay) {
+                neoSettingsOverlay.classList.remove("show");
+            }
+        });
+
+        // Tab switching
+        settingsTabs?.forEach(tab => {
+            tab.addEventListener("click", () => {
+                settingsTabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                const panelId = tab.dataset.settingsTab;
+                settingsPanels?.forEach(p => p.classList.remove("active"));
+                document.getElementById(`settingsPanel${panelId}`)?.classList.add("active");
+            });
+        });
+
+        // Save / Reset / Billing / Theme buttons (placeholders)
+        settingsSaveBtn?.addEventListener("click", () => {
+            alert("Settings saved (not yet implemented)");
+        });
+        settingsResetBtn?.addEventListener("click", () => {
+            alert("Settings reset (not yet implemented)");
+        });
+        settingsBillingBtn?.addEventListener("click", () => {
+            // Redirect to billing page
+            window.location.href = "/billing";
+        });
+        settingsThemeBtn?.addEventListener("click", () => {
+            // Toggle dark/light mode
+            topBarDarkModeToggle?.click();
+        });
+    }
+
+    // --------------------------------------------------------
     //  EVENT LISTENERS
     // --------------------------------------------------------
     function setupEventListeners() {
@@ -2552,6 +3359,7 @@
                         )}px`;
 
                     updateComposerShape();
+                    renderAdaptiveSuggestions(); // Added
                 }
             );
 
@@ -2787,7 +3595,7 @@
                 }
             );
 
-        // NEW: sidebarPersonalitiesBtn listener
+        // sidebarPersonalitiesBtn listener
         sidebarPersonalitiesBtn
             ?.addEventListener(
                 "click",
@@ -3076,167 +3884,7 @@
         });
     }
 
-    // --------------------------------------------------------
-    //  Image attachment helpers & enhanced rendering
-    // --------------------------------------------------------
-
-    function isImageAttachment(file) {
-        if (!file) return false;
-
-        if (file.type && file.type.startsWith("image/")) return true;
-        if (file.mimeType && file.mimeType.startsWith("image/")) return true;
-        if (file.category === "image") return true;
-
-        if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
-            return true;
-        }
-
-        const name = (file.name || "").toLowerCase();
-        return /\.(png|jpg|jpeg|webp|gif)$/i.test(name);
-    }
-
-    function getAttachmentPreviewUrl(file) {
-        if (!file) return "";
-
-        // Support persistent URL from backend
-        if (file.url) return file.url;
-        if (file.previewUrl) return file.previewUrl;
-
-        if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
-            return file.data;
-        }
-
-        const raw = file.rawFile || file.file || file.blob || file;
-
-        if (raw instanceof Blob && raw.type && raw.type.startsWith("image/")) {
-            file.previewUrl = URL.createObjectURL(raw);
-            return file.previewUrl;
-        }
-
-        return "";
-    }
-
-    // --- Enhanced renderAttachedChips ---
-    function renderAttachedChips() {
-        if (!attachedChipsWrapper) return;
-
-        attachedChipsWrapper.innerHTML = "";
-
-        attachedFiles.forEach((file, index) => {
-            const card = document.createElement("div");
-            card.className = "attachment-preview-card";
-
-            if (isImageAttachment(file)) {
-                const img = document.createElement("img");
-                img.alt = file.name || "Uploaded image";
-                img.src = getAttachmentPreviewUrl(file);
-                card.appendChild(img);
-            } else {
-                const box = document.createElement("div");
-                box.className = "attachment-preview-file";
-                box.textContent = file.name || "Attached file";
-                card.appendChild(box);
-            }
-
-            const remove = document.createElement("button");
-            remove.type = "button";
-            remove.className = "attachment-remove-btn";
-            remove.textContent = "×";
-
-            remove.addEventListener("click", () => {
-                const previewUrl = attachedFiles[index]?.previewUrl;
-
-                if (previewUrl && previewUrl.startsWith("blob:")) {
-                    URL.revokeObjectURL(previewUrl);
-                }
-
-                attachedFiles.splice(index, 1);
-                renderAttachedChips();
-                updateComposerShape();
-            });
-
-            card.appendChild(remove);
-            attachedChipsWrapper.appendChild(card);
-        });
-    }
-
-    // --- getFileCategory (unchanged) ---
-    function getFileCategory(file) {
-        const type = file.type || "";
-
-        if (type.startsWith("image/")) return "image";
-        if (type.startsWith("audio/")) return "audio";
-        if (type.startsWith("video/")) return "video";
-        if (type.includes("pdf")) return "pdf";
-
-        return "text";
-    }
-
-    // --- readFileAsPayload (unchanged) ---
-    function readFileAsPayload(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-
-            reader.onerror = () => {
-                reject(new Error(`Unable to read ${file.name}`));
-            };
-
-            reader.onload = () => {
-                resolve(reader.result || "");
-            };
-
-            const category = getFileCategory(file);
-
-            if (category === "text") {
-                reader.readAsText(file);
-            } else {
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    // --- UPDATED handleFileProcessing with rawFile and previewUrl ---
-    async function handleFileProcessing(files) {
-        const selected = Array.from(files || []).slice(0, MAX_ATTACHED_FILES);
-
-        for (const file of selected) {
-            if (attachedFiles.length >= MAX_ATTACHED_FILES) {
-                alert(`Maximum ${MAX_ATTACHED_FILES} files can be attached.`);
-                break;
-            }
-
-            if (file.size > MAX_FILE_SIZE_BYTES) {
-                alert(`${file.name} is too large. Max file size is 4MB.`);
-                continue;
-            }
-
-            if (!checkFilePermissionForPlan(file)) {
-                continue;
-            }
-
-            try {
-                const category = getFileCategory(file);
-                const isImage = category === "image";
-
-                attachedFiles.push({
-                    name: file.name,
-                    type: file.type,
-                    category: category,
-                    rawFile: file,                          // store raw file for preview
-                    previewUrl: isImage ? URL.createObjectURL(file) : "", // blob URL for images
-                    data: await readFileAsPayload(file)     // base64 or text for API
-                });
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-
-        renderAttachedChips();
-        renderAdaptiveSuggestions();
-        updateComposerShape();
-    }
-
-    // --- Profile rendering ---
+    // --- Profile rendering (safe) ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -3279,11 +3927,38 @@
             "";
 
         if (userAvatar) {
+            userAvatar.replaceChildren();
+
             if (avatarUrl) {
-                userAvatar.innerHTML =
-                    `<img src="${sanitizeHTML(avatarUrl)}" alt="${sanitizeHTML(username)}">`;
+                try {
+                    const parsedUrl = new URL(
+                        avatarUrl,
+                        window.location.origin
+                    );
+
+                    const allowed =
+                        parsedUrl.origin === window.location.origin ||
+                        parsedUrl.hostname ===
+                            "ujclhweqqifgoiscvqmd.supabase.co";
+
+                    if (!allowed) {
+                        throw new Error("Unsupported avatar host");
+                    }
+
+                    const img = document.createElement("img");
+                    img.src = parsedUrl.href;
+                    img.alt = username;
+                    img.loading = "lazy";
+                    img.referrerPolicy = "no-referrer";
+
+                    userAvatar.appendChild(img);
+                } catch {
+                    userAvatar.textContent =
+                        username.charAt(0).toUpperCase();
+                }
             } else {
-                userAvatar.textContent = username.charAt(0).toUpperCase();
+                userAvatar.textContent =
+                    username.charAt(0).toUpperCase();
             }
         }
     }
@@ -3315,7 +3990,7 @@
                     loadChatMessages(item.id);
                 });
 
-                // NEW: contextmenu listener for each history row
+                // contextmenu listener for each history row
                 row.addEventListener("contextmenu", event => {
                     event.preventDefault();
                     activePopupChatId = item.id;
@@ -3331,6 +4006,57 @@
             console.warn("History load failed:", error);
         }
     }
+
+    // --------------------------------------------------------
+    //  MEMORY CLEANUP
+    // --------------------------------------------------------
+    function revokeAttachedFilePreviews(files) {
+        Array.from(files || [])
+            .forEach(file => {
+                const previewUrl =
+                    file?.previewUrl;
+
+                if (
+                    typeof previewUrl ===
+                        "string" &&
+                    previewUrl.startsWith(
+                        "blob:"
+                    )
+                ) {
+                    URL.revokeObjectURL(
+                        previewUrl
+                    );
+                }
+            });
+    }
+
+    window.addEventListener(
+        "beforeunload",
+
+        () => {
+            revokeAttachedFilePreviews(
+                attachedFiles
+            );
+
+            sessionMediaPreviews.forEach(
+                previewUrl => {
+                    if (
+                        typeof previewUrl ===
+                            "string" &&
+                        previewUrl.startsWith(
+                            "blob:"
+                        )
+                    ) {
+                        URL.revokeObjectURL(
+                            previewUrl
+                        );
+                    }
+                }
+            );
+
+            sessionMediaPreviews.clear();
+        }
+    );
 
     // --------------------------------------------------------
     //  BOOT
