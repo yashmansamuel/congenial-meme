@@ -36,6 +36,8 @@
     let currentConversationId = null;
     let isGenerating = false;
     let activePopupChatId = null;
+    let activePopupChatPinned = false;
+    let activePopupChatTitle = "";
     let isDeepResearchMode = false;
     let recognition = null;
     let isListening = false;
@@ -134,6 +136,15 @@
         document.getElementById(
             "hpDeleteBtn"
         );
+
+    const hpRenameBtn =
+        document.getElementById("hpRenameBtn");
+
+    const hpPinBtn =
+        document.getElementById("hpPinBtn");
+
+    const hpShareBtn =
+        document.getElementById("hpShareBtn");
 
     // COMPOSER ELEMENTS
     const attachBtn =
@@ -282,6 +293,397 @@
         }
 
         return "New conversation";
+    }
+
+    // --------------------------------------------------------
+    //  NEO PROFESSIONAL TOAST NOTIFICATIONS
+    // --------------------------------------------------------
+    function getToastStack() {
+        let stack =
+            document.querySelector(
+                ".neo-toast-stack"
+            );
+
+        if (!stack) {
+            stack =
+                document.createElement(
+                    "div"
+                );
+
+            stack.className =
+                "neo-toast-stack";
+
+            stack.setAttribute(
+                "aria-live",
+                "polite"
+            );
+
+            stack.setAttribute(
+                "aria-atomic",
+                "true"
+            );
+
+            document.body.appendChild(
+                stack
+            );
+        }
+
+        return stack;
+    }
+
+    function showToast(
+        message,
+        type = "info",
+        duration = 3600
+    ) {
+        const cleanMessage =
+            String(
+                message ||
+                "Something went wrong."
+            ).trim();
+
+        const allowedTypes = [
+            "success",
+            "error",
+            "warning",
+            "info"
+        ];
+
+        const safeType =
+            allowedTypes.includes(type)
+                ? type
+                : "info";
+
+        const iconMap = {
+            success: "check",
+            error: "circle-alert",
+            warning: "triangle-alert",
+            info: "info"
+        };
+
+        const stack =
+            getToastStack();
+
+        const toast =
+            document.createElement(
+                "div"
+            );
+
+        toast.className =
+            `neo-toast ${safeType}`;
+
+        const icon =
+            document.createElement(
+                "span"
+            );
+
+        icon.className =
+            "neo-toast-icon";
+
+        icon.innerHTML =
+            `<i data-lucide="${iconMap[safeType]}" size="16"></i>`;
+
+        const text =
+            document.createElement(
+                "span"
+            );
+
+        text.className =
+            "neo-toast-message";
+
+        text.textContent =
+            cleanMessage;
+
+        const close =
+            document.createElement(
+                "button"
+            );
+
+        close.type =
+            "button";
+
+        close.className =
+            "neo-toast-close";
+
+        close.setAttribute(
+            "aria-label",
+            "Close notification"
+        );
+
+        close.innerHTML =
+            '<i data-lucide="x" size="14"></i>';
+
+        let removed = false;
+
+        const removeToast = () => {
+            if (removed) {
+                return;
+            }
+
+            removed = true;
+
+            toast.classList.add(
+                "is-leaving"
+            );
+
+            setTimeout(
+                () => toast.remove(),
+                170
+            );
+        };
+
+        close.addEventListener(
+            "click",
+            removeToast
+        );
+
+        toast.append(
+            icon,
+            text,
+            close
+        );
+
+        stack.appendChild(
+            toast
+        );
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        if (duration > 0) {
+            setTimeout(
+                removeToast,
+                duration
+            );
+        }
+
+        return toast;
+    }
+
+    // --------------------------------------------------------
+    // POPUP HELPERS
+    // --------------------------------------------------------
+    function closeHistoryPopup() {
+        activePopupChatId = null;
+        activePopupChatPinned = false;
+        activePopupChatTitle = "";
+
+        historyPopupMenu?.classList.remove("show");
+
+        if (historyPopupMenu) {
+            historyPopupMenu.style.display = "none";
+            historyPopupMenu.style.left = "";
+            historyPopupMenu.style.top = "";
+        }
+    }
+
+    function closeUserPopup() {
+        userPopupMenu?.classList.remove("show");
+    }
+
+    function openHistoryPopup({
+        conversationId,
+        title,
+        isPinned,
+        anchorElement,
+        clientX,
+        clientY
+    }) {
+        if (!historyPopupMenu || !conversationId) {
+            return;
+        }
+
+        closeUserPopup();
+
+        activePopupChatId = conversationId;
+        activePopupChatPinned = Boolean(isPinned);
+        activePopupChatTitle =
+            String(title || "New conversation");
+
+        if (hpPinBtn) {
+            hpPinBtn.innerHTML = activePopupChatPinned
+                ? '<i data-lucide="pin-off" size="16"></i> Unpin'
+                : '<i data-lucide="pin" size="16"></i> Pin';
+        }
+
+        historyPopupMenu.style.display = "block";
+        historyPopupMenu.classList.add("show");
+
+        const menuWidth = 208;
+        const menuHeight = 188;
+
+        let left = Number(clientX);
+        let top = Number(clientY);
+
+        if (
+            anchorElement &&
+            typeof anchorElement.getBoundingClientRect === "function"
+        ) {
+            const rect =
+                anchorElement.getBoundingClientRect();
+
+            left = rect.right - menuWidth;
+            top = rect.bottom + 6;
+        }
+
+        left = Math.max(
+            12,
+            Math.min(
+                Number.isFinite(left) ? left : 12,
+                window.innerWidth - menuWidth - 12
+            )
+        );
+
+        top = Math.max(
+            12,
+            Math.min(
+                Number.isFinite(top) ? top : 12,
+                window.innerHeight - menuHeight - 12
+            )
+        );
+
+        historyPopupMenu.style.left =
+            `${left}px`;
+
+        historyPopupMenu.style.top =
+            `${top}px`;
+
+        window.lucide?.createIcons();
+    }
+
+    // --------------------------------------------------------
+    // PROFESSIONAL RENAME DIALOG
+    // --------------------------------------------------------
+    function requestNeoText({
+        title,
+        value = "",
+        placeholder = "",
+        confirmText = "Save"
+    }) {
+        return new Promise(resolve => {
+            const overlay =
+                document.createElement("div");
+
+            overlay.className =
+                "neo-dialog-overlay";
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "neo-dialog-card";
+
+            const heading =
+                document.createElement("h3");
+
+            heading.textContent =
+                title;
+
+            const input =
+                document.createElement("input");
+
+            input.type = "text";
+            input.className =
+                "neo-dialog-input";
+
+            input.value = value;
+            input.placeholder =
+                placeholder;
+
+            input.maxLength = 100;
+
+            const actions =
+                document.createElement("div");
+
+            actions.className =
+                "neo-dialog-actions";
+
+            const cancel =
+                document.createElement("button");
+
+            cancel.type = "button";
+            cancel.className =
+                "neo-dialog-cancel";
+
+            cancel.textContent =
+                "Cancel";
+
+            const confirm =
+                document.createElement("button");
+
+            confirm.type = "button";
+            confirm.className =
+                "neo-dialog-confirm";
+
+            confirm.textContent =
+                confirmText;
+
+            const close = result => {
+                overlay.remove();
+                resolve(result);
+            };
+
+            cancel.addEventListener(
+                "click",
+                () => close(null)
+            );
+
+            confirm.addEventListener(
+                "click",
+                () => {
+                    const result =
+                        input.value.trim();
+
+                    close(
+                        result || null
+                    );
+                }
+            );
+
+            input.addEventListener(
+                "keydown",
+                event => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        confirm.click();
+                    }
+
+                    if (event.key === "Escape") {
+                        cancel.click();
+                    }
+                }
+            );
+
+            overlay.addEventListener(
+                "click",
+                event => {
+                    if (event.target === overlay) {
+                        cancel.click();
+                    }
+                }
+            );
+
+            actions.append(
+                cancel,
+                confirm
+            );
+
+            card.append(
+                heading,
+                input,
+                actions
+            );
+
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+
+            requestAnimationFrame(() => {
+                overlay.classList.add("show");
+                input.focus();
+                input.select();
+            });
+        });
     }
 
     // --------------------------------------------------------
@@ -880,9 +1282,10 @@
                     error
                 );
 
-                alert(
+                showToast(
                     error?.message ||
-                        "Checkout could not be opened. Please try again."
+                    "Checkout could not be opened. Please try again.",
+                    "error"
                 );
             } finally {
                 upgradeActionBtn.disabled =
@@ -1253,6 +1656,11 @@
                         response
                     );
 
+                    showToast(
+                        "Conversation deleted.",
+                        "success"
+                    );
+
                     if (
                         currentConversationId ===
                         conversationToDelete
@@ -1267,18 +1675,13 @@
                         error
                     );
 
-                    alert(
-                        error.message
+                    showToast(
+                        error?.message ||
+                        "Conversation could not be deleted.",
+                        "error"
                     );
                 } finally {
-                    activePopupChatId = null;
-                    historyPopupMenu?.classList.remove("show");
-
-                    if (historyPopupMenu) {
-                        historyPopupMenu.style.display = "none";
-                        historyPopupMenu.style.left = "";
-                        historyPopupMenu.style.top = "";
-                    }
+                    closeHistoryPopup();
                 }
             }
         );
@@ -1307,7 +1710,11 @@
             }
         } catch (error) {
             console.error("Rename failed:", error);
-            alert(error.message);
+            showToast(
+                error?.message ||
+                "Conversation could not be renamed.",
+                "error"
+            );
         }
     }
 
@@ -1330,7 +1737,11 @@
             await loadHistoryFromSupabase();
         } catch (error) {
             console.error("Pin toggle failed:", error);
-            alert(error.message);
+            showToast(
+                error?.message ||
+                "Conversation pin could not be changed.",
+                "error"
+            );
         }
     }
 
@@ -1451,8 +1862,10 @@
                 error
             );
 
-            alert(
-                error.message
+            showToast(
+                error?.message ||
+                "Unable to load conversation.",
+                "error"
             );
         }
     }
@@ -2323,9 +2736,10 @@
 
             isGenerating = false;
 
-            alert(
+            showToast(
                 error?.message ||
-                "Unable to upload the file."
+                "Unable to upload the file.",
+                "error"
             );
         }
     }
@@ -2932,23 +3346,144 @@
                 }
             );
 
-        userProfileBtn
-            ?.addEventListener(
-                "click",
+        // ---- Rename, Pin, Share listeners (moved here) ----
+        hpRenameBtn?.addEventListener(
+            "click",
+            async event => {
+                event.stopPropagation();
 
-                event => {
-                    event
-                        .stopPropagation();
+                const conversationId =
+                    activePopupChatId;
 
-                    userPopupMenu
-                        ?.classList
-                        .toggle(
-                            "show"
-                        );
+                const currentTitle =
+                    activePopupChatTitle;
+
+                if (!conversationId) {
+                    return;
                 }
-            );
 
-        // NEW: sidebarPersonalitiesBtn listener
+                closeHistoryPopup();
+
+                const newTitle =
+                    await requestNeoText({
+                        title:
+                            "Rename conversation",
+                        value:
+                            currentTitle,
+                        placeholder:
+                            "Conversation name",
+                        confirmText:
+                            "Rename"
+                    });
+
+                if (!newTitle) {
+                    return;
+                }
+
+                await renameConversation(
+                    conversationId,
+                    newTitle
+                );
+
+                showToast(
+                    "Conversation renamed.",
+                    "success"
+                );
+            }
+        );
+
+        hpPinBtn?.addEventListener(
+            "click",
+            async event => {
+                event.stopPropagation();
+
+                const conversationId =
+                    activePopupChatId;
+
+                const shouldPin =
+                    !activePopupChatPinned;
+
+                if (!conversationId) {
+                    return;
+                }
+
+                closeHistoryPopup();
+
+                await togglePinConversation(
+                    conversationId,
+                    shouldPin
+                );
+
+                showToast(
+                    shouldPin
+                        ? "Conversation pinned."
+                        : "Conversation unpinned.",
+                    "success"
+                );
+            }
+        );
+
+        hpShareBtn?.addEventListener(
+            "click",
+            async event => {
+                event.stopPropagation();
+
+                const title =
+                    activePopupChatTitle ||
+                    "NEO conversation";
+
+                closeHistoryPopup();
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title,
+                            text: title,
+                            url:
+                                window.location.href
+                        });
+
+                        return;
+                    }
+
+                    await navigator.clipboard.writeText(
+                        window.location.href
+                    );
+
+                    showToast(
+                        "Conversation link copied.",
+                        "success"
+                    );
+                } catch (error) {
+                    if (
+                        error?.name !==
+                        "AbortError"
+                    ) {
+                        showToast(
+                            "Conversation could not be shared.",
+                            "error"
+                        );
+                    }
+                }
+            }
+        );
+
+        // ---- User profile button ----
+        userProfileBtn?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeHistoryPopup();
+
+                userPopupMenu?.classList.toggle(
+                    "show"
+                );
+            }
+        );
+
+        // ---- Sidebar personalities button ----
         sidebarPersonalitiesBtn
             ?.addEventListener(
                 "click",
@@ -2974,59 +3509,43 @@
                 }
             );
 
+        // ---- Global outside-click handling ----
         document.addEventListener(
             "click",
 
             event => {
+                // Close history popup
                 if (
-                    !userProfileBtn
-                        ?.contains(
-                            event.target
-                        ) &&
-                    !userPopupMenu
-                        ?.contains(
-                            event.target
-                        )
-                ) {
-                    userPopupMenu
-                        ?.classList
-                        .remove(
-                            "show"
-                        );
-                }
-
-                if (
-                    !historyPopupMenu
-                        ?.contains(
-                            event.target
-                        ) &&
-                    !event.target.closest(
-                        ".history-action-btn"
+                    !historyPopupMenu?.contains(
+                        event.target
                     ) &&
                     !event.target.closest(
                         ".history-three-dot"
                     )
                 ) {
-                    historyPopupMenu?.classList.remove("show");
-
-                    if (historyPopupMenu) {
-                        historyPopupMenu.style.display = "none";
-                        historyPopupMenu.style.left = "";
-                        historyPopupMenu.style.top = "";
-                    }
-
-                    activePopupChatId = null;
+                    closeHistoryPopup();
                 }
 
+                // Close user popup
                 if (
-                    !attachBtn
-                        ?.contains(
-                            event.target
-                        ) &&
-                    !attachPopupMenu
-                        ?.contains(
-                            event.target
-                        )
+                    !userProfileBtn?.contains(
+                        event.target
+                    ) &&
+                    !userPopupMenu?.contains(
+                        event.target
+                    )
+                ) {
+                    closeUserPopup();
+                }
+
+                // Close attachment popup
+                if (
+                    !attachBtn?.contains(
+                        event.target
+                    ) &&
+                    !attachPopupMenu?.contains(
+                        event.target
+                    )
                 ) {
                     attachPopupMenu
                         ?.classList
@@ -3035,15 +3554,14 @@
                         );
                 }
 
+                // Close model dropdown
                 if (
-                    !modelBadgeBtn
-                        ?.contains(
-                            event.target
-                        ) &&
-                    !modelDropdownMenu
-                        ?.contains(
-                            event.target
-                        )
+                    !modelBadgeBtn?.contains(
+                        event.target
+                    ) &&
+                    !modelDropdownMenu?.contains(
+                        event.target
+                    )
                 ) {
                     modelDropdownMenu
                         ?.classList
@@ -3361,8 +3879,9 @@
                 attachedFiles.length >=
                 MAX_ATTACHED_FILES
             ) {
-                alert(
-                    `Maximum ${MAX_ATTACHED_FILES} files can be attached.`
+                showToast(
+                    `Maximum ${MAX_ATTACHED_FILES} files can be attached.`,
+                    "warning"
                 );
                 break;
             }
@@ -3519,25 +4038,27 @@
                 dotBtn.style.transition = "background 0.12s ease, color 0.12s ease";
                 dotBtn.style.flexShrink = "0";
 
-                dotBtn.addEventListener("click", (event) => {
-                    event.stopPropagation();
-                    activePopupChatId = item.id;
-                    historyPopupMenu.style.display = "block";
-                    historyPopupMenu.classList.add("show");
-                    // Position near the dot button
-                    const rect = dotBtn.getBoundingClientRect();
-                    historyPopupMenu.style.left = `${rect.left - 140}px`;
-                    historyPopupMenu.style.top = `${rect.bottom + 6}px`;
-                });
+                dotBtn.addEventListener(
+                    "click",
+                    event => {
+                        event.preventDefault();
+                        event.stopPropagation();
 
-                dotBtn.addEventListener("mouseenter", () => {
-                    dotBtn.style.background = "var(--bg-hover)";
-                    dotBtn.style.color = "var(--text-primary)";
-                });
-                dotBtn.addEventListener("mouseleave", () => {
-                    dotBtn.style.background = "transparent";
-                    dotBtn.style.color = "var(--text-muted)";
-                });
+                        openHistoryPopup({
+                            conversationId:
+                                item.id,
+
+                            title:
+                                item.title,
+
+                            isPinned:
+                                item.is_pinned,
+
+                            anchorElement:
+                                dotBtn
+                        });
+                    }
+                );
 
                 row.appendChild(button);
                 row.appendChild(dotBtn);
@@ -3550,82 +4071,42 @@
                     pinIcon.style.color = "var(--text-muted)";
                     pinIcon.innerHTML = '<i data-lucide="pin" size="12"></i>';
                     button.appendChild(pinIcon);
-                    // Lucide will be created after loop
                 }
 
                 // Store conversation ID on the row for later use
                 row.dataset.id = item.id;
 
                 // ---- Context menu (right-click) ----
-                row.addEventListener("contextmenu", event => {
-                    event.preventDefault();
-                    event.stopPropagation();
+                row.addEventListener(
+                    "contextmenu",
+                    event => {
+                        event.preventDefault();
+                        event.stopPropagation();
 
-                    activePopupChatId = item.id;
+                        openHistoryPopup({
+                            conversationId:
+                                item.id,
 
-                    if (!historyPopupMenu) {
-                        return;
+                            title:
+                                item.title,
+
+                            isPinned:
+                                item.is_pinned,
+
+                            clientX:
+                                event.clientX,
+
+                            clientY:
+                                event.clientY
+                        });
                     }
-
-                    historyPopupMenu.style.display = "block";
-                    historyPopupMenu.classList.add("show");
-
-                    const menuWidth = 204;
-                    const menuHeight = 176;
-
-                    const left = Math.min(
-                        event.clientX,
-                        window.innerWidth - menuWidth - 12
-                    );
-
-                    const top = Math.min(
-                        event.clientY,
-                        window.innerHeight - menuHeight - 12
-                    );
-
-                    historyPopupMenu.style.left = `${Math.max(12, left)}px`;
-                    historyPopupMenu.style.top = `${Math.max(12, top)}px`;
-                });
+                );
             });
 
             // Re-create Lucide icons after adding new elements
             if (window.lucide) {
                 window.lucide.createIcons();
             }
-
-            // ---- Popup menu actions (rename, pin, unpin, delete) ----
-            // Delete is already wired via hpDeleteBtn; we add rename and pin/unpin
-            const hpRenameBtn = document.getElementById("hpRenameBtn");
-            const hpPinBtn = document.getElementById("hpPinBtn");
-
-            hpRenameBtn?.addEventListener("click", async () => {
-                if (!activePopupChatId) return;
-                const newTitle = prompt("Rename conversation:", "");
-                if (newTitle && newTitle.trim()) {
-                    await renameConversation(activePopupChatId, newTitle.trim());
-                }
-                historyPopupMenu.classList.remove("show");
-                if (historyPopupMenu) {
-                    historyPopupMenu.style.display = "none";
-                    historyPopupMenu.style.left = "";
-                    historyPopupMenu.style.top = "";
-                }
-                activePopupChatId = null;
-            });
-
-            hpPinBtn?.addEventListener("click", async () => {
-                if (!activePopupChatId) return;
-                const currentItem = conversations.find(c => c.id === activePopupChatId);
-                const isPinned = currentItem?.is_pinned || false;
-                await togglePinConversation(activePopupChatId, !isPinned);
-                historyPopupMenu.classList.remove("show");
-                if (historyPopupMenu) {
-                    historyPopupMenu.style.display = "none";
-                    historyPopupMenu.style.left = "";
-                    historyPopupMenu.style.top = "";
-                }
-                activePopupChatId = null;
-            });
 
         } catch (error) {
             console.warn("History load failed:", error);
