@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Server-side supabase client with SERVICE_ROLE_KEY
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -39,7 +40,7 @@ async function deleteGeminiFile(apiKey, fileUri) {
 }
 
 async function saveMessage(supabase, conversationId, role, content, attachments) {
-    const { error } = await supabase.from('messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
         conversation_id: conversationId,
         role,
         content: cleanString(content, MAX_MESSAGE_LENGTH),
@@ -48,9 +49,8 @@ async function saveMessage(supabase, conversationId, role, content, attachments)
     if (error) throw new Error(error.message);
 }
 
-// ------ Main Handler ------
 export default async (req, res) => {
-    const geminiFiles = [];
+    const geminiFiles = []; // Safe scoping
 
     try {
         const user = req.user;
@@ -82,7 +82,7 @@ export default async (req, res) => {
             parts: [{ text: cleanString(msg.content || '') }]
         })).filter(m => m.parts[0].text || m.attachments?.length);
 
-        // Upload attachments to Gemini
+        // Upload attachments to Gemini (temporary)
         if (attachments.length > 0 && GEMINI_API_KEY) {
             const lastMsgGeminiParts = [];
             for (const file of attachments) {
@@ -106,7 +106,7 @@ export default async (req, res) => {
         let convId = conversationId || null;
         if (!convId) {
             const { data: newConv, error: convError } = await supabase
-                .from('conversations')
+                .from('chat_conversations')
                 .insert({ user_id: user.id, title: cleanString(title || 'New conversation', 100) })
                 .select('id')
                 .single();
@@ -132,13 +132,14 @@ export default async (req, res) => {
         console.error('Chat error:', error);
         return res.status(500).json({ error: error.message });
     } finally {
+        // ✅ Delete only Gemini temp files. Supabase originals preserve.
         if (geminiFiles.length > 0 && GEMINI_API_KEY) {
             await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
         }
     }
 };
 
-// ---------- Helper Functions ----------
+// Helper functions
 async function getSignedDownloadUrl(path, bucket = UPLOAD_BUCKET) {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
     if (error) return null;
@@ -161,7 +162,7 @@ async function uploadToGemini(fileUrl, mimeType) {
 }
 
 async function callGemini(messages, model, isDeepResearch) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-1.5-pro'}:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.1-flash-lite'}:generateContent?key=${GEMINI_API_KEY}`;
     const body = { contents: messages };
     if (isDeepResearch) {
         body.generationConfig = { temperature: 0.7, maxOutputTokens: 8192 };
