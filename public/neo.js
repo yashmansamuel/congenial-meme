@@ -2618,21 +2618,11 @@
                 "change",
 
                 event => {
-                    if (
-                        event.target
-                            .files
-                    ) {
-                        handleFileProcessing(
-                            Array.from(
-                                event
-                                    .target
-                                    .files
-                            )
-                        );
+                    const files = Array.from(event.target.files || []);
+                    if (files.length > 0) {
+                        handleFileProcessing(files);
                     }
-
-                    event.target.value =
-                        "";
+                    event.target.value = "";
                 }
             );
 
@@ -2926,7 +2916,7 @@
     }
 
     // --------------------------------------------------------
-    //  ADDITIONAL FUNCTIONS (integrated from your new code)
+    //  ADDITIONAL FUNCTIONS
     // --------------------------------------------------------
 
     // --- Dynamic adaptive suggestions ---
