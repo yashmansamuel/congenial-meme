@@ -1271,14 +1271,14 @@
                         error.message
                     );
                 } finally {
-                    activePopupChatId =
-                        null;
+                    activePopupChatId = null;
+                    historyPopupMenu?.classList.remove("show");
 
-                    historyPopupMenu
-                        ?.classList
-                        .remove(
-                            "show"
-                        );
+                    if (historyPopupMenu) {
+                        historyPopupMenu.style.display = "none";
+                        historyPopupMenu.style.left = "";
+                        historyPopupMenu.style.top = "";
+                    }
                 }
             }
         );
@@ -3007,11 +3007,15 @@
                         ".history-three-dot"
                     )
                 ) {
-                    historyPopupMenu
-                        ?.classList
-                        .remove(
-                            "show"
-                        );
+                    historyPopupMenu?.classList.remove("show");
+
+                    if (historyPopupMenu) {
+                        historyPopupMenu.style.display = "none";
+                        historyPopupMenu.style.left = "";
+                        historyPopupMenu.style.top = "";
+                    }
+
+                    activePopupChatId = null;
                 }
 
                 if (
@@ -3478,8 +3482,8 @@
                 button.className = "history-item";
                 button.textContent = item.title || "New conversation";
                 button.style.flex = "1";
-                button.style.minHeight = "38px";
-                button.style.padding = "9px 10px";
+                button.style.minHeight = "36px";
+                button.style.padding = "8px 10px";
                 button.style.background = "transparent";
                 button.style.border = "none";
                 button.style.color = "var(--text-primary)";
@@ -3488,7 +3492,11 @@
                 button.style.overflow = "hidden";
                 button.style.whiteSpace = "nowrap";
                 button.style.textOverflow = "ellipsis";
-                button.style.borderRadius = "10px";
+                button.style.borderRadius = "8px";
+                button.style.fontSize = "14px";
+                button.style.lineHeight = "20px";
+                button.style.height = "36px";
+                button.style.minHeight = "36px";
 
                 button.addEventListener("click", () => {
                     loadChatMessages(item.id);
@@ -3547,6 +3555,37 @@
 
                 // Store conversation ID on the row for later use
                 row.dataset.id = item.id;
+
+                // ---- Context menu (right-click) ----
+                row.addEventListener("contextmenu", event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    activePopupChatId = item.id;
+
+                    if (!historyPopupMenu) {
+                        return;
+                    }
+
+                    historyPopupMenu.style.display = "block";
+                    historyPopupMenu.classList.add("show");
+
+                    const menuWidth = 204;
+                    const menuHeight = 176;
+
+                    const left = Math.min(
+                        event.clientX,
+                        window.innerWidth - menuWidth - 12
+                    );
+
+                    const top = Math.min(
+                        event.clientY,
+                        window.innerHeight - menuHeight - 12
+                    );
+
+                    historyPopupMenu.style.left = `${Math.max(12, left)}px`;
+                    historyPopupMenu.style.top = `${Math.max(12, top)}px`;
+                });
             });
 
             // Re-create Lucide icons after adding new elements
@@ -3566,6 +3605,11 @@
                     await renameConversation(activePopupChatId, newTitle.trim());
                 }
                 historyPopupMenu.classList.remove("show");
+                if (historyPopupMenu) {
+                    historyPopupMenu.style.display = "none";
+                    historyPopupMenu.style.left = "";
+                    historyPopupMenu.style.top = "";
+                }
                 activePopupChatId = null;
             });
 
@@ -3575,6 +3619,11 @@
                 const isPinned = currentItem?.is_pinned || false;
                 await togglePinConversation(activePopupChatId, !isPinned);
                 historyPopupMenu.classList.remove("show");
+                if (historyPopupMenu) {
+                    historyPopupMenu.style.display = "none";
+                    historyPopupMenu.style.left = "";
+                    historyPopupMenu.style.top = "";
+                }
                 activePopupChatId = null;
             });
 
