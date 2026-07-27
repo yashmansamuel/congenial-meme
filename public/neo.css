@@ -2362,3 +2362,195 @@ body.dark-mode .neo-toast {
         );
     }
 }
+/* =========================================================
+   FINAL COMPOSER SHAPE FIX
+   Premium rounded ChatGPT-style composer
+   ========================================================= */
+
+.composer-wrapper {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.glass-input-container {
+    width: 100%;
+    min-height: 58px;
+    padding: 7px 8px 7px 10px !important;
+    gap: 6px;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 30px !important;
+    background: var(--bg-main) !important;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 8px 28px rgba(0, 0, 0, 0.04) !important;
+    overflow: visible;
+}
+
+.glass-input-container.is-expanded {
+    border-radius: 24px !important;
+    padding-top: 8px !important;
+}
+
+.glass-input-container:focus-within {
+    border-color: rgba(0, 0, 0, 0.16) !important;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 10px 32px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.dark-mode .glass-input-container {
+    background: var(--bg-sidebar) !important;
+}
+
+body.dark-mode .glass-input-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.composer-input-row {
+    width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: flex-end !important;
+    gap: 6px;
+}
+
+/* Plus button */
+.attach-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-self: flex-end;
+    border: none !important;
+    outline: none !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.attach-btn:hover {
+    background: var(--bg-hover) !important;
+}
+
+.attach-btn svg,
+.attach-btn i {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 1.8px;
+}
+
+/* Text area */
+textarea#chatInput {
+    flex: 1;
+    min-width: 0;
+    min-height: 36px;
+    max-height: 160px;
+    padding: 7px 4px 6px !important;
+    margin: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.45;
+    resize: none;
+    box-shadow: none !important;
+}
+
+textarea#chatInput::placeholder {
+    color: var(--text-muted);
+    opacity: 0.88;
+}
+
+/* Mic button */
+.mic-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-self: flex-end;
+    border: none !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.mic-btn:hover {
+    background: var(--bg-hover) !important;
+}
+
+/* Send button */
+.send-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-self: flex-end;
+    border: none !important;
+    border-radius: 50% !important;
+    background: var(--text-primary) !important;
+    color: var(--bg-main) !important;
+    box-shadow: none !important;
+}
+
+.send-btn:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: scale(0.98);
+}
+
+.send-btn svg,
+.send-btn i {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+/* Attachment area stays inside composer */
+.attached-chips-wrapper {
+    width: 100%;
+    padding: 6px 4px 2px !important;
+    margin: 0;
+}
+
+/* Suggestions spacing */
+.live-suggestions {
+    margin-bottom: 10px;
+}
+
+/* Remove unwanted browser outlines */
+.attach-btn:focus,
+.mic-btn:focus,
+.send-btn:focus,
+textarea#chatInput:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 520px) {
+    .glass-input-container {
+        min-height: 56px;
+        border-radius: 28px !important;
+    }
+
+    .glass-input-container.is-expanded {
+        border-radius: 22px !important;
+    }
+
+    .attach-btn,
+    .mic-btn,
+    .send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px;
+        min-height: 34px;
+    }
+}
