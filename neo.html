@@ -2,31 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-
-  <meta
-    http-equiv="Content-Security-Policy"
-    content="
-      default-src 'self';
-      base-uri 'self';
-      object-src 'none';
-      frame-ancestors 'none';
-      form-action 'self';
-      script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co;
-      connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co /api/;
-      media-src 'self' blob:;
-      upgrade-insecure-requests;
-    "
-  >
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co; connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co https://unpkg.com https://cdnjs.cloudflare.com;">
 
   <title>NEO • Signaturesi</title>
-
   <link rel="stylesheet" href="/neo.css?v=27">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -34,8 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
 </head>
-
 <body class="sidebar-collapsed">
+
   <div class="sidebar-scrim" id="sidebarScrim"></div>
 
   <aside class="sidebar collapsed" id="sidebar">
@@ -121,7 +102,6 @@
                 <strong>NEO L1.0</strong>
                 <small>Text & Images • Snappy Responses</small>
               </div>
-
               <i data-lucide="check" size="16" class="opt-check-icon"></i>
             </div>
 
@@ -130,7 +110,6 @@
                 <strong>NEO L1.2 Pro</strong>
                 <small>Audio, Video, Deep Reasoning & 4K Tokens</small>
               </div>
-
               <span class="pro-tag">PRO</span>
             </div>
           </div>
@@ -199,7 +178,7 @@
 
           <div class="attachment-popup-item" id="personalMemoryBtn">
             <i data-lucide="brain-circuit" size="16"></i>
-            <span>Memory Context</span>
+            <span>NEO Personalities</span>
           </div>
         </div>
 
@@ -208,7 +187,7 @@
           id="hiddenFileInput"
           multiple
           accept="image/*,.pdf,.doc,.docx,.txt,.js,.ts,.py,.html,.css,.json,.cpp,.c,.java,.mp3,.mp4,.wav,.webm"
-          hidden
+          style="display: none;"
         >
 
         <div class="glass-input-container" id="glassInputContainer">
@@ -313,7 +292,6 @@
               <strong>Appearance</strong>
               <small>Choose how NEO looks on this device.</small>
             </div>
-
             <button class="settings-pill-btn" id="settingsThemeBtn" type="button">System</button>
           </div>
 
@@ -322,7 +300,6 @@
               <strong>Language</strong>
               <small>Auto-detect Urdu, Roman Urdu, Hindi, and English.</small>
             </div>
-
             <button class="settings-pill-btn" type="button">Auto</button>
           </div>
 
@@ -331,7 +308,6 @@
               <strong>Deep Research</strong>
               <small>Use backend URL context when a link is attached.</small>
             </div>
-
             <span class="settings-status-pill">Ready</span>
           </div>
         </div>
@@ -345,17 +321,17 @@
             <div class="profile-editor-main">
               <label>
                 Display name
-                <input id="settingsDisplayNameInput" type="text" placeholder="Your NEO name" autocomplete="name">
+                <input id="settingsDisplayNameInput" type="text" placeholder="Your NEO name">
               </label>
 
               <label>
                 Username
-                <input id="settingsUsernameInput" type="text" placeholder="@username" autocomplete="username">
+                <input id="settingsUsernameInput" type="text" placeholder="@username">
               </label>
 
               <label>
                 Avatar URL
-                <input id="settingsAvatarUrlInput" type="url" placeholder="https://... or Supabase avatar path" autocomplete="off">
+                <input id="settingsAvatarUrlInput" type="url" placeholder="https://... or Supabase avatar path">
               </label>
 
               <div class="profile-editor-actions">
@@ -451,7 +427,6 @@
               <strong id="billingPlanText">Free Plan</strong>
               <small>Upgrade to unlock more usage and advanced features.</small>
             </div>
-
             <button class="settings-primary-btn" id="settingsUpgradeBtn" type="button">Upgrade</button>
           </div>
         </div>
@@ -461,7 +436,7 @@
 
   <div class="modal-overlay" id="upgradeModal">
     <div class="modal-card">
-      <button class="modal-close-btn" id="modalCloseBtn" type="button" aria-label="Close upgrade modal">&times;</button>
+      <button class="modal-close-btn" id="modalCloseBtn" type="button">&times;</button>
 
       <div class="modal-header">
         <div class="pro-sparkle-badge">
