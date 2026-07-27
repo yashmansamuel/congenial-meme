@@ -250,6 +250,9 @@
             "upgradeActionBtn"
         );
 
+    // --------------------------------------------------------
+    //  INIT
+    // --------------------------------------------------------
     async function init() {
         if (window.lucide) {
             window.lucide.createIcons();
@@ -294,6 +297,9 @@
         chatInput?.focus();
     }
 
+    // --------------------------------------------------------
+    //  SESSION / AUTH
+    // --------------------------------------------------------
     async function restoreSecureSession() {
         try {
             const response =
@@ -402,6 +408,9 @@
         );
     }
 
+    // --------------------------------------------------------
+    //  SECURITY / THEME
+    // --------------------------------------------------------
     function configureSecurityHooks() {
         if (!window.DOMPurify) {
             return;
@@ -466,7 +475,9 @@
             );
     }
 
-    // SAFE MARKDOWN & SANITIZATION FUNCTIONS
+    // --------------------------------------------------------
+    //  SANITIZATION & MARKDOWN
+    // --------------------------------------------------------
     function sanitizeHTML(value) {
         const source =
             String(value || "");
@@ -554,6 +565,9 @@
         );
     }
 
+    // --------------------------------------------------------
+    //  API HELPER
+    // --------------------------------------------------------
     async function readJsonResponse(
         response
     ) {
@@ -594,7 +608,9 @@
         return data;
     }
 
-    // DYNAMIC COMPOSER SHAPE MANAGEMENT
+    // --------------------------------------------------------
+    //  COMPOSER SHAPE
+    // --------------------------------------------------------
     function updateComposerShape() {
         if (!glassInputContainer) {
             return;
@@ -626,7 +642,9 @@
             );
     }
 
-    // FREEMIUM LOGIC
+    // --------------------------------------------------------
+    //  FREEMIUM
+    // --------------------------------------------------------
     function setupFreemiumLogic() {
         modelBadgeBtn
             ?.addEventListener(
@@ -882,7 +900,9 @@
         return true;
     }
 
-    // REAL-TIME MICROPHONE AUDIO VISUALIZER
+    // --------------------------------------------------------
+    //  AUDIO VISUALIZER
+    // --------------------------------------------------------
     async function startAudioVisualizer() {
         try {
             micStream =
@@ -1046,7 +1066,9 @@
         );
     }
 
-    // SPEECH RECOGNITION
+    // --------------------------------------------------------
+    //  SPEECH RECOGNITION
+    // --------------------------------------------------------
     function setupSpeechRecognition() {
         const SpeechRecognition =
             window.SpeechRecognition ||
@@ -1167,6 +1189,15 @@
         }
     }
 
+    function stopListening() {
+        isListening = false;
+        composerInputRow?.classList.remove("is-transcribing");
+        stopAudioVisualizer();
+    }
+
+    // --------------------------------------------------------
+    //  HISTORY / CONVERSATION
+    // --------------------------------------------------------
     hpDeleteBtn
         ?.addEventListener(
             "click",
@@ -1373,6 +1404,9 @@
         }
     }
 
+    // --------------------------------------------------------
+    //  UI RENDERERS
+    // --------------------------------------------------------
     function renderMessageToUI(
         role,
         content,
@@ -1875,6 +1909,9 @@
             );
     }
 
+    // --------------------------------------------------------
+    //  CHAT ACTIONS
+    // --------------------------------------------------------
     chatMessages
         ?.addEventListener(
             "click",
@@ -2430,6 +2467,9 @@
         }
     }
 
+    // --------------------------------------------------------
+    //  EVENT LISTENERS
+    // --------------------------------------------------------
     function setupEventListeners() {
         sendBtn
             ?.addEventListener(
@@ -2848,38 +2888,235 @@
             );
     }
 
-    document.addEventListener(
-        "DOMContentLoaded",
+    // --------------------------------------------------------
+    //  ADDITIONAL FUNCTIONS (integrated from your new code)
+    // --------------------------------------------------------
 
-        () => {
-            document
-                .documentElement
-                .dataset
-                .neoRuntime =
-                "ready";
+    // --- Dynamic adaptive suggestions ---
+    function renderAdaptiveSuggestions() {
+        if (!liveSuggestions || !chatInput) return;
 
-            init().catch(
-                error => {
-                    console.error(
-                        "NEO initialization failed:",
-                        error
-                    );
+        const text = chatInput.value.trim().toLowerCase();
 
-                    const input =
-                        document
-                            .getElementById(
-                                "chatInput"
-                            );
+        const baseSuggestions = [
+            "Write code",
+            "Summarize this",
+            "Make a plan",
+            "Improve text",
+            "Research this"
+        ];
 
-                    if (input) {
-                        input.placeholder =
-                            "NEO could not initialize. Check console.";
-                    }
-                }
-            );
+        const codeSuggestions = [
+            "Fix this code",
+            "Explain this error",
+            "Make it production ready",
+            "Find bugs",
+            "Write cleaner version"
+        ];
+
+        const businessSuggestions = [
+            "Make launch plan",
+            "Improve pricing",
+            "Write marketing copy",
+            "Find risks",
+            "Make growth strategy"
+        ];
+
+        let suggestions = baseSuggestions;
+
+        if (
+            text.includes("code") ||
+            text.includes("error") ||
+            text.includes("js") ||
+            text.includes("css") ||
+            text.includes("html")
+        ) {
+            suggestions = codeSuggestions;
         }
-    );
 
+        if (
+            text.includes("business") ||
+            text.includes("launch") ||
+            text.includes("pricing") ||
+            text.includes("grow")
+        ) {
+            suggestions = businessSuggestions;
+        }
+
+        liveSuggestions.innerHTML = "";
+
+        suggestions.forEach(label => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "suggestion-chip";
+            button.textContent = label;
+
+            button.addEventListener("click", () => {
+                chatInput.value = label;
+                chatInput.focus();
+                updateComposerShape();
+                renderAdaptiveSuggestions();
+            });
+
+            liveSuggestions.appendChild(button);
+        });
+    }
+
+    // --- Sidebar state management ---
+    function initializeSidebarState() {
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+        if (isMobile) {
+            document.body.classList.add("sidebar-collapsed");
+            sidebar?.classList.add("collapsed");
+            sidebarScrim?.classList.remove("visible");
+        } else {
+            document.body.classList.remove("sidebar-collapsed");
+            sidebar?.classList.remove("collapsed");
+            sidebarScrim?.classList.remove("visible");
+        }
+
+        updateBodySidebarState();
+    }
+
+    function updateBodySidebarState() {
+        const collapsed = sidebar?.classList.contains("collapsed");
+        document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
+    }
+
+    // --- Enhanced drag & drop ---
+    function setupDragAndDrop() {
+        if (!composerWrapper) return;
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            composerWrapper.addEventListener(eventName, event => {
+                event.preventDefault();
+                event.stopPropagation();
+                dragDropOverlay?.classList.add("show");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            composerWrapper.addEventListener(eventName, event => {
+                event.preventDefault();
+                event.stopPropagation();
+                dragDropOverlay?.classList.remove("show");
+            });
+        });
+
+        composerWrapper.addEventListener("drop", event => {
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.length) handleFileProcessing(files);
+        });
+    }
+
+    // --- Paste upload ---
+    function setupPasteUpload() {
+        document.addEventListener("paste", event => {
+            const files = Array.from(event.clipboardData?.files || []);
+            if (files.length) handleFileProcessing(files);
+        });
+    }
+
+    // --- Render attached chips (updated styling) ---
+    function renderAttachedChips() {
+        if (!attachedChipsWrapper) return;
+
+        attachedChipsWrapper.innerHTML = "";
+
+        attachedFiles.forEach((file, index) => {
+            const chip = document.createElement("div");
+            chip.className = "attachment-chip";
+
+            const name = document.createElement("span");
+            name.textContent = file.name || "Attached file";
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.textContent = "×";
+
+            remove.addEventListener("click", () => {
+                attachedFiles.splice(index, 1);
+                renderAttachedChips();
+                updateComposerShape();
+            });
+
+            chip.appendChild(name);
+            chip.appendChild(remove);
+            attachedChipsWrapper.appendChild(chip);
+        });
+    }
+
+    // --- File processing (kept original enriched version) ---
+    function getFileCategory(file) {
+        const type = file.type || "";
+
+        if (type.startsWith("image/")) return "image";
+        if (type.startsWith("audio/")) return "audio";
+        if (type.startsWith("video/")) return "video";
+        if (type.includes("pdf")) return "pdf";
+
+        return "text";
+    }
+
+    function readFileAsPayload(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => {
+                reject(new Error(`Unable to read ${file.name}`));
+            };
+
+            reader.onload = () => {
+                resolve(reader.result || "");
+            };
+
+            const category = getFileCategory(file);
+
+            if (category === "text") {
+                reader.readAsText(file);
+            } else {
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    async function handleFileProcessing(files) {
+        const selected = Array.from(files || []).slice(0, MAX_ATTACHED_FILES);
+
+        for (const file of selected) {
+            if (attachedFiles.length >= MAX_ATTACHED_FILES) {
+                alert(`Maximum ${MAX_ATTACHED_FILES} files can be attached.`);
+                break;
+            }
+
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                alert(`${file.name} is too large. Max file size is 4MB.`);
+                continue;
+            }
+
+            if (!checkFilePermissionForPlan(file)) {
+                continue;
+            }
+
+            try {
+                attachedFiles.push({
+                    name: file.name,
+                    type: file.type,
+                    category: getFileCategory(file),
+                    data: await readFileAsPayload(file)
+                });
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        renderAttachedChips();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
+    }
+
+    // --- Profile rendering (kept original with API fetch) ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -2931,6 +3168,7 @@
         }
     }
 
+    // --- History loading (kept original GET version) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -2964,151 +3202,38 @@
         }
     }
 
-    function renderAttachedChips() {
-        if (!attachedChipsWrapper) return;
+    // --------------------------------------------------------
+    //  BOOT
+    // --------------------------------------------------------
+    document.addEventListener(
+        "DOMContentLoaded",
 
-        attachedChipsWrapper.innerHTML = "";
+        () => {
+            document
+                .documentElement
+                .dataset
+                .neoRuntime =
+                "ready";
 
-        attachedFiles.forEach((file, index) => {
-            const chip = document.createElement("div");
-            chip.className = "attached-chip";
-            chip.innerHTML =
-                `<span>${sanitizeHTML(file.name)}</span><button type="button" aria-label="Remove file">×</button>`;
+            init().catch(
+                error => {
+                    console.error(
+                        "NEO initialization failed:",
+                        error
+                    );
 
-            chip.querySelector("button")?.addEventListener("click", () => {
-                attachedFiles.splice(index, 1);
-                renderAttachedChips();
-                renderAdaptiveSuggestions();
-                updateComposerShape();
-            });
+                    const input =
+                        document
+                            .getElementById(
+                                "chatInput"
+                            );
 
-            attachedChipsWrapper.appendChild(chip);
-        });
-    }
-
-    function renderAdaptiveSuggestions() {
-        if (!liveSuggestions) return;
-
-        liveSuggestions.classList.toggle(
-            "has-files",
-            attachedFiles.length > 0
-        );
-    }
-
-    function getFileCategory(file) {
-        const type = file.type || "";
-
-        if (type.startsWith("image/")) return "image";
-        if (type.startsWith("audio/")) return "audio";
-        if (type.startsWith("video/")) return "video";
-        if (type.includes("pdf")) return "pdf";
-
-        return "text";
-    }
-
-    function readFileAsPayload(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-
-            reader.onerror = () => {
-                reject(new Error(`Unable to read ${file.name}`));
-            };
-
-            reader.onload = () => {
-                resolve(reader.result || "");
-            };
-
-            const category = getFileCategory(file);
-
-            if (category === "text") {
-                reader.readAsText(file);
-            } else {
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    async function handleFileProcessing(files) {
-        const selected = Array.from(files || []).slice(0, MAX_ATTACHED_FILES);
-
-        for (const file of selected) {
-            if (file.size > MAX_FILE_SIZE_BYTES) {
-                alert(`${file.name} is too large.`);
-                continue;
-            }
-
-            if (!checkFilePermissionForPlan(file)) {
-                continue;
-            }
-
-            try {
-                attachedFiles.push({
-                    name: file.name,
-                    type: file.type,
-                    category: getFileCategory(file),
-                    data: await readFileAsPayload(file)
-                });
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-
-        renderAttachedChips();
-        renderAdaptiveSuggestions();
-        updateComposerShape();
-    }
-
-    function setupDragAndDrop() {
-        if (!composerWrapper) return;
-
-        ["dragenter", "dragover"].forEach(eventName => {
-            composerWrapper.addEventListener(eventName, event => {
-                event.preventDefault();
-                dragDropOverlay?.classList.add("show");
-            });
-        });
-
-        ["dragleave", "drop"].forEach(eventName => {
-            composerWrapper.addEventListener(eventName, event => {
-                event.preventDefault();
-                dragDropOverlay?.classList.remove("show");
-
-                if (eventName === "drop" && event.dataTransfer?.files) {
-                    handleFileProcessing(Array.from(event.dataTransfer.files));
+                    if (input) {
+                        input.placeholder =
+                            "NEO could not initialize. Check console.";
+                    }
                 }
-            });
-        });
-    }
-
-    function setupPasteUpload() {
-        document.addEventListener("paste", event => {
-            const files = Array.from(event.clipboardData?.files || []);
-
-            if (files.length) {
-                handleFileProcessing(files);
-            }
-        });
-    }
-
-    function stopListening() {
-        isListening = false;
-
-        composerInputRow?.classList.remove("is-transcribing");
-
-        stopAudioVisualizer();
-    }
-
-    // --- Added functions ---
-    function updateBodySidebarState() {
-        const collapsed = sidebar?.classList.contains("collapsed");
-        document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
-    }
-
-    function initializeSidebarState() {
-        if (!sidebar) return;
-        const mobile = window.matchMedia("(max-width: 767px)").matches;
-        sidebar.classList.toggle("collapsed", mobile);
-        sidebarScrim?.classList.remove("visible");
-        updateBodySidebarState();
-    }
+            );
+        }
+    );
 })();
