@@ -1,3 +1,5 @@
+// neo.js – Complete Frontend Application
+
 (function () {
     "use strict";
 
@@ -331,7 +333,7 @@
         setupSpeechRecognition();
         renderAdaptiveSuggestions();
         updateComposerShape();
-        setupSettingsUI(); // added
+        setupSettingsUI();
 
         const authenticated =
             await restoreSecureSession();
@@ -2917,6 +2919,9 @@
         isGenerating = false;
     }
 
+    // ----------------------------------------------------------------
+    //  UPDATED submitChatRequest with attachments payload
+    // ----------------------------------------------------------------
     async function submitChatRequest(
         aiBubble,
         userText,
@@ -3010,6 +3015,9 @@
                                 {
                                     messages:
                                         apiMessages,
+
+                                    attachments:
+                                        conversation.at(-1)?.attachments || [],   // <-- added
 
                                     conversationId:
                                         currentConversationId,
