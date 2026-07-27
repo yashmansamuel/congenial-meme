@@ -1,467 +1,220 @@
-import { createClient } from '@supabase/supabase-js';
+// api/history.js
+// Handles conversation history: list, get, delete, rename
 
-import { getAuthenticatedUser } from '../lib/auth.js';
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
-import {
-  setJsonHeaders,
-  parseJsonBody,
-  isAllowedOrigin,
-  positiveInteger
-} from '../lib/http.js';
-
-const DEFAULT_HISTORY_LIMIT = 50;
-const MAX_HISTORY_LIMIT = 100;
-const MAX_TITLE_LENGTH = 80;
-
-function cleanEnv(value) {
-  return typeof value === 'string'
-    ? value.trim().replace(/^["']|["']$/g, '')
-    : '';
-}
-
-function createSupabaseAdmin() {
-  const supabaseUrl = cleanEnv(process.env.SUPABASE_URL);
-  const serviceRoleKey = cleanEnv(
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabase configuration is missing.');
-  }
-
-  const parsedUrl = new URL(supabaseUrl);
-
-  if (
-    process.env.NODE_ENV === 'production' &&
-    parsedUrl.protocol !== 'https:'
-  ) {
-    throw new Error('Supabase must use HTTPS in production.');
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'signaturesi-neo-history'
-      }
-    }
-  });
-}
-
-function cleanString(value, maxLength = 200) {
-  if (typeof value !== 'string') {
-    return '';
-  }
-
-  return value
-    .replace(/\u0000/g, '')
+// Clean a string: trim, truncate, remove control chars
+function cleanString(str, maxLength = 50000) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/[\x00-\x1F\x7F]/g, '')   // remove control characters
     .trim()
     .slice(0, maxLength);
 }
 
-function normalizeAction(value) {
-  const action = cleanString(value, 40).toLowerCase();
-
-  const aliases = {
-    history: 'list',
-    conversations: 'list',
-    load: 'get',
-    open: 'get',
-    messages: 'get',
-    remove: 'delete',
-    update: 'rename',
-    title: 'rename'
-  };
-
-  return aliases[action] || action;
-}
-
-function getHistoryLimit(value) {
-  return Math.min(
-    positiveInteger(value, DEFAULT_HISTORY_LIMIT),
-    MAX_HISTORY_LIMIT
-  );
-}
-
-function validateConversationId(value) {
-  const id = cleanString(value, 100);
-
-  const uuidPattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  if (!uuidPattern.test(id)) {
-    return '';
-  }
-
-  return id;
-}
-
-function getConversationId(req, body) {
-  return validateConversationId(
-    body?.conversationId ||
-      body?.conversation_id ||
-      req.query?.conversationId ||
-      req.query?.conversation_id ||
-      ''
-  );
-}
-
-function safeConversation(conversation) {
-  return {
-    id: String(conversation.id),
-    title:
-      cleanString(conversation.title, MAX_TITLE_LENGTH) ||
-      'New Chat',
-    model:
-      conversation.model_used ||
-      conversation.model ||
-      null,
-    createdAt: conversation.created_at || null,
-    updatedAt:
-      conversation.updated_at ||
-      conversation.created_at ||
-      null
-  };
-}
-
-// ---------- UPDATED safeMessage with attachments ----------
+// ----------------------------------------------------------------
+// REPLACED safeMessage() – with attachment handling
+// ----------------------------------------------------------------
 function safeMessage(message) {
+  const attachments = Array.isArray(message.attachments)
+    ? message.attachments
+        .slice(0, 5)
+        .map(file => ({
+          provider: "supabase",
+          bucket: "uploads",
+          path: String(file?.path || "").trim(),
+          name: String(file?.name || "Attached file")
+            .replace(/[\\/]/g, "-")
+            .slice(0, 180),
+          mimeType: String(
+            file?.mimeType ||
+            file?.type ||
+            "application/octet-stream"
+          ).slice(0, 120),
+          type: String(
+            file?.mimeType ||
+            file?.type ||
+            "application/octet-stream"
+          ).slice(0, 120),
+          category: String(file?.category || "text")
+            .toLowerCase()
+            .slice(0, 20),
+          size: Number.isFinite(Number(file?.size))
+            ? Math.max(0, Number(file.size))
+            : 0
+        }))
+        .filter(file => {
+          return (
+            file.path &&
+            !file.path.startsWith("/") &&
+            !file.path.includes("..") &&
+            !file.path.startsWith("http") &&
+            !file.path.startsWith("data:") &&
+            !file.path.startsWith("blob:")
+          );
+        })
+    : [];
+
   return {
     id: String(message.id),
+
     role:
-      message.role === 'assistant'
-        ? 'assistant'
-        : message.role === 'user'
-        ? 'user'
-        : 'system',
-    content: cleanString(message.content, 50_000),
-    attachments: Array.isArray(message.attachments)
-      ? message.attachments
-      : [],
-    createdAt: message.created_at || null
+      message.role === "assistant"
+        ? "assistant"
+        : message.role === "user"
+        ? "user"
+        : "system",
+
+    content: cleanString(
+      message.content,
+      50_000
+    ),
+
+    attachments,
+
+    createdAt:
+      message.created_at || null
   };
 }
-// ----------------------------------------------------------
+// ----------------------------------------------------------------
 
-async function verifyConversationOwnership(
-  supabase,
-  conversationId,
-  userId
-) {
+// GET /api/history – list all conversations for the authenticated user
+async function listConversations(userId) {
   const { data, error } = await supabase
-    .from('chat_conversations')
-    .select(
-      'id, title, model_used, created_at, updated_at'
-    )
+    .from('conversations')
+    .select('id, title, created_at, updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+// GET /api/history/:conversationId – get full conversation
+async function getConversation(conversationId, userId) {
+  // Verify ownership
+  const { data: conv, error: convError } = await supabase
+    .from('conversations')
+    .select('id')
     .eq('id', conversationId)
     .eq('user_id', userId)
-    .maybeSingle();
+    .single();
 
-  if (error) {
-    throw error;
+  if (convError || !conv) {
+    throw new Error('Conversation not found or access denied');
   }
 
-  return data;
-}
-
-async function listConversations(
-  supabase,
-  userId,
-  limit
-) {
-  const { data, error } = await supabase
-    .from('chat_conversations')
-    .select(
-      'id, title, model_used, created_at, updated_at'
-    )
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw error;
-  }
-
-  return (data || []).map(safeConversation);
-}
-
-// ---------- UPDATED loadConversationMessages with attachments ----------
-async function loadConversationMessages(
-  supabase,
-  conversationId
-) {
-  const { data, error } = await supabase
-    .from('chat_messages')
+  // Fetch messages with attachments
+  const { data: messages, error: msgError } = await supabase
+    .from('messages')
     .select('id, role, content, attachments, created_at')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
-    .limit(500);
+    .order('created_at', { ascending: true });
 
-  if (error) {
-    throw error;
-  }
+  if (msgError) throw new Error(msgError.message);
 
-  return (data || []).map(safeMessage);
+  return messages.map(safeMessage);
 }
-// ----------------------------------------------------------------------
 
-async function renameConversation(
-  supabase,
-  conversationId,
-  userId,
-  title
-) {
-  const cleanTitle = cleanString(
-    title,
-    MAX_TITLE_LENGTH
-  ).replace(/\s+/g, ' ');
-
-  if (!cleanTitle) {
-    throw new Error('A conversation title is required.');
-  }
-
-  const { data, error } = await supabase
-    .from('chat_conversations')
-    .update({
-      title: cleanTitle,
-      updated_at: new Date().toISOString()
-    })
+// DELETE /api/history/:conversationId
+async function deleteConversation(conversationId, userId) {
+  // Verify ownership
+  const { data: conv, error: convError } = await supabase
+    .from('conversations')
+    .select('id')
     .eq('id', conversationId)
     .eq('user_id', userId)
-    .select(
-      'id, title, model_used, created_at, updated_at'
-    )
-    .maybeSingle();
+    .single();
 
-  if (error) {
-    throw error;
+  if (convError || !conv) {
+    throw new Error('Conversation not found or access denied');
   }
 
-  return data || null;
+  // Delete messages first (cascade would also work)
+  const { error: msgError } = await supabase
+    .from('messages')
+    .delete()
+    .eq('conversation_id', conversationId);
+
+  if (msgError) throw new Error(msgError.message);
+
+  const { error: convError2 } = await supabase
+    .from('conversations')
+    .delete()
+    .eq('id', conversationId);
+
+  if (convError2) throw new Error(convError2.message);
 }
 
-async function deleteConversation(
-  supabase,
-  conversationId,
-  userId
-) {
-  const { data, error } = await supabase.rpc(
-    'delete_own_conversation',
-    {
-      p_user_id: userId,
-      p_conversation_id: conversationId
-    }
-  );
+// RENAME /api/history/:conversationId (optional)
+async function renameConversation(conversationId, userId, newTitle) {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ title: cleanString(newTitle, 100) })
+    .eq('id', conversationId)
+    .eq('user_id', userId);
 
-  if (error) {
-    throw error;
-  }
-
-  return data === true;
+  if (error) throw new Error(error.message);
 }
 
-function methodAllowsAction(method, action) {
-  if (method === 'GET') {
-    return ['list', 'get'].includes(action);
-  }
-
-  if (method === 'DELETE') {
-    return action === 'delete';
-  }
-
-  if (method === 'PATCH') {
-    return action === 'rename';
-  }
-
-  if (method === 'POST') {
-    return ['list', 'get', 'delete', 'rename'].includes(
-      action
-    );
-  }
-
-  return false;
-}
-
-export default async function handler(req, res) {
-  setJsonHeaders(res);
-
-  const allowedMethods = ['GET', 'POST', 'DELETE', 'PATCH'];
-
-  if (!allowedMethods.includes(req.method)) {
-    res.setHeader('Allow', allowedMethods.join(', '));
-
-    return res.status(405).json({
-      error: 'Method Not Allowed'
-    });
-  }
-
-  const authUser = getAuthenticatedUser(req);
-
-  if (!authUser?.userId) {
-    return res.status(401).json({
-      error: 'Authentication required. Please log in.'
-    });
-  }
-
-  if (req.method !== 'GET') {
-    try {
-      if (!isAllowedOrigin(req)) {
-        return res.status(403).json({
-          error: 'Request origin is not allowed.'
-        });
-      }
-    } catch {
-      return res.status(500).json({
-        error: 'History service is not configured safely.'
-      });
-    }
-  }
-
-  const body =
-    req.method === 'GET'
-      ? {}
-      : parseJsonBody(req);
-
-  if (!body) {
-    return res.status(400).json({
-      error: 'Invalid JSON request.'
-    });
-  }
-
-  const conversationId = getConversationId(req, body);
-
-  let action = normalizeAction(
-    body.action || req.query?.action || ''
-  );
-
-  if (!action) {
-    if (req.method === 'DELETE') {
-      action = 'delete';
-    } else if (req.method === 'PATCH') {
-      action = 'rename';
-    } else if (conversationId) {
-      action = 'get';
-    } else {
-      action = 'list';
-    }
-  }
-
-  if (!methodAllowsAction(req.method, action)) {
-    return res.status(405).json({
-      error: 'This method cannot perform the requested action.'
-    });
-  }
-
-  if (
-    ['get', 'delete', 'rename'].includes(action) &&
-    !conversationId
-  ) {
-    return res.status(400).json({
-      error: 'A valid conversation ID is required.'
-    });
-  }
-
-  let supabase;
-
+// Main handler
+module.exports = async (req, res) => {
   try {
-    supabase = createSupabaseAdmin();
-
-    if (action === 'list') {
-      const conversations = await listConversations(
-        supabase,
-        authUser.userId,
-        getHistoryLimit(body.limit || req.query?.limit)
-      );
-
-      return res.status(200).json({
-        success: true,
-        conversations,
-        count: conversations.length
-      });
+    // Extract authenticated user from session (assume middleware sets req.user)
+    const user = req.user;
+    if (!user || !user.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (action === 'get') {
-      const conversation =
-        await verifyConversationOwnership(
-          supabase,
-          conversationId,
-          authUser.userId
-        );
+    const { method, query, body } = req;
+    const { action, conversationId, title } = body || {};
 
-      if (!conversation) {
-        return res.status(404).json({
-          error: 'Conversation not found.'
-        });
+    // GET /api/history
+    if (method === 'GET') {
+      const conversations = await listConversations(user.id);
+      return res.json({ conversations });
+    }
+
+    // POST /api/history – actions: get, delete, rename
+    if (method === 'POST') {
+      if (!action) {
+        return res.status(400).json({ error: 'Missing action' });
       }
 
-      const messages = await loadConversationMessages(
-        supabase,
-        conversationId
-      );
+      switch (action) {
+        case 'get':
+          if (!conversationId) {
+            return res.status(400).json({ error: 'Missing conversationId' });
+          }
+          const messages = await getConversation(conversationId, user.id);
+          return res.json({ messages });
 
-      return res.status(200).json({
-        success: true,
-        conversation: safeConversation(conversation),
-        messages
-      });
-    }
+        case 'delete':
+          if (!conversationId) {
+            return res.status(400).json({ error: 'Missing conversationId' });
+          }
+          await deleteConversation(conversationId, user.id);
+          return res.json({ success: true });
 
-    if (action === 'rename') {
-      const conversation =
-        await renameConversation(
-          supabase,
-          conversationId,
-          authUser.userId,
-          body.title
-        );
+        case 'rename':
+          if (!conversationId || !title) {
+            return res.status(400).json({ error: 'Missing conversationId or title' });
+          }
+          await renameConversation(conversationId, user.id, title);
+          return res.json({ success: true });
 
-      if (!conversation) {
-        return res.status(404).json({
-          error: 'Conversation not found.'
-        });
+        default:
+          return res.status(400).json({ error: 'Invalid action' });
       }
-
-      return res.status(200).json({
-        success: true,
-        conversation: safeConversation(conversation)
-      });
     }
 
-    if (action === 'delete') {
-      const deleted = await deleteConversation(
-        supabase,
-        conversationId,
-        authUser.userId
-      );
-
-      if (!deleted) {
-        return res.status(404).json({
-          error: 'Conversation not found.'
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        deleted: true,
-        conversationId
-      });
-    }
-
-    return res.status(400).json({
-      error: 'Invalid history action.'
-    });
+    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('History request failed:', {
-      message: error?.message,
-      code: error?.code
-    });
-
-    return res.status(500).json({
-      error: 'Unable to process conversation history.'
-    });
+    console.error('History API error:', error);
+    return res.status(500).json({ error: error.message });
   }
-}
+};
