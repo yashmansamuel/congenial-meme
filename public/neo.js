@@ -262,6 +262,75 @@
         );
 
     // --------------------------------------------------------
+    //  INJECT SAFE CSS (media grid, file pills, avatar, etc.)
+    // --------------------------------------------------------
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+        .message-media-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .message-media-grid img {
+            max-width: 360px;
+            max-height: 360px;
+            border-radius: 18px;
+            object-fit: cover;
+            background: var(--surface-2);
+        }
+        .message-file-pill {
+            background: var(--surface-2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: inline-block;
+            border: 1px solid var(--border-color);
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--surface-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+    `;
+    document.head.appendChild(styleEl);
+
+    // --------------------------------------------------------
+    //  HELPER: clean conversation title
+    // --------------------------------------------------------
+    function makeConversationTitle(text, files) {
+        const hasText = text && text.trim().length > 0;
+        const imageCount = files ? files.filter(f => isImageAttachment(f)).length : 0;
+        const fileCount = files ? files.length : 0;
+
+        if (imageCount > 0 && !hasText) {
+            return imageCount === 1 ? "Image upload" : "Images uploaded";
+        }
+        if (fileCount > 0 && !hasText) {
+            return "File upload";
+        }
+        if (hasText) {
+            const cleaned = text.trim().slice(0, 60);
+            return cleaned + (text.length > 60 ? "…" : "");
+        }
+        return "New conversation";
+    }
+
+    // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
     async function init() {
@@ -1562,7 +1631,7 @@
         wrapper.className =
             "message-wrapper";
 
-        // Text content
+        // Text content (never show base64/data URL)
         const content =
             document.createElement(
                 "div"
@@ -2116,7 +2185,7 @@
                     "none";
             }
 
-            // ----- UPDATED: pass pendingFiles as attachments -----
+            // ----- UPDATED: pass pendingFiles as attachments, no "[Uploaded ...]" text -----
             renderMessageToUI(
                 "user",
                 text || "",
@@ -3282,7 +3351,7 @@
         }
     }
 
-    // --- History loading (with contextmenu) ---
+    // --- History loading (with contextmenu + clean titles) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -3303,13 +3372,21 @@
                 const row = document.createElement("button");
                 row.type = "button";
                 row.className = "history-item";
-                row.textContent = item.title || "New conversation";
+
+                // Clean the title: if it contains base64/data URL, replace with generic
+                let title = item.title || "New conversation";
+                if (title.includes("data:image") || title.includes("base64,") || title.length > 100) {
+                    // Use makeConversationTitle with empty text and file count? We don't have file info.
+                    // For safety, just show a generic title.
+                    title = "Conversation";
+                }
+                row.textContent = title;
 
                 row.addEventListener("click", () => {
                     loadChatMessages(item.id);
                 });
 
-                // NEW: contextmenu listener for each history row
+                // contextmenu listener for each history row
                 row.addEventListener("contextmenu", event => {
                     event.preventDefault();
                     activePopupChatId = item.id;
