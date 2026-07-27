@@ -250,6 +250,17 @@
             "upgradeActionBtn"
         );
 
+    // NEW DOM ELEMENTS FOR SETTINGS & PERSONALITIES
+    const neoSettingsOverlay =
+        document.getElementById(
+            "neoSettingsOverlay"
+        );
+
+    const sidebarPersonalitiesBtn =
+        document.getElementById(
+            "sidebarPersonalitiesBtn"
+        );
+
     // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
@@ -2755,6 +2766,32 @@
                 }
             );
 
+        // NEW: sidebarPersonalitiesBtn listener
+        sidebarPersonalitiesBtn
+            ?.addEventListener(
+                "click",
+
+                () => {
+                    userPopupMenu?.classList.remove("show");
+
+                    neoSettingsOverlay?.classList.add("show");
+                    neoSettingsOverlay?.setAttribute("aria-hidden", "false");
+
+                    document.querySelectorAll(".neo-settings-tab").forEach(tab => {
+                        tab.classList.toggle(
+                            "active",
+                            tab.dataset.settingsTab === "personalities"
+                        );
+                    });
+
+                    document.querySelectorAll(".neo-settings-panel").forEach(panel => {
+                        panel.classList.remove("active");
+                    });
+
+                    document.getElementById("settingsPanelPersonalities")?.classList.add("active");
+                }
+            );
+
         document.addEventListener(
             "click",
 
@@ -3047,7 +3084,7 @@
         });
     }
 
-    // --- File processing (kept original enriched version) ---
+    // --- File processing ---
     function getFileCategory(file) {
         const type = file.type || "";
 
@@ -3116,7 +3153,7 @@
         updateComposerShape();
     }
 
-    // --- Profile rendering (kept original with API fetch) ---
+    // --- Profile rendering ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -3168,7 +3205,7 @@
         }
     }
 
-    // --- History loading (kept original GET version) ---
+    // --- History loading (with added contextmenu for each row) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -3193,6 +3230,16 @@
 
                 row.addEventListener("click", () => {
                     loadChatMessages(item.id);
+                });
+
+                // NEW: contextmenu listener for each history row
+                row.addEventListener("contextmenu", event => {
+                    event.preventDefault();
+                    activePopupChatId = item.id;
+                    historyPopupMenu.style.display = "block";
+                    historyPopupMenu.classList.add("show");
+                    historyPopupMenu.style.left = `${event.clientX}px`;
+                    historyPopupMenu.style.top = `${event.clientY}px`;
                 });
 
                 historyList.appendChild(row);
