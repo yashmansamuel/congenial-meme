@@ -41,10 +41,17 @@ function safeMessage(message) {
         .slice(0, 5)
         .map(file => ({
           provider: "supabase",
-          bucket: "uploads",
+          bucket: String(file?.bucket || "neo-uploads").trim(),
           path: String(file?.path || "").trim(),
-          name: String(file?.name || "Attached file").slice(0, 180),
+          name: String(file?.name || "Attached file")
+            .replace(/[\\/]/g, "-")
+            .slice(0, 180),
           mimeType: String(
+            file?.mimeType ||
+            file?.type ||
+            "application/octet-stream"
+          ).slice(0, 120),
+          type: String(
             file?.mimeType ||
             file?.type ||
             "application/octet-stream"
