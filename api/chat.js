@@ -3,11 +3,17 @@ import { getAuthenticatedUser } from "../lib/auth.js";
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    }
 );
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const UPLOAD_BUCKET = "uploads";
+const GEMINI_API_KEY = cleanEnv(process.env.GEMINI_API_KEY);
+const UPLOAD_BUCKET = "neo-uploads";
 const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
@@ -38,11 +44,17 @@ function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
     })).filter(f => f.path && f.path.startsWith(`users/${userId}/`) && !f.path.includes('..'));
 }
 
-async function deleteGeminiFile(apiKey, fileUri) {
-    if (!fileUri || !apiKey) return;
+async function deleteGeminiFile(apiKey, fileName) {
+    if (!fileName || !apiKey) return;
+    const safeName = String(fileName).replace(/^\/+/, "");
     try {
-        await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileUri}?key=${apiKey}`, { method: 'DELETE' });
-    } catch {}
+        await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/${safeName}?key=${encodeURIComponent(apiKey)}`,
+            { method: "DELETE" }
+        );
+    } catch (error) {
+        console.warn("Gemini temporary file deletion failed:", error);
+    }
 }
 
 async function saveMessage(supabase, conversationId, role, content, attachments) {
@@ -67,11 +79,10 @@ export default async (req, res) => {
         const user = {
             id: auth.userId,
             username: auth.username || "user",
-            planType: auth.planType || "free" // assuming auth returns planType
+            planType: auth.planType || "free"
         };
 
         const { messages, conversationId, isDeepResearch, title } = req.body;
-        // ⚠️ `model` from req.body is IGNORED — it's just a UI label (l1.0 / l1.2)
 
         if (!Array.isArray(messages) || messages.length === 0) {
             return res.status(400).json({ error: 'Messages array required' });
@@ -96,24 +107,33 @@ export default async (req, res) => {
             parts: [{ text: cleanString(msg.content || '') }]
         })).filter(m => m.parts[0].text || m.attachments?.length);
 
-        // --- Upload attachments to Gemini ---
+        // --- Upload attachments to Gemini (resumable) ---
         if (attachments.length > 0 && GEMINI_API_KEY) {
-            const lastMsgGeminiParts = [];
+            const lastGeminiMessage = geminiMessages[geminiMessages.length - 1];
+            if (!lastGeminiMessage) {
+                throw new Error("Unable to prepare attachment message.");
+            }
+
+            const originalText = cleanString(lastMsg.content || "Please analyze the attached file.");
+            const attachmentParts = [];
+
             for (const file of attachments) {
-                const signedUrl = await getSignedDownloadUrl(file.path, file.bucket);
-                if (!signedUrl) continue;
-                
-                const geminiFile = await uploadToGemini(signedUrl, file.mimeType, file.name);
-                if (geminiFile) {
-                    geminiFiles.push(geminiFile.uri);
-                    lastMsgGeminiParts.push({
-                        fileData: { mimeType: geminiFile.mimeType, fileUri: geminiFile.uri }
-                    });
-                }
+                const geminiFile = await uploadSupabaseFileToGemini(file);
+                if (!geminiFile?.uri) continue;
+                geminiFiles.push(geminiFile.name);
+                attachmentParts.push({
+                    fileData: {
+                        mimeType: geminiFile.mimeType,
+                        fileUri: geminiFile.uri
+                    }
+                });
             }
-            if (lastMsgGeminiParts.length > 0) {
-                geminiMessages[geminiMessages.length - 1].parts = lastMsgGeminiParts;
-            }
+
+            // Preserve user text and append file parts
+            lastGeminiMessage.parts = [
+                { text: originalText },
+                ...attachmentParts
+            ];
         }
 
         // --- Create conversation if new ---
@@ -132,16 +152,13 @@ export default async (req, res) => {
         const userText = cleanString(lastMsg.content || "");
         await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments);
 
-        // ================================================================
-        // ✅ MODEL MAPPING FIX (User plan se real Gemini model decide karo)
-        // ================================================================
+        // --- Model mapping (Pro vs Free) ---
         const isPro = user.planType === 'pro';
         const model = isPro
             ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
             : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
-        // ================================================================
 
-        // --- Call Gemini with correct model ---
+        // --- Call Gemini ---
         const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
         const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         if (!reply) throw new Error('Gemini returned empty response');
@@ -162,32 +179,113 @@ export default async (req, res) => {
 };
 
 // ================================================================
-// HELPER FUNCTIONS (Gemini API Calls with corrected URL)
+// HELPER FUNCTIONS (Gemini resumable upload & API call)
 // ================================================================
 
-async function getSignedDownloadUrl(path, bucket = UPLOAD_BUCKET) {
-    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
-    if (error) return null;
-    return data?.signedUrl;
+async function uploadSupabaseFileToGemini(file) {
+    const { data: storedFile, error } = await supabase.storage
+        .from(file.bucket || UPLOAD_BUCKET)
+        .download(file.path);
+
+    if (error || !storedFile) {
+        throw new Error(error?.message || `Unable to read ${file.name}.`);
+    }
+
+    const mimeType = file.mimeType || storedFile.type || "application/octet-stream";
+    const bytes = await storedFile.arrayBuffer();
+
+    // Start resumable upload
+    const startResponse = await fetch(
+        `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${encodeURIComponent(GEMINI_API_KEY)}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Upload-Protocol": "resumable",
+                "X-Goog-Upload-Command": "start",
+                "X-Goog-Upload-Header-Content-Length": String(bytes.byteLength),
+                "X-Goog-Upload-Header-Content-Type": mimeType
+            },
+            body: JSON.stringify({
+                file: { displayName: file.name || "NEO attachment" }
+            })
+        }
+    );
+
+    if (!startResponse.ok) {
+        const details = await startResponse.text().catch(() => "");
+        throw new Error(details || "Gemini upload initialization failed.");
+    }
+
+    const uploadUrl = startResponse.headers.get("x-goog-upload-url");
+    if (!uploadUrl) {
+        throw new Error("Gemini upload URL was not returned.");
+    }
+
+    // Upload bytes and finalize
+    const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+            "Content-Length": String(bytes.byteLength),
+            "X-Goog-Upload-Offset": "0",
+            "X-Goog-Upload-Command": "upload, finalize"
+        },
+        body: bytes
+    });
+
+    const uploadData = await uploadResponse.json().catch(() => ({}));
+    if (!uploadResponse.ok) {
+        throw new Error(uploadData?.error?.message || "Gemini file upload failed.");
+    }
+
+    const geminiFile = uploadData?.file;
+    if (!geminiFile?.name || !geminiFile?.uri) {
+        throw new Error("Gemini file information was not returned.");
+    }
+
+    if (geminiFile.state === "PROCESSING") {
+        return await waitForGeminiFile(geminiFile.name, mimeType);
+    }
+
+    if (geminiFile.state === "FAILED") {
+        throw new Error(`Gemini could not process ${file.name}.`);
+    }
+
+    return {
+        name: geminiFile.name,
+        uri: geminiFile.uri,
+        mimeType: geminiFile.mimeType || mimeType
+    };
 }
 
-async function uploadToGemini(fileUrl, mimeType) {
-    try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/files?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: { mimeType, uri: fileUrl } })
-        });
-        const data = await res.json();
-        if (!res.ok) return null;
-        return data.file ? { uri: data.file.uri, mimeType } : null;
-    } catch {
-        return null;
+async function waitForGeminiFile(fileName, fallbackMimeType) {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${encodeURIComponent(GEMINI_API_KEY)}`
+        );
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data?.error?.message || "Unable to check Gemini file status.");
+        }
+
+        if (data.state === "ACTIVE") {
+            return {
+                name: data.name,
+                uri: data.uri,
+                mimeType: data.mimeType || fallbackMimeType
+            };
+        }
+        if (data.state === "FAILED") {
+            throw new Error("Gemini could not process this file.");
+        }
     }
+    throw new Error("Gemini file processing timed out.");
 }
 
 async function callGemini(messages, model, isDeepResearch) {
-    // ✅ Safe URL encoding
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
     const body = { contents: messages };
     if (isDeepResearch) {
@@ -200,7 +298,6 @@ async function callGemini(messages, model, isDeepResearch) {
     });
     const data = await res.json();
     if (!res.ok) {
-        // Detailed error logging for debugging
         console.error('Gemini API Error:', data);
         throw new Error(data.error?.message || 'Gemini API error');
     }
