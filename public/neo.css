@@ -236,7 +236,7 @@ body.sidebar-collapsed #sidebarToggleBtn {
     display: block;
 }
 
-/* UPDATED HISTORY SECTION */
+/* HISTORY SECTION */
 .history-list {
     display: grid;
     gap: 4px;
@@ -749,6 +749,41 @@ body.dark-mode #userAvatar::before {
     box-shadow: none;
 }
 
+/* New message media & file styles */
+.message-media-grid {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.message.user .message-media-grid {
+    justify-items: end;
+}
+
+.message-media-grid img {
+    max-width: 260px;
+    max-height: 260px;
+    border-radius: 18px;
+    object-fit: cover;
+    border: 1px solid var(--border-subtle);
+    display: block;
+}
+
+.message-file-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 260px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    background: var(--user-msg-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    font-size: 13px;
+}
+
+/* End of new media styles */
+
 .user-msg-actions {
     display: flex;
     align-items: center;
@@ -1120,34 +1155,33 @@ body.dark-mode .glass-input-container:focus-within {
 .attached-chips-wrapper {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 10px !important;
-    padding: 12px 12px 0 !important;
+    gap: 12px !important;
+    padding: 14px 14px 4px !important;
+    max-height: 170px !important;
+    overflow-y: auto !important;
 }
 
 .attached-chips-wrapper:empty {
     display: none !important;
 }
 
-.attachment-chip {
-    display: none !important;
-}
-
 .attachment-preview-card {
-    position: relative;
-    width: 128px;
-    height: 128px;
-    border-radius: 18px;
-    overflow: hidden;
-    background: var(--bg-hover);
-    border: 1px solid var(--border-subtle);
-    flex-shrink: 0;
+    position: relative !important;
+    width: 112px !important;
+    height: 112px !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    background: var(--bg-hover) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: none !important;
+    flex-shrink: 0 !important;
 }
 
 .attachment-preview-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
 }
 
 .attachment-preview-file {
@@ -1162,20 +1196,27 @@ body.dark-mode .glass-input-container:focus-within {
 }
 
 .attachment-remove-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 50%;
-    background: var(--bg-main);
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-popup);
+    position: absolute !important;
+    top: 7px !important;
+    right: 7px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    color: #111 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.dark-mode .attachment-remove-btn {
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #111 !important;
 }
 
 /* Legacy attachment classes (kept for compatibility) */
