@@ -2070,3 +2070,66 @@ body.dark-mode .personality-card.active {
         grid-template-columns: 1fr;
     }
 }
+.history-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.history-item {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  padding: 12px 42px 12px 12px !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.history-item:hover {
+  background: var(--bg-hover) !important;
+}
+
+.history-item.active {
+  background: var(--bg-active) !important;
+  font-weight: 650 !important;
+}
+
+.history-item::after {
+  content: "•••";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-55%);
+  color: var(--text-muted);
+  font-size: 13px;
+  letter-spacing: 1px;
+  opacity: 0;
+}
+
+.history-item:hover::after,
+.history-item.active::after {
+  opacity: 1;
+}
+
+.history-item-actions {
+  display: none !important;
+}
+
+.history-action-btn {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
