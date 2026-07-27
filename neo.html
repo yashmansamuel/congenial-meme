@@ -45,6 +45,11 @@
         <span class="section-title">Recent Chats</span>
         <div class="history-list" id="historyList"></div>
       </div>
+
+      <button class="sidebar-personality-btn" id="sidebarPersonalitiesBtn" type="button">
+        <i data-lucide="sparkles" size="16"></i>
+        <span>NEO Personalities</span>
+      </button>
     </div>
 
     <div class="sidebar-footer">
@@ -183,11 +188,11 @@
         </div>
 
         <input
-          type="file"
-          id="hiddenFileInput"
-          multiple
-          accept="image/*,.pdf,.doc,.docx,.txt,.js,.ts,.py,.html,.css,.json,.cpp,.c,.java,.mp3,.mp4,.wav,.webm"
-          style="display: none;"
+        type="file"
+        id="hiddenFileInput"
+        multiple
+        accept="image/*,.pdf,.doc,.docx,.txt,.js,.ts,.py,.html,.css,.json,.cpp,.c,.java,.mp3,.mp4,.wav,.webm"
+        style="display: none;"
         >
 
         <div class="glass-input-container" id="glassInputContainer">
@@ -229,17 +234,17 @@
   </main>
 
   <div class="history-popup-menu" id="historyPopupMenu">
-    <div class="history-popup-item">
+    <div class="history-popup-item" id="hpShareBtn">
       <i data-lucide="share-2" size="16"></i>
       Share conversation
     </div>
 
-    <div class="history-popup-item">
+    <div class="history-popup-item" id="hpPinBtn">
       <i data-lucide="pin" size="16"></i>
       Pin
     </div>
 
-    <div class="history-popup-item">
+    <div class="history-popup-item" id="hpRenameBtn">
       <i data-lucide="pencil" size="16"></i>
       Rename
     </div>
