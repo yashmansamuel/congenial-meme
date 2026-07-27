@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -28,9 +28,7 @@ function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
         type: String(f.mimeType || f.type || "application/octet-stream").slice(0, 120),
         category: String(f.category || "text").toLowerCase().slice(0, 20),
         size: Number.isFinite(Number(f.size)) ? Math.max(0, Number(f.size)) : 0
-    })).filter(f => {
-        return f.path && f.path.startsWith(`users/${userId}/`) && !f.path.includes('..');
-    });
+    })).filter(f => f.path && f.path.startsWith(`users/${userId}/`) && !f.path.includes('..'));
 }
 
 async function deleteGeminiFile(apiKey, fileUri) {
@@ -50,8 +48,9 @@ async function saveMessage(supabase, conversationId, role, content, attachments)
     if (error) throw new Error(error.message);
 }
 
-module.exports = async (req, res) => {
-    const geminiFiles = []; // ✅ Correct scoping - accessible in finally
+// ------ Main Handler ------
+export default async (req, res) => {
+    const geminiFiles = [];
 
     try {
         const user = req.user;
@@ -76,7 +75,7 @@ module.exports = async (req, res) => {
         
         let attachments = validAttachmentList(receivedAttachments, user.id);
 
-        // Prepare Gemini messages (simplified for this fix)
+        // Prepare Gemini messages
         const history = messages.slice(-MAX_HISTORY_MESSAGES);
         const geminiMessages = history.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : msg.role,
@@ -133,14 +132,13 @@ module.exports = async (req, res) => {
         console.error('Chat error:', error);
         return res.status(500).json({ error: error.message });
     } finally {
-        // ✅ Clean up Gemini temporary files - Supabase originals stay safe
         if (geminiFiles.length > 0 && GEMINI_API_KEY) {
             await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
         }
     }
 };
 
-// ---------- Helper Functions for Gemini ----------
+// ---------- Helper Functions ----------
 async function getSignedDownloadUrl(path, bucket = UPLOAD_BUCKET) {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
     if (error) return null;
