@@ -711,7 +711,7 @@ body.dark-mode #userAvatar::before {
     background-color: var(--bg-hover);
 }
 
-/* CHAT */
+/* CHAT - updated with image fix */
 .chat-messages {
     display: flex;
     flex-direction: column;
@@ -726,21 +726,24 @@ body.dark-mode #userAvatar::before {
 }
 
 .message.user {
-    align-items: flex-end;
-}
-
-.message.user .message-wrapper {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    max-width: 85%;
+    justify-content: flex-end;
     width: 100%;
 }
 
+.message.user .message-wrapper {
+    max-width: min(720px, 86vw);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
 .message.user .message-content {
+    max-width: min(520px, 78vw);
+    padding: 10px 14px;
     background: var(--user-msg-bg);
     color: var(--text-primary);
-    padding: 10px 16px;
     border-radius: 20px;
     font-size: 14.5px;
     line-height: 1.5;
@@ -749,23 +752,24 @@ body.dark-mode #userAvatar::before {
     box-shadow: none;
 }
 
-/* New message media & file styles */
 .message-media-grid {
-    display: grid;
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    width: 100%;
     margin-bottom: 8px;
 }
 
-.message.user .message-media-grid {
-    justify-items: end;
-}
-
 .message-media-grid img {
-    max-width: 260px;
-    max-height: 260px;
+    width: auto;
+    max-width: min(520px, 78vw);
+    max-height: 420px;
+    object-fit: contain;
     border-radius: 18px;
-    object-fit: cover;
     border: 1px solid var(--border-subtle);
+    background: var(--bg-main);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     display: block;
 }
 
@@ -782,8 +786,7 @@ body.dark-mode #userAvatar::before {
     font-size: 13px;
 }
 
-/* End of new media styles */
-
+/* ... rest of user message actions etc. */
 .user-msg-actions {
     display: flex;
     align-items: center;
