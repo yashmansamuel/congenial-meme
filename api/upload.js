@@ -1,10 +1,7 @@
-// api/upload.js – Secure signed upload URL generator for Supabase Storage
-
 import { createClient } from "@supabase/supabase-js";
 import { getAuthenticatedUser } from "../lib/auth.js";
 
-// ✅ BUCKET NAME FIXED TO "uploads"
-const UPLOAD_BUCKET = "uploads";
+const UPLOAD_BUCKET = "neo-uploads";
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -38,7 +35,6 @@ export default async (req, res) => {
             return res.status(400).json({ error: "Missing file name or size." });
         }
 
-        // Generate a safe, user-specific path
         const safeName = sanitizeFileName(filename);
         const objectPath = [
             "users",
@@ -47,7 +43,6 @@ export default async (req, res) => {
             `${crypto.randomUUID()}-${safeName}`
         ].join("/");
 
-        // Generate signed upload URL with token
         const { data, error } = await supabase
             .storage
             .from(UPLOAD_BUCKET)
