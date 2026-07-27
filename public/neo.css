@@ -382,6 +382,18 @@ body.dark-mode #userAvatar::before {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
+/* NEW AVATAR IMAGE RULES */
+#userAvatar img,
+.user-avatar img,
+.profile-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+}
+
 .user-info {
     flex: 1;
     overflow: hidden;
@@ -711,7 +723,7 @@ body.dark-mode #userAvatar::before {
     background-color: var(--bg-hover);
 }
 
-/* CHAT - updated with image fix */
+/* CHAT */
 .chat-messages {
     display: flex;
     flex-direction: column;
@@ -786,7 +798,6 @@ body.dark-mode #userAvatar::before {
     font-size: 13px;
 }
 
-/* ... rest of user message actions etc. */
 .user-msg-actions {
     display: flex;
     align-items: center;
