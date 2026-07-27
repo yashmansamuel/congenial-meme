@@ -1,5 +1,3 @@
-// api/chat.js
-
 import { createClient } from "@supabase/supabase-js";
 import { getAuthenticatedUser } from "../lib/auth.js";
 import {
@@ -179,18 +177,27 @@ function normalizePersonality(value) {
     : "balanced";
 }
 
-function titleFrom(text) {
-  const title = cleanText(text, 80)
-    .replace(/\s+/g, " ");
+// ---------- Improved title generation ----------
+function makeConversationTitle(text, files = []) {
+  const cleanText = String(text || "").trim();
 
-  if (!title) {
-    return "New Chat";
+  if (cleanText) {
+    return cleanText.slice(0, 48);
   }
 
-  return title.length > 48
-    ? `${title.slice(0, 48)}…`
-    : title;
+  if (files.length > 0) {
+    const imageCount = files.filter(file => file.mimeType && file.mimeType.startsWith("image/")).length;
+
+    if (imageCount > 0) {
+      return imageCount === 1 ? "Image upload" : `${imageCount} images uploaded`;
+    }
+
+    return files.length === 1 ? "File upload" : `${files.length} files uploaded`;
+  }
+
+  return "New Chat";
 }
+// ------------------------------------------------
 
 function quotaStart(hours) {
   return new Date(
@@ -434,19 +441,22 @@ async function createConversation(supabase, userId, title, model) {
   return data.id;
 }
 
-async function saveMessage(supabase, conversationId, role, content) {
+// ---------- UPDATED saveMessage with attachments ----------
+async function saveMessage(supabase, conversationId, role, content, attachments = []) {
   const { error } = await supabase
     .from("chat_messages")
     .insert({
       conversation_id: conversationId,
       role,
-      content
+      content,
+      attachments: attachments // JSONB column
     });
 
   if (error) {
     throw error;
   }
 }
+// ----------------------------------------------------------
 
 async function updateConversation(supabase, conversationId, model) {
   const { error } = await supabase
@@ -999,27 +1009,33 @@ export default async function handler(req, res) {
     let conversationId = conversationIdFromRequest;
 
     if (!conversationId) {
+      // Use improved title generator
+      const title = makeConversationTitle(lastText, attachments);
       conversationId = await createConversation(
         supabase,
         userId,
-        titleFrom(lastText),
+        title,
         model
       );
     }
 
+    // Build user message text with attachment names (for display)
     const savedUserText = attachments.length
       ? `${lastText}\n\n${attachments
           .map(file => `[Attached: ${file.name}]`)
           .join("\n")}`
       : lastText;
 
+    // Save user message WITH attachments
     await saveMessage(
       supabase,
       conversationId,
       "user",
-      savedUserText
+      savedUserText,
+      attachments // store the attachment metadata
     );
 
+    // Save assistant message (no attachments)
     await saveMessage(
       supabase,
       conversationId,
