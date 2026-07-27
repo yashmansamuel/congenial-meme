@@ -9,7 +9,7 @@ const supabase = createClient(
 
 // Gemini API configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 
 // ----------------------------------------------------------------
 // 1. BUCKET NAME – must match frontend
@@ -96,22 +96,22 @@ module.exports = async (req, res) => {
     }
 
     // ----------------------------------------------------------------
-    // 2. REPLACED: Extract attachments from the last user message
+    // 2. REPLACED: Extract attachments from last user message or top-level
     // ----------------------------------------------------------------
-    const finalUserMessage =
+    const lastUserMessage =
       Array.isArray(messages)
         ? messages.at(-1)
         : null;
 
-    const requestedAttachments =
+    const receivedAttachments =
       Array.isArray(req.body.attachments)
         ? req.body.attachments
-        : Array.isArray(finalUserMessage?.attachments)
-        ? finalUserMessage.attachments
+        : Array.isArray(lastUserMessage?.attachments)
+        ? lastUserMessage.attachments
         : [];
 
     let attachments = validAttachmentList(
-      requestedAttachments,
+      receivedAttachments,
       user.id,
       MAX_ATTACHMENTS
     );
@@ -131,7 +131,7 @@ module.exports = async (req, res) => {
       geminiMessages.push({ role, parts: [{ text: content }] });
     }
 
-    // If there are attachments, we need to upload them to Gemini's temporary storage
+    // If there are attachments, upload them to Gemini temporary storage
     const geminiFiles = [];
     const geminiParts = [];
 
@@ -170,9 +170,13 @@ module.exports = async (req, res) => {
     }
 
     // ----------------------------------------------------------------
-    // 3. REPLACED: savedUserText – do NOT append attachment list
+    // 3. REPLACED: savedUserText – keep it clean
     // ----------------------------------------------------------------
-    const savedUserText = lastText;
+    const savedUserText =
+      lastText ||
+      (attachments.length
+        ? "User uploaded an attachment."
+        : "");
 
     // ----------------------------------------------------------------
     //  SAVE USER MESSAGE TO DATABASE
@@ -229,10 +233,10 @@ module.exports = async (req, res) => {
     res.json({
       reply,
       conversationId,
-      // optionally send back attachments metadata for re‑rendering
+      // send back attachments metadata (without preview)
       attachments: attachments.map(f => ({
         ...f,
-        previewUrl: null // preview only exists in frontend session
+        previewUrl: null
       }))
     });
 
@@ -241,14 +245,14 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: error.message });
   } finally {
     // ----------------------------------------------------------------
-    // 5. REPLACED: Only delete Gemini temporary files, NOT Supabase storage
+    // 4. REPLACED: Only delete Gemini temporary files, NOT Supabase storage
     // ----------------------------------------------------------------
     await Promise.all(
       geminiFiles.map(fileUri =>
         deleteGeminiFile(GEMINI_API_KEY, fileUri)
       )
     );
-    // DO NOT call deleteStorageFiles() here – Supabase originals stay.
+    // DO NOT call deleteStorageFiles() – Supabase originals stay.
   }
 };
 
@@ -292,7 +296,6 @@ async function uploadToGemini(fileUrl, mimeType, fileName) {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'Gemini upload failed');
 
-    // Wait for file to be processed (simple polling)
     const fileUri = data.file?.uri;
     if (!fileUri) throw new Error('No file URI returned');
 
