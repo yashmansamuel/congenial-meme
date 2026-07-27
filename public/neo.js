@@ -2879,4 +2879,236 @@
             );
         }
     );
+
+    async function renderUserProfile() {
+        let profile = null;
+
+        try {
+            const response = await fetch("/api/profile", {
+                credentials: "include",
+                cache: "no-store",
+                headers: { Accept: "application/json" }
+            });
+
+            if (response.ok) {
+                profile = await response.json();
+            }
+        } catch (error) {
+            console.warn("Profile request failed:", error);
+        }
+
+        const username =
+            profile?.user?.username ||
+            currentUser.username ||
+            "user";
+
+        const plan =
+            profile?.user?.planType ||
+            currentUser.planType ||
+            userPlan ||
+            "free";
+
+        if (userNameDisplay) {
+            userNameDisplay.textContent = `@${username}`;
+        }
+
+        if (userPlanBadge) {
+            userPlanBadge.textContent = plan === "pro" ? "Pro Plan" : "Free Plan";
+        }
+
+        const avatarUrl =
+            profile?.profile?.avatarUrl ||
+            profile?.avatarUrl ||
+            "";
+
+        if (userAvatar) {
+            if (avatarUrl) {
+                userAvatar.innerHTML =
+                    `<img src="${sanitizeHTML(avatarUrl)}" alt="${sanitizeHTML(username)}">`;
+            } else {
+                userAvatar.textContent = username.charAt(0).toUpperCase();
+            }
+        }
+    }
+
+    async function loadHistoryFromSupabase() {
+        if (!historyList) return;
+
+        try {
+            const response = await fetch("/api/history", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: { Accept: "application/json" }
+            });
+
+            const data = await readJsonResponse(response);
+            const conversations = data.conversations || [];
+
+            historyList.innerHTML = "";
+
+            conversations.forEach(item => {
+                const row = document.createElement("button");
+                row.type = "button";
+                row.className = "history-item";
+                row.textContent = item.title || "New conversation";
+
+                row.addEventListener("click", () => {
+                    loadChatMessages(item.id);
+                });
+
+                historyList.appendChild(row);
+            });
+        } catch (error) {
+            console.warn("History load failed:", error);
+        }
+    }
+
+    function renderAttachedChips() {
+        if (!attachedChipsWrapper) return;
+
+        attachedChipsWrapper.innerHTML = "";
+
+        attachedFiles.forEach((file, index) => {
+            const chip = document.createElement("div");
+            chip.className = "attached-chip";
+            chip.innerHTML =
+                `<span>${sanitizeHTML(file.name)}</span><button type="button" aria-label="Remove file">×</button>`;
+
+            chip.querySelector("button")?.addEventListener("click", () => {
+                attachedFiles.splice(index, 1);
+                renderAttachedChips();
+                renderAdaptiveSuggestions();
+                updateComposerShape();
+            });
+
+            attachedChipsWrapper.appendChild(chip);
+        });
+    }
+
+    function renderAdaptiveSuggestions() {
+        if (!liveSuggestions) return;
+
+        liveSuggestions.classList.toggle(
+            "has-files",
+            attachedFiles.length > 0
+        );
+    }
+
+    function getFileCategory(file) {
+        const type = file.type || "";
+
+        if (type.startsWith("image/")) return "image";
+        if (type.startsWith("audio/")) return "audio";
+        if (type.startsWith("video/")) return "video";
+        if (type.includes("pdf")) return "pdf";
+
+        return "text";
+    }
+
+    function readFileAsPayload(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => {
+                reject(new Error(`Unable to read ${file.name}`));
+            };
+
+            reader.onload = () => {
+                resolve(reader.result || "");
+            };
+
+            const category = getFileCategory(file);
+
+            if (category === "text") {
+                reader.readAsText(file);
+            } else {
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    async function handleFileProcessing(files) {
+        const selected = Array.from(files || []).slice(0, MAX_ATTACHED_FILES);
+
+        for (const file of selected) {
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                alert(`${file.name} is too large.`);
+                continue;
+            }
+
+            if (!checkFilePermissionForPlan(file)) {
+                continue;
+            }
+
+            try {
+                attachedFiles.push({
+                    name: file.name,
+                    type: file.type,
+                    category: getFileCategory(file),
+                    data: await readFileAsPayload(file)
+                });
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        renderAttachedChips();
+        renderAdaptiveSuggestions();
+        updateComposerShape();
+    }
+
+    function setupDragAndDrop() {
+        if (!composerWrapper) return;
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            composerWrapper.addEventListener(eventName, event => {
+                event.preventDefault();
+                dragDropOverlay?.classList.add("show");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            composerWrapper.addEventListener(eventName, event => {
+                event.preventDefault();
+                dragDropOverlay?.classList.remove("show");
+
+                if (eventName === "drop" && event.dataTransfer?.files) {
+                    handleFileProcessing(Array.from(event.dataTransfer.files));
+                }
+            });
+        });
+    }
+
+    function setupPasteUpload() {
+        document.addEventListener("paste", event => {
+            const files = Array.from(event.clipboardData?.files || []);
+
+            if (files.length) {
+                handleFileProcessing(files);
+            }
+        });
+    }
+
+    function stopListening() {
+        isListening = false;
+
+        composerInputRow?.classList.remove("is-transcribing");
+
+        stopAudioVisualizer();
+    }
+
+    // --- Added functions ---
+    function updateBodySidebarState() {
+        const collapsed = sidebar?.classList.contains("collapsed");
+        document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
+    }
+
+    function initializeSidebarState() {
+        if (!sidebar) return;
+        const mobile = window.matchMedia("(max-width: 767px)").matches;
+        sidebar.classList.toggle("collapsed", mobile);
+        sidebarScrim?.classList.remove("visible");
+        updateBodySidebarState();
+    }
 })();
