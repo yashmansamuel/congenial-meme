@@ -1034,6 +1034,11 @@ body.dark-mode .message-content code {
     display: flex;
 }
 
+/* NEW ADDITION */
+.drag-drop-overlay.show {
+    display: flex;
+}
+
 .live-suggestions {
     display: flex;
     align-items: center;
