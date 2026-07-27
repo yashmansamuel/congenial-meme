@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 function cleanString(str, max = 50000) {
@@ -34,7 +34,6 @@ function safeMessage(message) {
     };
 }
 
-// ------ Main Handler ------
 export default async (req, res) => {
     try {
         const user = req.user;
@@ -48,7 +47,7 @@ export default async (req, res) => {
         // GET: Fetch all conversations
         if (method === 'GET') {
             const { data, error } = await supabase
-                .from('conversations')
+                .from('chat_conversations')
                 .select('id, title, created_at, updated_at')
                 .eq('user_id', user.id)
                 .order('updated_at', { ascending: false });
@@ -66,7 +65,7 @@ export default async (req, res) => {
                     if (!conversationId) return res.status(400).json({ error: 'Missing conversationId' });
                     
                     const { data: conv, error: convError } = await supabase
-                        .from('conversations')
+                        .from('chat_conversations')
                         .select('id')
                         .eq('id', conversationId)
                         .eq('user_id', user.id)
@@ -74,7 +73,7 @@ export default async (req, res) => {
                     if (convError || !conv) throw new Error('Conversation not found');
 
                     const { data: messages, error: msgError } = await supabase
-                        .from('messages')
+                        .from('chat_messages')
                         .select('id, role, content, attachments, created_at')
                         .eq('conversation_id', conversationId)
                         .order('created_at', { ascending: true });
@@ -87,7 +86,7 @@ export default async (req, res) => {
                     if (!conversationId) return res.status(400).json({ error: 'Missing conversationId' });
                     
                     const { error: delError } = await supabase
-                        .from('conversations')
+                        .from('chat_conversations')
                         .delete()
                         .eq('id', conversationId)
                         .eq('user_id', user.id);
@@ -100,7 +99,7 @@ export default async (req, res) => {
                     if (!conversationId || !title) return res.status(400).json({ error: 'Missing conversationId or title' });
                     
                     const { error: renError } = await supabase
-                        .from('conversations')
+                        .from('chat_conversations')
                         .update({ title: cleanString(title, 100) })
                         .eq('id', conversationId)
                         .eq('user_id', user.id);
