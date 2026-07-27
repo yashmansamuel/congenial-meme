@@ -12,12 +12,18 @@ const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
 
-// Helpers
+// Helper: clean strings
 function cleanString(str, max = MAX_MESSAGE_LENGTH) {
     if (typeof str !== 'string') return '';
     return str.replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, max);
 }
 
+// Helper: clean env var
+function cleanEnv(value) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+// Helper: validate attachments
 function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
     if (!Array.isArray(attachments)) return [];
     return attachments.slice(0, max).map(f => ({
@@ -53,20 +59,20 @@ export default async (req, res) => {
     const geminiFiles = [];
 
     try {
-        // --- AUTH FIX START ---
+        // --- AUTH ---
         const auth = getAuthenticatedUser(req);
         if (!auth?.userId) {
-            return res.status(401).json({
-                error: "Authentication required. Please log in."
-            });
+            return res.status(401).json({ error: "Authentication required. Please log in." });
         }
         const user = {
             id: auth.userId,
-            username: auth.username || "user"
+            username: auth.username || "user",
+            planType: auth.planType || "free" // assuming auth returns planType
         };
-        // --- AUTH FIX END ---
 
-        const { messages, conversationId, model, isDeepResearch, title } = req.body;
+        const { messages, conversationId, isDeepResearch, title } = req.body;
+        // ⚠️ `model` from req.body is IGNORED — it's just a UI label (l1.0 / l1.2)
+
         if (!Array.isArray(messages) || messages.length === 0) {
             return res.status(400).json({ error: 'Messages array required' });
         }
@@ -76,21 +82,21 @@ export default async (req, res) => {
             return res.status(400).json({ error: 'Last message must be user' });
         }
 
-        // Attachments extraction
+        // --- Attachments extraction ---
         const receivedAttachments = Array.isArray(req.body.attachments) 
             ? req.body.attachments 
             : (lastMsg?.attachments || []);
         
         let attachments = validAttachmentList(receivedAttachments, user.id);
 
-        // Prepare Gemini messages
+        // --- Prepare Gemini messages ---
         const history = messages.slice(-MAX_HISTORY_MESSAGES);
         const geminiMessages = history.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : msg.role,
             parts: [{ text: cleanString(msg.content || '') }]
         })).filter(m => m.parts[0].text || m.attachments?.length);
 
-        // Upload attachments to Gemini
+        // --- Upload attachments to Gemini ---
         if (attachments.length > 0 && GEMINI_API_KEY) {
             const lastMsgGeminiParts = [];
             for (const file of attachments) {
@@ -110,7 +116,7 @@ export default async (req, res) => {
             }
         }
 
-        // Create conversation if new
+        // --- Create conversation if new ---
         let convId = conversationId || null;
         if (!convId) {
             const { data: newConv, error: convError } = await supabase
@@ -122,16 +128,25 @@ export default async (req, res) => {
             convId = newConv.id;
         }
 
-        // Save user message
+        // --- Save user message ---
         const userText = cleanString(lastMsg.content || "");
         await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments);
 
-        // Call Gemini
+        // ================================================================
+        // ✅ MODEL MAPPING FIX (User plan se real Gemini model decide karo)
+        // ================================================================
+        const isPro = user.planType === 'pro';
+        const model = isPro
+            ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
+            : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
+        // ================================================================
+
+        // --- Call Gemini with correct model ---
         const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
         const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         if (!reply) throw new Error('Gemini returned empty response');
 
-        // Save assistant message
+        // --- Save assistant message ---
         await saveMessage(supabase, convId, 'assistant', reply, []);
 
         return res.json({ reply, conversationId: convId });
@@ -146,7 +161,10 @@ export default async (req, res) => {
     }
 };
 
-// Helper functions (unchanged)
+// ================================================================
+// HELPER FUNCTIONS (Gemini API Calls with corrected URL)
+// ================================================================
+
 async function getSignedDownloadUrl(path, bucket = UPLOAD_BUCKET) {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
     if (error) return null;
@@ -169,7 +187,8 @@ async function uploadToGemini(fileUrl, mimeType) {
 }
 
 async function callGemini(messages, model, isDeepResearch) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-1.5-pro'}:generateContent?key=${GEMINI_API_KEY}`;
+    // ✅ Safe URL encoding
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
     const body = { contents: messages };
     if (isDeepResearch) {
         body.generationConfig = { temperature: 0.7, maxOutputTokens: 8192 };
@@ -180,6 +199,10 @@ async function callGemini(messages, model, isDeepResearch) {
         body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'Gemini API error');
+    if (!res.ok) {
+        // Detailed error logging for debugging
+        console.error('Gemini API Error:', data);
+        throw new Error(data.error?.message || 'Gemini API error');
+    }
     return data;
 }
