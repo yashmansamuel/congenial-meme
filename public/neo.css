@@ -2369,3 +2369,48 @@ textarea#chatInput:focus {
         min-height: 34px;
     }
 }
+
+/* =========================================================
+   FINAL RIGHT-SIDE ROUNDING + EQUAL SPACING
+   ========================================================= */
+
+.glass-input-container {
+    border-radius: 999px !important;
+    padding: 8px 8px 8px 10px !important;
+}
+
+.glass-input-container.is-expanded {
+    border-radius: 28px !important;
+}
+
+.composer-input-row {
+    min-height: 40px;
+    align-items: center !important;
+}
+
+.mic-btn,
+.send-btn {
+    align-self: center !important;
+    margin: 0 !important;
+}
+
+.send-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    margin-right: 0 !important;
+}
+
+.mic-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+}
+
+textarea#chatInput {
+    min-height: 36px;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+}
