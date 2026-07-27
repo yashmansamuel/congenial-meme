@@ -3055,36 +3055,89 @@
         });
     }
 
-    // --- Render attached chips (updated styling) ---
+    // --------------------------------------------------------
+    //  NEW: Image attachment helpers & enhanced rendering
+    // --------------------------------------------------------
+
+    function isImageAttachment(file) {
+        if (!file) return false;
+
+        if (file.type && file.type.startsWith("image/")) return true;
+        if (file.mimeType && file.mimeType.startsWith("image/")) return true;
+        if (file.category === "image") return true;
+
+        if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
+            return true;
+        }
+
+        const name = (file.name || "").toLowerCase();
+        return /\.(png|jpg|jpeg|webp|gif)$/i.test(name);
+    }
+
+    function getAttachmentPreviewUrl(file) {
+        if (!file) return "";
+
+        if (file.previewUrl) return file.previewUrl;
+
+        if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
+            return file.data;
+        }
+
+        const raw = file.rawFile || file.file || file.blob || file;
+
+        if (raw instanceof Blob && raw.type && raw.type.startsWith("image/")) {
+            file.previewUrl = URL.createObjectURL(raw);
+            return file.previewUrl;
+        }
+
+        return "";
+    }
+
+    // --- Enhanced renderAttachedChips ---
     function renderAttachedChips() {
         if (!attachedChipsWrapper) return;
 
         attachedChipsWrapper.innerHTML = "";
 
         attachedFiles.forEach((file, index) => {
-            const chip = document.createElement("div");
-            chip.className = "attachment-chip";
+            const card = document.createElement("div");
+            card.className = "attachment-preview-card";
 
-            const name = document.createElement("span");
-            name.textContent = file.name || "Attached file";
+            if (isImageAttachment(file)) {
+                const img = document.createElement("img");
+                img.alt = file.name || "Uploaded image";
+                img.src = getAttachmentPreviewUrl(file);
+                card.appendChild(img);
+            } else {
+                const box = document.createElement("div");
+                box.className = "attachment-preview-file";
+                box.textContent = file.name || "Attached file";
+                card.appendChild(box);
+            }
 
             const remove = document.createElement("button");
             remove.type = "button";
+            remove.className = "attachment-remove-btn";
             remove.textContent = "×";
 
             remove.addEventListener("click", () => {
+                const previewUrl = attachedFiles[index]?.previewUrl;
+
+                if (previewUrl && previewUrl.startsWith("blob:")) {
+                    URL.revokeObjectURL(previewUrl);
+                }
+
                 attachedFiles.splice(index, 1);
                 renderAttachedChips();
                 updateComposerShape();
             });
 
-            chip.appendChild(name);
-            chip.appendChild(remove);
-            attachedChipsWrapper.appendChild(chip);
+            card.appendChild(remove);
+            attachedChipsWrapper.appendChild(card);
         });
     }
 
-    // --- File processing ---
+    // --- getFileCategory (unchanged, but used for reading) ---
     function getFileCategory(file) {
         const type = file.type || "";
 
@@ -3096,6 +3149,7 @@
         return "text";
     }
 
+    // --- readFileAsPayload (unchanged) ---
     function readFileAsPayload(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -3118,6 +3172,7 @@
         });
     }
 
+    // --- UPDATED handleFileProcessing with rawFile and previewUrl ---
     async function handleFileProcessing(files) {
         const selected = Array.from(files || []).slice(0, MAX_ATTACHED_FILES);
 
@@ -3137,11 +3192,16 @@
             }
 
             try {
+                const category = getFileCategory(file);
+                const isImage = category === "image";
+
                 attachedFiles.push({
                     name: file.name,
                     type: file.type,
-                    category: getFileCategory(file),
-                    data: await readFileAsPayload(file)
+                    category: category,
+                    rawFile: file,                          // store raw file for preview
+                    previewUrl: isImage ? URL.createObjectURL(file) : "", // blob URL for images
+                    data: await readFileAsPayload(file)     // base64 or text for API
                 });
             } catch (error) {
                 alert(error.message);
@@ -3205,7 +3265,7 @@
         }
     }
 
-    // --- History loading (with added contextmenu for each row) ---
+    // --- History loading (with contextmenu) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
