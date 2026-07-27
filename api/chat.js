@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
+import { getAuthenticatedUser } from "../lib/auth.js";
 
-// Server-side supabase client with SERVICE_ROLE_KEY
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -50,13 +50,21 @@ async function saveMessage(supabase, conversationId, role, content, attachments)
 }
 
 export default async (req, res) => {
-    const geminiFiles = []; // Safe scoping
+    const geminiFiles = [];
 
     try {
-        const user = req.user;
-        if (!user || !user.id) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        // --- AUTH FIX START ---
+        const auth = getAuthenticatedUser(req);
+        if (!auth?.userId) {
+            return res.status(401).json({
+                error: "Authentication required. Please log in."
+            });
         }
+        const user = {
+            id: auth.userId,
+            username: auth.username || "user"
+        };
+        // --- AUTH FIX END ---
 
         const { messages, conversationId, model, isDeepResearch, title } = req.body;
         if (!Array.isArray(messages) || messages.length === 0) {
@@ -82,7 +90,7 @@ export default async (req, res) => {
             parts: [{ text: cleanString(msg.content || '') }]
         })).filter(m => m.parts[0].text || m.attachments?.length);
 
-        // Upload attachments to Gemini (temporary)
+        // Upload attachments to Gemini
         if (attachments.length > 0 && GEMINI_API_KEY) {
             const lastMsgGeminiParts = [];
             for (const file of attachments) {
@@ -132,14 +140,13 @@ export default async (req, res) => {
         console.error('Chat error:', error);
         return res.status(500).json({ error: error.message });
     } finally {
-        // ✅ Delete only Gemini temp files. Supabase originals preserve.
         if (geminiFiles.length > 0 && GEMINI_API_KEY) {
             await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
         }
     }
 };
 
-// Helper functions
+// Helper functions (unchanged)
 async function getSignedDownloadUrl(path, bucket = UPLOAD_BUCKET) {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
     if (error) return null;
@@ -162,7 +169,7 @@ async function uploadToGemini(fileUrl, mimeType) {
 }
 
 async function callGemini(messages, model, isDeepResearch) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.1-flash-lite'}:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-1.5-pro'}:generateContent?key=${GEMINI_API_KEY}`;
     const body = { contents: messages };
     if (isDeepResearch) {
         body.generationConfig = { temperature: 0.7, maxOutputTokens: 8192 };
