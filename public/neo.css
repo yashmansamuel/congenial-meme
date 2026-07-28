@@ -1,7 +1,3 @@
-/* =========================================================
-   NEO CHAT — COMPLETE STYLESHEET
-   ========================================================= */
-
 :root {
     --bg-main: #ffffff;
     --bg-sidebar: #f9f9f9;
@@ -286,7 +282,6 @@ body.sidebar-collapsed #sidebarToggleBtn {
     gap: 4px;
 }
 
-/* New wrapper for each history item (for three-dot) */
 .history-item-wrapper {
     display: flex !important;
     align-items: center !important;
@@ -1080,7 +1075,7 @@ body.dark-mode .suggestion-chip {
     border-color: var(--border-subtle);
 }
 
-/* ATTACHMENT CHIPS — kept from earlier patches */
+/* ATTACHMENT CHIPS */
 .attached-chips-wrapper {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -1171,7 +1166,7 @@ body.dark-mode .suggestion-chip {
     color: #ef4444 !important;
 }
 
-/* Legacy attachment classes (kept for compatibility) */
+/* Legacy attachment classes */
 .image-preview-chip {
     position: relative;
     width: 60px;
@@ -1249,7 +1244,7 @@ body.dark-mode .suggestion-chip {
 }
 
 /*  =========================================================
-    PHASE 1 + PHASE 2 — toast, dialog, popup fixes
+    TOAST, DIALOG, POPUP FIXES
     ========================================================= */
 
 .neo-toast-stack {
@@ -2009,7 +2004,7 @@ body.dark-mode .neo-toast {
     line-height: 1.35;
 }
 
-/* PERSONALITIES GRID - icons replaced emojis */
+/* PERSONALITIES GRID */
 .personality-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2179,7 +2174,6 @@ body.dark-mode .personality-card.active {
 
 /* =========================================================
    FINAL COMPOSER SHAPE FIX
-   Premium rounded ChatGPT-style composer
    ========================================================= */
 
 .composer-wrapper {
@@ -2231,37 +2225,67 @@ body.dark-mode .glass-input-container:focus-within {
     padding-right: 0 !important;
 }
 
-/* Plus button */
-.attach-btn {
+.attach-btn,
+.mic-btn,
+.stop-recording-btn,
+.send-btn {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
     min-height: 36px !important;
     padding: 0 !important;
     margin: 0 !important;
-    align-self: center !important;
-    border: none !important;
-    outline: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: flex-end !important;
+    border: 0 !important;
     border-radius: 50% !important;
-    background: transparent !important;
-    color: var(--text-primary) !important;
+    outline: none !important;
     box-shadow: none !important;
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-.attach-btn:hover {
-    background: var(--bg-hover) !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    cursor: pointer;
+    flex-shrink: 0 !important;
 }
 
 .attach-btn svg,
 .attach-btn i {
     width: 21px !important;
     height: 21px !important;
+    transform: translateY(-1px) !important;
     stroke-width: 1.9px !important;
 }
 
-/* Text area */
+.attach-btn:hover,
+.mic-btn:hover {
+    background: var(--bg-hover) !important;
+}
+
+.send-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: var(--text-primary) !important;
+    color: var(--bg-main) !important;
+}
+
+.send-btn svg,
+.send-btn i {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    stroke: currentColor !important;
+    transform: none !important;
+}
+
+.send-btn:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: scale(0.98);
+}
+
 textarea#chatInput {
     flex: 1;
     min-width: 0;
@@ -2284,260 +2308,6 @@ textarea#chatInput::placeholder {
     opacity: 0.88;
 }
 
-/* Mic button */
-.mic-btn {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    align-self: center !important;
-    border: none !important;
-    border-radius: 50% !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-.mic-btn:hover {
-    background: var(--bg-hover) !important;
-}
-
-/* Send button */
-.send-btn {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    align-self: center !important;
-    border: none !important;
-    border-radius: 50% !important;
-    background: var(--text-primary) !important;
-    color: var(--bg-main) !important;
-    box-shadow: none !important;
-    margin-right: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: visible !important;
-}
-
-.send-btn:hover:not(:disabled) {
-    opacity: 0.88;
-    transform: scale(0.98);
-}
-
-.send-btn svg,
-.send-btn i,
-.send-btn .lucide {
-    display: block !important;
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
-    stroke: currentColor !important;
-    color: currentColor !important;
-    opacity: 1 !important;
-    transform: none !important;
-    margin: 0 !important;
-    position: static !important;
-    line-height: 1 !important;
-}
-
-/* Mic icon alignment also stays clean */
-.mic-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.mic-btn svg,
-.mic-btn i,
-.mic-btn .lucide {
-    display: block !important;
-    width: 18px !important;
-    height: 18px !important;
-    margin: 0 !important;
-    position: static !important;
-}
-
-/* Attachment area stays inside composer */
-.attached-chips-wrapper {
-    width: 100%;
-    padding: 6px 4px 2px !important;
-    margin: 0;
-}
-
-/* Suggestions spacing */
-.live-suggestions {
-    margin-bottom: 10px;
-}
-
-/* Remove unwanted browser outlines */
-.attach-btn:focus,
-.mic-btn:focus,
-.send-btn:focus,
-textarea#chatInput:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-/* Keep the right cap perfectly circular */
-.glass-input-container:not(.is-expanded) {
-    overflow: hidden;
-}
-
-@media (max-width: 520px) {
-    .glass-input-container {
-        min-height: 58px !important;
-        padding: 7px 8px 7px 9px !important;
-    }
-
-    .glass-input-container.is-expanded {
-        border-radius: 22px !important;
-    }
-
-    .attach-btn,
-    .mic-btn {
-        width: 34px !important;
-        height: 34px !important;
-        min-width: 34px !important;
-        min-height: 34px !important;
-    }
-
-    .send-btn {
-        width: 42px !important;
-        height: 42px !important;
-        min-width: 42px !important;
-        min-height: 42px !important;
-    }
-}
-
-/* =========================================================
-   VOICE TRANSCRIPTION CONTROLS
-   Hide/Show recording controls cleanly
-   ========================================================= */
-
-/* Hide recording controls in normal composer state */
-.voice-transcribe-container,
-.stop-recording-btn {
-    display: none !important;
-}
-
-/* Show only while voice transcription is active */
-.composer-input-row.is-transcribing .voice-transcribe-container {
-    display: flex !important;
-}
-
-.composer-input-row.is-transcribing .stop-recording-btn {
-    display: flex !important;
-}
-
-.composer-input-row.is-transcribing .mic-btn,
-.composer-input-row.is-transcribing .send-btn {
-    display: none !important;
-}
-
-/* Keep normal controls perfectly aligned */
-.composer-input-row:not(.is-transcribing) .attach-btn,
-.composer-input-row:not(.is-transcribing) .mic-btn,
-.composer-input-row:not(.is-transcribing) .send-btn {
-    display: flex !important;
-    align-self: flex-end !important;
-}
-
-/* Better spacing under composer */
-.composer-note {
-    margin-top: 12px !important;
-    margin-bottom: 0 !important;
-    text-align: center !important;
-    font-size: 12.5px !important;
-    line-height: 1.45 !important;
-    color: var(--text-muted) !important;
-    opacity: 0.95;
-}
-
-/* Composer and note relation */
-.composer-wrapper {
-    gap: 0 !important;
-}
-
-.composer-dock {
-    padding-bottom: 10px !important;
-}
-
-/* =========================================================
-   NEO PREMIUM ICONS + REAL-TIME VOICE UI
-   ========================================================= */
-
-/* ---------- Composer circular controls ---------- */
-
-.attach-btn,
-.mic-btn,
-.stop-recording-btn,
-.send-btn {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    align-self: flex-end !important;
-
-    border: 0 !important;
-    border-radius: 50% !important;
-    outline: none !important;
-    box-shadow: none !important;
-
-    appearance: none !important;
-    -webkit-appearance: none !important;
-
-    cursor: pointer;
-    flex-shrink: 0 !important;
-}
-
-/* Plus icon slightly higher, wrapper remains aligned */
-.attach-btn svg,
-.attach-btn i {
-    width: 21px !important;
-    height: 21px !important;
-    transform: translateY(-1px) !important;
-    stroke-width: 1.9px !important;
-}
-
-.attach-btn:hover,
-.mic-btn:hover {
-    background: var(--bg-hover) !important;
-}
-
-/* Send button always visible */
-.send-btn {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    background: var(--text-primary) !important;
-    color: var(--bg-main) !important;
-}
-
-.send-btn svg,
-.send-btn i {
-    display: block !important;
-    width: 18px !important;
-    height: 18px !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    stroke: currentColor !important;
-    transform: none !important;
-}
-
-/* ---------- Normal voice state ---------- */
-
 .composer-input-row:not(.is-transcribing)
 .voice-transcribe-container,
 
@@ -2553,8 +2323,6 @@ textarea#chatInput:focus {
 .send-btn {
     display: flex !important;
 }
-
-/* ---------- Active real-time transcription ---------- */
 
 .composer-input-row.is-transcribing textarea#chatInput {
     display: none !important;
@@ -2584,16 +2352,13 @@ textarea#chatInput:focus {
     display: flex !important;
 }
 
-/* Premium live waveform */
 .wave-dots-bar {
     height: 30px !important;
     min-width: 0 !important;
     flex: 1 !important;
-
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-
     gap: 3px !important;
     padding: 0 6px !important;
     overflow: hidden !important;
@@ -2604,26 +2369,21 @@ textarea#chatInput:focus {
     min-width: 3px !important;
     height: 4px;
     border-radius: 999px !important;
-
     background: var(--text-muted);
     opacity: 0.45;
-
     transform-origin: center;
     will-change: height, opacity;
-
     transition:
         height 55ms linear,
         opacity 55ms linear,
         background-color 80ms ease !important;
 }
 
-/* Premium stop control */
 .stop-recording-btn {
     width: 32px !important;
     height: 32px !important;
     min-width: 32px !important;
     min-height: 32px !important;
-
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
 }
@@ -2639,33 +2399,210 @@ textarea#chatInput:focus {
     height: 13px !important;
 }
 
-/* Keep every composer control on bottom */
 .composer-input-row,
 .composer-input-row.is-transcribing {
     min-height: 42px !important;
     align-items: flex-end !important;
 }
 
-/* ---------- Main premium utility icon wrappers ---------- */
+.attached-chips-wrapper {
+    width: 100%;
+    padding: 6px 4px 2px !important;
+    margin: 0;
+}
+
+.live-suggestions {
+    margin-bottom: 10px;
+}
+
+.attach-btn:focus,
+.mic-btn:focus,
+.send-btn:focus,
+textarea#chatInput:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.glass-input-container:not(.is-expanded) {
+    overflow: hidden;
+}
+
+.composer-note {
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+    text-align: center !important;
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+    color: var(--text-muted) !important;
+    opacity: 0.95;
+}
+
+.composer-wrapper {
+    gap: 0 !important;
+}
+
+.composer-dock {
+    padding-bottom: 10px !important;
+}
+
+@media (max-width: 520px) {
+    .glass-input-container {
+        min-height: 58px !important;
+        padding: 7px 8px 7px 9px !important;
+    }
+    .glass-input-container.is-expanded {
+        border-radius: 22px !important;
+    }
+    .attach-btn,
+    .mic-btn,
+    .send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+    }
+    .wave-dots-bar {
+        gap: 2.5px !important;
+        padding: 0 3px !important;
+    }
+}
+
+/* =========================================================
+   PREMIUM NEO TOOLTIP
+   ========================================================= */
+
+.neo-tooltip {
+    --neo-tooltip-arrow-x: 50%;
+
+    position: fixed;
+    z-index: 70000;
+
+    max-width: min(280px, calc(100vw - 20px));
+    min-height: 30px;
+    padding: 6px 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+
+    background: rgba(30, 30, 30, 0.96);
+    color: #ffffff;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        0 2px 6px rgba(0, 0, 0, 0.08);
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform:
+        translateY(3px)
+        scale(0.97);
+
+    transform-origin: center bottom;
+
+    transition:
+        opacity 130ms ease,
+        visibility 130ms ease,
+        transform 130ms ease;
+}
+
+.neo-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+.neo-tooltip-text {
+    display: block;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.neo-tooltip-arrow {
+    position: absolute;
+    left: var(--neo-tooltip-arrow-x);
+    bottom: -5px;
+
+    width: 9px;
+    height: 9px;
+
+    background: rgba(30, 30, 30, 0.96);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    transform:
+        translateX(-50%)
+        rotate(45deg);
+}
+
+.neo-tooltip.is-bottom {
+    transform-origin: center top;
+}
+
+.neo-tooltip.is-bottom .neo-tooltip-arrow {
+    top: -5px;
+    bottom: auto;
+
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .neo-tooltip {
+    background: rgba(52, 52, 52, 0.98);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .neo-tooltip-arrow {
+    background: rgba(52, 52, 52, 0.98);
+}
+
+button:disabled[data-tooltip],
+button:disabled[title] {
+    pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .neo-tooltip {
+        transition: none;
+    }
+}
+
+/* =========================================================
+   PREMIUM ICON WRAPPERS (unified sizing)
+   ========================================================= */
 
 .icon-btn,
 .neo-settings-close {
     width: 36px;
     height: 36px;
     padding: 0 !important;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     border: 0;
     border-radius: 10px;
     background: transparent;
     color: var(--text-muted);
-
     appearance: none;
     -webkit-appearance: none;
-
     transition:
         background-color 140ms ease,
         color 140ms ease,
@@ -2689,7 +2626,6 @@ textarea#chatInput:focus {
     height: 18px !important;
 }
 
-/* Compact message/sidebar icon wrappers */
 .msg-action-btn,
 .user-action-btn,
 .history-three-dot,
@@ -2698,21 +2634,16 @@ textarea#chatInput:focus {
     height: 28px !important;
     min-width: 28px !important;
     min-height: 28px !important;
-
     padding: 0 !important;
-
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-
     border: 0 !important;
     border-radius: 8px !important;
     background: transparent !important;
     color: var(--text-muted) !important;
-
     appearance: none !important;
     -webkit-appearance: none !important;
-
     transition:
         background-color 130ms ease,
         color 130ms ease,
@@ -2743,7 +2674,6 @@ textarea#chatInput:focus {
     margin: 0 !important;
 }
 
-/* Consistent keyboard focus */
 .icon-btn:focus-visible,
 .attach-btn:focus-visible,
 .mic-btn:focus-visible,
@@ -2754,21 +2684,4 @@ textarea#chatInput:focus {
 .history-three-dot:focus-visible {
     outline: 2px solid var(--focus-ring) !important;
     outline-offset: 2px !important;
-}
-
-/* Mobile geometry */
-@media (max-width: 520px) {
-    .attach-btn,
-    .mic-btn,
-    .send-btn {
-        width: 34px !important;
-        height: 34px !important;
-        min-width: 34px !important;
-        min-height: 34px !important;
-    }
-
-    .wave-dots-bar {
-        gap: 2.5px !important;
-        padding: 0 3px !important;
-    }
 }
