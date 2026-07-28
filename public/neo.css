@@ -2499,3 +2499,94 @@ textarea#chatInput:focus {
     visibility: visible !important;
     stroke: currentColor !important;
 }
+/* =========================================================
+   FINAL VOICE + SEND CONTROL FIX
+   Normal: + mic send
+   Recording: + stop send
+   ========================================================= */
+
+/* Normal state */
+.composer-input-row:not(.is-transcribing) .voice-transcribe-container,
+.composer-input-row:not(.is-transcribing) .stop-recording-btn {
+    display: none !important;
+}
+
+.composer-input-row:not(.is-transcribing) .mic-btn,
+.composer-input-row:not(.is-transcribing) .send-btn {
+    display: flex !important;
+}
+
+/* Recording state */
+.composer-input-row.is-transcribing .voice-transcribe-container {
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0;
+}
+
+.composer-input-row.is-transcribing .stop-recording-btn {
+    display: flex !important;
+}
+
+.composer-input-row.is-transcribing .mic-btn {
+    display: none !important;
+}
+
+/* Send must remain visible while recording */
+.composer-input-row.is-transcribing .send-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Premium circular stop button */
+.stop-recording-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    margin: 0 2px 0 8px !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.stop-recording-btn:hover {
+    background: rgba(239, 68, 68, 0.14) !important;
+    color: #ef4444 !important;
+}
+
+.stop-recording-btn svg,
+.stop-recording-btn i {
+    width: 13px !important;
+    height: 13px !important;
+    stroke-width: 2 !important;
+    margin: 0 !important;
+}
+
+/* Send stays premium and centered */
+.send-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+}
+
+.send-btn svg,
+.send-btn i {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    stroke: currentColor !important;
+}
+
+/* Keep controls pinned to bottom */
+.composer-input-row,
+.composer-input-row.is-transcribing {
+    align-items: flex-end !important;
+}
