@@ -2421,3 +2421,69 @@ textarea#chatInput:focus {
     margin-top: 8px !important;
     line-height: 16px;
 }
+/* =========================================================
+   SMALL FIX — SEND ICON + COMPOSER NOTE
+   ========================================================= */
+
+/* Send button icon center and visible */
+.send-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    color: #ffffff !important;
+}
+
+.send-btn svg,
+.send-btn i,
+.send-btn .lucide {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    stroke: currentColor !important;
+    color: currentColor !important;
+    opacity: 1 !important;
+    transform: none !important;
+    margin: 0 !important;
+    position: static !important;
+    line-height: 1 !important;
+}
+
+/* Mic icon alignment also stays clean */
+.mic-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.mic-btn svg,
+.mic-btn i,
+.mic-btn .lucide {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    position: static !important;
+}
+
+/* Better spacing for note under composer */
+.composer-note {
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+    text-align: center !important;
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+    color: var(--text-muted) !important;
+    opacity: 0.95;
+}
+
+/* Composer and note relation */
+.composer-wrapper {
+    gap: 0 !important;
+}
+
+.composer-dock {
+    padding-bottom: 10px !important;
+}
