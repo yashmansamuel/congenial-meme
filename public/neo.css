@@ -2382,3 +2382,42 @@ textarea#chatInput:focus {
         min-height: 42px !important;
     }
 }
+
+/* =========================================================
+   VOICE TRANSCRIPTION CONTROLS
+   Hide/Show recording controls cleanly
+   ========================================================= */
+
+/* Hide recording controls in normal composer state */
+.voice-transcribe-container,
+.stop-recording-btn {
+    display: none !important;
+}
+
+/* Show only while voice transcription is active */
+.composer-input-row.is-transcribing .voice-transcribe-container {
+    display: flex !important;
+}
+
+.composer-input-row.is-transcribing .stop-recording-btn {
+    display: flex !important;
+}
+
+.composer-input-row.is-transcribing .mic-btn,
+.composer-input-row.is-transcribing .send-btn {
+    display: none !important;
+}
+
+/* Keep normal controls perfectly aligned */
+.composer-input-row:not(.is-transcribing) .attach-btn,
+.composer-input-row:not(.is-transcribing) .mic-btn,
+.composer-input-row:not(.is-transcribing) .send-btn {
+    display: flex !important;
+    align-self: flex-end !important;
+}
+
+/* Better spacing under composer */
+.composer-note {
+    margin-top: 8px !important;
+    line-height: 16px;
+}
