@@ -813,31 +813,71 @@
     }
 
     // --------------------------------------------------------
-    // MARKDOWN NORMALIZATION — fix raw ### headings
+    // MARKDOWN NORMALIZATION — FIX MALFORMED OUTPUT
     // --------------------------------------------------------
     function normalizeMarkdownForDisplay(value) {
         const source = String(value || "")
-            .replace(/\r\n?/g, "\n");
+            .replace(/\r\n?/g, "\n")
+            .trim();
 
-        const sections = source.split(
+        const chunks = source.split(
             /(```[\s\S]*?```)/g
         );
 
-        return sections
-            .map((section, index) => {
-                /* Never modify fenced code blocks */
+        return chunks
+            .map((chunk, index) => {
+                /* Code blocks ko bilkul modify mat karo */
                 if (index % 2 === 1) {
-                    return section;
+                    return chunk;
                 }
 
-                return section
-                    /* Fix: text.### Heading */
+                return chunk
+                    /* Remove trailing spaces */
+                    .replace(/[ \t]+\n/g, "\n")
+
+                    /* Fix: sentence.**Next paragraph */
+                    .replace(
+                        /([.!?])\*\*(?=[A-Z0-9])/g,
+                        "$1**\n\n"
+                    )
+
+                    /* Fix: **Section title**1. First item */
+                    .replace(
+                        /(\*\*[^*\n]{3,100}\*\*)(?=\d{1,2}\.\s)/g,
+                        "$1\n\n"
+                    )
+
+                    /* Fix: Generation1. Krea AI */
+                    .replace(
+                        /([A-Za-z)])(\d{1,2}\.\s+(?=[A-Z]))/g,
+                        "$1\n\n$2"
+                    )
+
+                    /* Fix: instantly.2. Next item */
+                    .replace(
+                        /([.!?])(?=\d{1,2}\.\s+[A-Z])/g,
+                        "$1\n\n"
+                    )
+
+                    /* Embedded headings ko new line par lao */
                     .replace(
                         /([^\n])\s*(#{1,6}\s+)/g,
                         "$1\n\n$2"
                     )
 
-                    /* Remove excessive blank lines */
+                    /* Short standalone bold title → heading */
+                    .replace(
+                        /^\*\*([^*\n]{3,80})\*\*\s*$/gm,
+                        "### $1"
+                    )
+
+                    /* Bullets ko separate lines par lao */
+                    .replace(
+                        /([.!?])\s*(?=[-*+]\s+\S)/g,
+                        "$1\n\n"
+                    )
+
+                    /* Excess blank lines clean */
                     .replace(
                         /\n{3,}/g,
                         "\n\n"
@@ -1078,7 +1118,7 @@
     }
 
     // --------------------------------------------------------
-    //  SANITIZATION & MARKDOWN
+    //  SANITIZATION & MARKDOWN (UPDATED)
     // --------------------------------------------------------
     function sanitizeHTML(value) {
         const source =
@@ -1107,7 +1147,11 @@
             try {
                 parsed =
                     window.marked.parse(
-                        source
+                        source,
+                        {
+                            gfm: true,
+                            breaks: true
+                        }
                     );
             } catch (error) {
                 console.warn(
@@ -1115,17 +1159,12 @@
                     error
                 );
 
-                return sanitizeHTML(
-                    source
-                ).replace(
-                    /\n/g,
-                    "<br>"
-                );
+                return sanitizeHTML(source)
+                    .replace(/\n/g, "<br>");
             }
 
             return window.DOMPurify.sanitize(
                 parsed,
-
                 {
                     USE_PROFILES: {
                         html: true
@@ -1159,12 +1198,8 @@
             );
         }
 
-        return sanitizeHTML(
-            source
-        ).replace(
-            /\n/g,
-            "<br>"
-        );
+        return sanitizeHTML(source)
+            .replace(/\n/g, "<br>");
     }
 
     // --------------------------------------------------------
