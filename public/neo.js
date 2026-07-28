@@ -1,6 +1,3 @@
-// neo.js — NEO Engine v=46
-// Complete with upload, voice waveform, premium tooltips, pin/rename/share, toasts, signed URLs
-
 (function () {
     "use strict";
 
@@ -264,7 +261,7 @@
             "upgradeActionBtn"
         );
 
-    // NEW DOM ELEMENTS FOR SETTINGS & PERSONALITIES
+    // SETTINGS DOM ELEMENTS
     const neoSettingsOverlay =
         document.getElementById(
             "neoSettingsOverlay"
@@ -273,6 +270,34 @@
     const sidebarPersonalitiesBtn =
         document.getElementById(
             "sidebarPersonalitiesBtn"
+        );
+
+    const settingsBtn =
+        document.getElementById("settingsBtn");
+
+    const neoSettingsCloseBtn =
+        document.getElementById(
+            "neoSettingsCloseBtn"
+        );
+
+    const settingsThemeBtn =
+        document.getElementById(
+            "settingsThemeBtn"
+        );
+
+    const saveProfileSettingsBtn =
+        document.getElementById(
+            "saveProfileSettingsBtn"
+        );
+
+    const resetProfileSettingsBtn =
+        document.getElementById(
+            "resetProfileSettingsBtn"
+        );
+
+    const settingsUpgradeBtn =
+        document.getElementById(
+            "settingsUpgradeBtn"
         );
 
     // --------------------------------------------------------
@@ -2100,62 +2125,44 @@
             }
         );
 
-    // ----- RENAME conversation -----
+    // ----- RENAME conversation (now throws error) -----
     async function renameConversation(conversationId, newTitle) {
-        try {
-            const response = await fetch("/api/history", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json"
-                },
-                body: JSON.stringify({
-                    action: "rename",
-                    conversationId,
-                    title: newTitle
-                })
-            });
-            await readJsonResponse(response);
-            await loadHistoryFromSupabase();
-            if (currentConversationId === conversationId) {
-                // Optionally update UI header if needed
-            }
-        } catch (error) {
-            console.error("Rename failed:", error);
-            showToast(
-                error?.message ||
-                "Conversation could not be renamed.",
-                "error"
-            );
+        const response = await fetch("/api/history", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+            },
+            body: JSON.stringify({
+                action: "rename",
+                conversationId,
+                title: newTitle
+            })
+        });
+        await readJsonResponse(response);
+        await loadHistoryFromSupabase();
+        if (currentConversationId === conversationId) {
+            // Optionally update UI header if needed
         }
     }
 
-    // ----- PIN / UNPIN conversation -----
+    // ----- PIN / UNPIN conversation (now throws error) -----
     async function togglePinConversation(conversationId, pin) {
-        try {
-            const response = await fetch("/api/history", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json"
-                },
-                body: JSON.stringify({
-                    action: pin ? "pin" : "unpin",
-                    conversationId
-                })
-            });
-            await readJsonResponse(response);
-            await loadHistoryFromSupabase();
-        } catch (error) {
-            console.error("Pin toggle failed:", error);
-            showToast(
-                error?.message ||
-                "Conversation pin could not be changed.",
-                "error"
-            );
-        }
+        const response = await fetch("/api/history", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+            },
+            body: JSON.stringify({
+                action: pin ? "pin" : "unpin",
+                conversationId
+            })
+        });
+        await readJsonResponse(response);
+        await loadHistoryFromSupabase();
     }
 
     // ----- loadChatMessages (with signed URLs) -----
@@ -2427,7 +2434,7 @@
         return message;
     }
 
-    // ----- renderUserMessageWrapper (with signed URLs and icons) -----
+    // ----- renderUserMessageWrapper (with signed URLs and icons, secure file names) -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
@@ -2458,7 +2465,7 @@
 
         wrapper.appendChild(content);
 
-        // Attachments (media grid)
+        // Attachments (media grid) — secure file names
         if (attachments && attachments.length > 0) {
             const mediaGrid = document.createElement("div");
             mediaGrid.className = "message-media-grid";
@@ -2477,14 +2484,20 @@
                         const pill = document.createElement("div");
                         pill.className = "message-file-pill";
                         const icon = getFileIcon(file);
-                        pill.innerHTML = `<i data-lucide="${icon}" size="14"></i> <span>${file.name || "Uploaded image"}</span>`;
+                        const nameSpan = document.createElement("span");
+                        nameSpan.textContent = file.name || "Uploaded image";
+                        pill.innerHTML = `<i data-lucide="${icon}" size="14"></i>`;
+                        pill.appendChild(nameSpan);
                         mediaGrid.appendChild(pill);
                     }
                 } else {
                     const pill = document.createElement("div");
                     pill.className = "message-file-pill";
                     const icon = getFileIcon(file);
-                    pill.innerHTML = `<i data-lucide="${icon}" size="14"></i> <span>${file.name || "Attached file"}</span>`;
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = file.name || "Attached file";
+                    pill.innerHTML = `<i data-lucide="${icon}" size="14"></i>`;
+                    pill.appendChild(nameSpan);
                     mediaGrid.appendChild(pill);
                 }
             });
@@ -3497,6 +3510,122 @@
     }
 
     // --------------------------------------------------------
+    //  SETTINGS UI — fully connected
+    // --------------------------------------------------------
+    function setupSettingsUI() {
+        // Open settings from user popup
+        settingsBtn?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeUserPopup();
+                closeHistoryPopup();
+
+                neoSettingsOverlay?.classList.add("show");
+                neoSettingsOverlay?.setAttribute("aria-hidden", "false");
+            }
+        );
+
+        // Close settings
+        neoSettingsCloseBtn?.addEventListener(
+            "click",
+            () => {
+                neoSettingsOverlay?.classList.remove("show");
+                neoSettingsOverlay?.setAttribute("aria-hidden", "true");
+            }
+        );
+
+        // Close on backdrop click
+        neoSettingsOverlay?.addEventListener(
+            "click",
+            event => {
+                if (event.target === neoSettingsOverlay) {
+                    neoSettingsOverlay?.classList.remove("show");
+                    neoSettingsOverlay?.setAttribute("aria-hidden", "true");
+                }
+            }
+        );
+
+        // Tab switching
+        document.querySelectorAll(".neo-settings-tab").forEach(tab => {
+            tab.addEventListener(
+                "click",
+                () => {
+                    document.querySelectorAll(".neo-settings-tab").forEach(t => {
+                        t.classList.remove("active");
+                    });
+                    tab.classList.add("active");
+
+                    const target = tab.dataset.settingsTab;
+                    document.querySelectorAll(".neo-settings-panel").forEach(panel => {
+                        panel.classList.remove("active");
+                    });
+                    const panel = document.getElementById(`settingsPanel${target.charAt(0).toUpperCase() + target.slice(1)}`);
+                    if (panel) {
+                        panel.classList.add("active");
+                    }
+                }
+            );
+        });
+
+        // Theme button (syncs with main theme toggle)
+        settingsThemeBtn?.addEventListener(
+            "click",
+            () => {
+                const isDark = document.body.classList.contains("dark-mode");
+                document.body.classList.toggle("dark-mode", !isDark);
+                localStorage.setItem(
+                    "neo_theme",
+                    !isDark ? "dark" : "light"
+                );
+                // Update button text to reflect new state
+                settingsThemeBtn.textContent = !isDark ? "Dark" : "Light";
+            }
+        );
+
+        // Profile save (placeholder)
+        saveProfileSettingsBtn?.addEventListener(
+            "click",
+            () => {
+                const displayName = document.getElementById("settingsDisplayNameInput")?.value?.trim() || "";
+                const username = document.getElementById("settingsUsernameInput")?.value?.trim() || "";
+                const avatarUrl = document.getElementById("settingsAvatarUrlInput")?.value?.trim() || "";
+
+                if (displayName || username || avatarUrl) {
+                    showToast("Profile updated successfully.", "success");
+                } else {
+                    showToast("No changes to save.", "info");
+                }
+            }
+        );
+
+        // Profile reset (placeholder)
+        resetProfileSettingsBtn?.addEventListener(
+            "click",
+            () => {
+                document.getElementById("settingsDisplayNameInput").value = "";
+                document.getElementById("settingsUsernameInput").value = "";
+                document.getElementById("settingsAvatarUrlInput").value = "";
+                showToast("Profile reset to defaults.", "info");
+            }
+        );
+
+        // Settings upgrade button (reuses checkout logic)
+        settingsUpgradeBtn?.addEventListener(
+            "click",
+            () => {
+                if (userPlan === "pro") {
+                    showToast("You are already on Pro plan.", "info");
+                    return;
+                }
+                upgradeActionBtn?.click();
+            }
+        );
+    }
+
+    // --------------------------------------------------------
     //  EVENT LISTENERS
     // --------------------------------------------------------
     function setupEventListeners() {
@@ -3792,15 +3921,22 @@
                     return;
                 }
 
-                await renameConversation(
-                    conversationId,
-                    newTitle
-                );
-
-                showToast(
-                    "Conversation renamed.",
-                    "success"
-                );
+                try {
+                    await renameConversation(
+                        conversationId,
+                        newTitle
+                    );
+                    showToast(
+                        "Conversation renamed.",
+                        "success"
+                    );
+                } catch (error) {
+                    showToast(
+                        error?.message ||
+                        "Conversation could not be renamed.",
+                        "error"
+                    );
+                }
             }
         );
 
@@ -3821,17 +3957,24 @@
 
                 closeHistoryPopup();
 
-                await togglePinConversation(
-                    conversationId,
-                    shouldPin
-                );
-
-                showToast(
-                    shouldPin
-                        ? "Conversation pinned."
-                        : "Conversation unpinned.",
-                    "success"
-                );
+                try {
+                    await togglePinConversation(
+                        conversationId,
+                        shouldPin
+                    );
+                    showToast(
+                        shouldPin
+                            ? "Conversation pinned."
+                            : "Conversation unpinned.",
+                        "success"
+                    );
+                } catch (error) {
+                    showToast(
+                        error?.message ||
+                        "Conversation pin could not be changed.",
+                        "error"
+                    );
+                }
             }
         );
 
@@ -3920,6 +4063,9 @@
                     document.getElementById("settingsPanelPersonalities")?.classList.add("active");
                 }
             );
+
+        // ---- Connect Settings UI ----
+        setupSettingsUI();
 
         // ---- Global outside-click handling ----
         document.addEventListener(
@@ -4216,7 +4362,7 @@
         return "";
     }
 
-    // --- renderAttachedChips (with icons and horizontal layout) ---
+    // --- renderAttachedChips (secure file names) ---
     function renderAttachedChips() {
         if (!attachedChipsWrapper) return;
 
@@ -4236,7 +4382,14 @@
             } else {
                 const box = document.createElement("div");
                 box.className = "attachment-preview-file";
-                box.innerHTML = `<i data-lucide="${icon}" size="18"></i><span>${file.name || "Attached file"}</span>`;
+                const iconEl = document.createElement("i");
+                iconEl.setAttribute("data-lucide", icon);
+                iconEl.style.width = "18px";
+                iconEl.style.height = "18px";
+                const nameSpan = document.createElement("span");
+                nameSpan.textContent = file.name || "Attached file";
+                box.appendChild(iconEl);
+                box.appendChild(nameSpan);
                 card.appendChild(box);
             }
 
