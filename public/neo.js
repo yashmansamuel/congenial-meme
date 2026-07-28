@@ -1,3 +1,6 @@
+// neo.js — NEO Engine v=46
+// Complete with upload, voice waveform, premium tooltips, pin/rename/share, toasts, signed URLs
+
 (function () {
     "use strict";
 
@@ -702,6 +705,7 @@
         configureSecurityHooks();
         initializeSidebarState();
         setupEventListeners();
+        setupPremiumTooltips();   // premium tooltip system
         setupFreemiumLogic();
         setupDragAndDrop();
         setupPasteUpload();
@@ -1046,6 +1050,399 @@
         }
 
         return data;
+    }
+
+    // --------------------------------------------------------
+    // PREMIUM NEO TOOLTIPS
+    // --------------------------------------------------------
+    function setupPremiumTooltips() {
+        let tooltip = null;
+        let activeTarget = null;
+        let showTimer = null;
+        let hideTimer = null;
+
+        function createTooltip() {
+            if (tooltip) {
+                return tooltip;
+            }
+
+            tooltip = document.createElement("div");
+            tooltip.className = "neo-tooltip";
+            tooltip.setAttribute("role", "tooltip");
+            tooltip.setAttribute("aria-hidden", "true");
+
+            const text = document.createElement("span");
+            text.className = "neo-tooltip-text";
+
+            const arrow = document.createElement("span");
+            arrow.className = "neo-tooltip-arrow";
+
+            tooltip.append(text, arrow);
+            document.body.appendChild(tooltip);
+
+            return tooltip;
+        }
+
+        function getTooltipTarget(element) {
+            if (!(element instanceof Element)) {
+                return null;
+            }
+
+            return element.closest(
+                "[data-tooltip], [title]"
+            );
+        }
+
+        function getTooltipText(target) {
+            if (!target) {
+                return "";
+            }
+
+            return String(
+                target.dataset.tooltip ||
+                target.getAttribute("title") ||
+                target.dataset.neoNativeTitle ||
+                ""
+            ).trim();
+        }
+
+        function suppressNativeTooltip(target) {
+            const nativeTitle =
+                target.getAttribute("title");
+
+            if (nativeTitle) {
+                target.dataset.neoNativeTitle =
+                    nativeTitle;
+
+                target.removeAttribute("title");
+            }
+        }
+
+        function restoreNativeTooltip(target) {
+            if (!target?.dataset?.neoNativeTitle) {
+                return;
+            }
+
+            target.setAttribute(
+                "title",
+                target.dataset.neoNativeTitle
+            );
+
+            delete target.dataset.neoNativeTitle;
+        }
+
+        function positionTooltip(target) {
+            if (!tooltip || !target) {
+                return;
+            }
+
+            const targetRect =
+                target.getBoundingClientRect();
+
+            const tooltipRect =
+                tooltip.getBoundingClientRect();
+
+            const viewportPadding = 10;
+            const distance = 9;
+
+            let top =
+                targetRect.top -
+                tooltipRect.height -
+                distance;
+
+            let placement = "top";
+
+            if (top < viewportPadding) {
+                top =
+                    targetRect.bottom +
+                    distance;
+
+                placement = "bottom";
+            }
+
+            let left =
+                targetRect.left +
+                targetRect.width / 2 -
+                tooltipRect.width / 2;
+
+            left = Math.max(
+                viewportPadding,
+                Math.min(
+                    left,
+                    window.innerWidth -
+                    tooltipRect.width -
+                    viewportPadding
+                )
+            );
+
+            const targetCenter =
+                targetRect.left +
+                targetRect.width / 2;
+
+            const arrowX =
+                Math.max(
+                    12,
+                    Math.min(
+                        targetCenter - left,
+                        tooltipRect.width - 12
+                    )
+                );
+
+            tooltip.style.left =
+                `${Math.round(left)}px`;
+
+            tooltip.style.top =
+                `${Math.round(top)}px`;
+
+            tooltip.style.setProperty(
+                "--neo-tooltip-arrow-x",
+                `${Math.round(arrowX)}px`
+            );
+
+            tooltip.classList.toggle(
+                "is-bottom",
+                placement === "bottom"
+            );
+        }
+
+        function showTooltip(target) {
+            clearTimeout(hideTimer);
+
+            const text =
+                getTooltipText(target);
+
+            if (!text) {
+                return;
+            }
+
+            if (
+                activeTarget &&
+                activeTarget !== target
+            ) {
+                restoreNativeTooltip(
+                    activeTarget
+                );
+            }
+
+            activeTarget = target;
+
+            suppressNativeTooltip(target);
+
+            const element =
+                createTooltip();
+
+            element.querySelector(
+                ".neo-tooltip-text"
+            ).textContent = text;
+
+            element.classList.remove(
+                "is-visible"
+            );
+
+            element.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            requestAnimationFrame(() => {
+                positionTooltip(target);
+
+                requestAnimationFrame(() => {
+                    element.classList.add(
+                        "is-visible"
+                    );
+                });
+            });
+        }
+
+        function scheduleShow(target) {
+            clearTimeout(showTimer);
+            clearTimeout(hideTimer);
+
+            showTimer = setTimeout(
+                () => showTooltip(target),
+                380
+            );
+        }
+
+        function hideTooltip({
+            immediate = false
+        } = {}) {
+            clearTimeout(showTimer);
+            clearTimeout(hideTimer);
+
+            if (!tooltip) {
+                if (activeTarget) {
+                    restoreNativeTooltip(
+                        activeTarget
+                    );
+
+                    activeTarget = null;
+                }
+
+                return;
+            }
+
+            const close = () => {
+                tooltip.classList.remove(
+                    "is-visible"
+                );
+
+                tooltip.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+                if (activeTarget) {
+                    restoreNativeTooltip(
+                        activeTarget
+                    );
+                }
+
+                activeTarget = null;
+            };
+
+            if (immediate) {
+                close();
+                return;
+            }
+
+            hideTimer = setTimeout(
+                close,
+                80
+            );
+        }
+
+        document.addEventListener(
+            "pointerover",
+            event => {
+                if (
+                    event.pointerType ===
+                    "touch"
+                ) {
+                    return;
+                }
+
+                const target =
+                    getTooltipTarget(
+                        event.target
+                    );
+
+                if (!target) {
+                    return;
+                }
+
+                if (
+                    event.relatedTarget &&
+                    target.contains(
+                        event.relatedTarget
+                    )
+                ) {
+                    return;
+                }
+
+                scheduleShow(target);
+            }
+        );
+
+        document.addEventListener(
+            "pointerout",
+            event => {
+                const target =
+                    getTooltipTarget(
+                        event.target
+                    );
+
+                if (!target) {
+                    return;
+                }
+
+                if (
+                    event.relatedTarget &&
+                    target.contains(
+                        event.relatedTarget
+                    )
+                ) {
+                    return;
+                }
+
+                hideTooltip();
+            }
+        );
+
+        document.addEventListener(
+            "focusin",
+            event => {
+                const target =
+                    getTooltipTarget(
+                        event.target
+                    );
+
+                if (target) {
+                    scheduleShow(target);
+                }
+            }
+        );
+
+        document.addEventListener(
+            "focusout",
+            event => {
+                const target =
+                    getTooltipTarget(
+                        event.target
+                    );
+
+                if (target) {
+                    hideTooltip();
+                }
+            }
+        );
+
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (event.key === "Escape") {
+                    hideTooltip({
+                        immediate: true
+                    });
+                }
+            }
+        );
+
+        window.addEventListener(
+            "resize",
+            () => {
+                if (
+                    tooltip?.classList.contains(
+                        "is-visible"
+                    ) &&
+                    activeTarget
+                ) {
+                    positionTooltip(
+                        activeTarget
+                    );
+                }
+            },
+            {
+                passive: true
+            }
+        );
+
+        document.addEventListener(
+            "scroll",
+            () => {
+                if (
+                    tooltip?.classList.contains(
+                        "is-visible"
+                    )
+                ) {
+                    hideTooltip({
+                        immediate: true
+                    });
+                }
+            },
+            true
+        );
     }
 
     // --------------------------------------------------------
@@ -1600,7 +1997,7 @@
         }
     }
 
-    // --- REPLACED stopListening ---
+    // --- stopListening (clean version) ---
     function stopListening() {
         isListening = false;
 
@@ -1721,7 +2118,6 @@
             });
             await readJsonResponse(response);
             await loadHistoryFromSupabase();
-            // Update conversation title in current list if it matches
             if (currentConversationId === conversationId) {
                 // Optionally update UI header if needed
             }
@@ -1841,7 +2237,6 @@
                         message.role !==
                         "system"
                     ) {
-                        // Pass attachments (with signedUrl if any)
                         renderMessageToUI(
                             message.role,
                             message.content,
@@ -2544,7 +2939,7 @@
         );
 
     // --------------------------------------------------------
-    //  UPLOAD FUNCTION (unchanged)
+    //  UPLOAD FUNCTION
     // --------------------------------------------------------
     async function uploadFileToStorage(fileEntry) {
         const file = fileEntry?.rawFile;
@@ -2630,7 +3025,7 @@
     }
 
     // --------------------------------------------------------
-    //  HANDLE SEND (unchanged)
+    //  HANDLE SEND
     // --------------------------------------------------------
     async function handleSend() {
         if (isGenerating) {
@@ -2762,7 +3157,7 @@
     }
 
     // --------------------------------------------------------
-    //  SUBMIT CHAT REQUEST (unchanged)
+    //  SUBMIT CHAT REQUEST
     // --------------------------------------------------------
     async function submitChatRequest(
         aiBubble,
@@ -3363,7 +3758,7 @@
                 }
             );
 
-        // ---- Rename, Pin, Share listeners (moved here) ----
+        // ---- Rename, Pin, Share listeners ----
         hpRenameBtn?.addEventListener(
             "click",
             async event => {
@@ -3653,7 +4048,7 @@
     //  ADDITIONAL FUNCTIONS
     // --------------------------------------------------------
 
-    // --- Dynamic adaptive suggestions (unchanged) ---
+    // --- Dynamic adaptive suggestions ---
     function renderAdaptiveSuggestions() {
         if (!liveSuggestions || !chatInput) return;
 
@@ -3723,7 +4118,7 @@
         });
     }
 
-    // --- Sidebar state management (unchanged) ---
+    // --- Sidebar state management ---
     function initializeSidebarState() {
         const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
@@ -3745,7 +4140,7 @@
         document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
     }
 
-    // --- Enhanced drag & drop (unchanged) ---
+    // --- Enhanced drag & drop ---
     function setupDragAndDrop() {
         if (!composerWrapper) return;
 
@@ -3771,7 +4166,7 @@
         });
     }
 
-    // --- Paste upload (unchanged) ---
+    // --- Paste upload ---
     function setupPasteUpload() {
         document.addEventListener("paste", event => {
             const files = Array.from(event.clipboardData?.files || []);
@@ -3831,10 +4226,8 @@
             const card = document.createElement("div");
             card.className = "attachment-preview-card";
 
-            // Determine icon
             const icon = getFileIcon(file);
 
-            // For images, show thumbnail; otherwise show icon + name
             if (isImageAttachment(file)) {
                 const img = document.createElement("img");
                 img.alt = file.name || "Uploaded image";
@@ -3873,7 +4266,7 @@
         }
     }
 
-    // --- getFileCategory (unchanged) ---
+    // --- getFileCategory ---
     function getFileCategory(file) {
         const type = file.type || "";
 
@@ -3885,7 +4278,7 @@
         return "text";
     }
 
-    // --- handleFileProcessing (unchanged) ---
+    // --- handleFileProcessing ---
     async function handleFileProcessing(files) {
         const selected =
             Array.from(files || [])
@@ -3933,7 +4326,7 @@
         updateComposerShape();
     }
 
-    // --- Profile rendering (unchanged) ---
+    // --- Profile rendering ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -4090,7 +4483,6 @@
                     button.appendChild(pinIcon);
                 }
 
-                // Store conversation ID on the row for later use
                 row.dataset.id = item.id;
 
                 // ---- Context menu (right-click) ----
@@ -4120,7 +4512,6 @@
                 );
             });
 
-            // Re-create Lucide icons after adding new elements
             if (window.lucide) {
                 window.lucide.createIcons();
             }
