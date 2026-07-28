@@ -1,7 +1,6 @@
 (function () {
     "use strict";
 
-    // SECURITY CONSTANTS & CONFIGS
     const MAX_FILE_SIZE_BYTES = Number.MAX_SAFE_INTEGER;
     const MAX_ATTACHED_FILES = 5;
 
@@ -24,13 +23,11 @@
             );
     }
 
-    // AUTHENTICATED USER COMES FROM SECURE SERVER COOKIE
     let currentUser = {
         id: null,
         username: "user"
     };
 
-    // STATE VARIABLES
     let conversation = [];
     let attachedFiles = [];
     let currentConversationId = null;
@@ -42,17 +39,14 @@
     let recognition = null;
     let isListening = false;
 
-    // REAL-TIME AUDIO VISUALIZER STATE
     let audioCtx = null;
     let analyser = null;
     let micStream = null;
     let animFrameId = null;
 
-    // FREEMIUM STATE
     let selectedModel = "l1.0";
     let userPlan = "free";
 
-    // DOM ELEMENTS
     const chatInput =
         document.getElementById("chatInput");
 
@@ -146,7 +140,6 @@
     const hpShareBtn =
         document.getElementById("hpShareBtn");
 
-    // COMPOSER ELEMENTS
     const attachBtn =
         document.getElementById(
             "attachBtn"
@@ -215,7 +208,6 @@
             "glassInputContainer"
         );
 
-    // FREEMIUM ELEMENTS
     const modelBadgeBtn =
         document.getElementById(
             "modelBadgeBtn"
@@ -261,7 +253,7 @@
             "upgradeActionBtn"
         );
 
-    // SETTINGS DOM ELEMENTS
+    // Settings UI elements
     const neoSettingsOverlay =
         document.getElementById(
             "neoSettingsOverlay"
@@ -278,6 +270,16 @@
     const neoSettingsCloseBtn =
         document.getElementById(
             "neoSettingsCloseBtn"
+        );
+
+    const settingsTabs =
+        document.querySelectorAll(
+            ".neo-settings-tab"
+        );
+
+    const settingsPanels =
+        document.querySelectorAll(
+            ".neo-settings-panel"
         );
 
     const settingsThemeBtn =
@@ -507,7 +509,20 @@
     }
 
     function closeUserPopup() {
-        userPopupMenu?.classList.remove("show");
+        userPopupMenu
+            ?.classList.remove("show");
+
+        userPopupMenu
+            ?.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        userProfileBtn
+            ?.setAttribute(
+                "aria-expanded",
+                "false"
+            );
     }
 
     function openHistoryPopup({
@@ -578,6 +593,81 @@
             `${top}px`;
 
         window.lucide?.createIcons();
+    }
+
+    // --------------------------------------------------------
+    // SETTINGS HELPERS
+    // --------------------------------------------------------
+    function activateSettingsTab(
+        tabName = "general"
+    ) {
+        const panelMap = {
+            general:
+                "settingsPanelGeneral",
+
+            profile:
+                "settingsPanelProfile",
+
+            notifications:
+                "settingsPanelNotifications",
+
+            personalities:
+                "settingsPanelPersonalities",
+
+            billing:
+                "settingsPanelBilling"
+        };
+
+        settingsTabs.forEach(tab => {
+            tab.classList.toggle(
+                "active",
+                tab.dataset.settingsTab ===
+                    tabName
+            );
+        });
+
+        settingsPanels.forEach(panel => {
+            panel.classList.remove(
+                "active"
+            );
+        });
+
+        const panelId =
+            panelMap[tabName] ||
+            panelMap.general;
+
+        document
+            .getElementById(panelId)
+            ?.classList.add("active");
+    }
+
+    function openNeoSettings(
+        tabName = "general"
+    ) {
+        closeUserPopup();
+        closeHistoryPopup();
+
+        activateSettingsTab(tabName);
+
+        neoSettingsOverlay
+            ?.classList.add("show");
+
+        neoSettingsOverlay
+            ?.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+    }
+
+    function closeNeoSettings() {
+        neoSettingsOverlay
+            ?.classList.remove("show");
+
+        neoSettingsOverlay
+            ?.setAttribute(
+                "aria-hidden",
+                "true"
+            );
     }
 
     // --------------------------------------------------------
@@ -718,7 +808,6 @@
     //  INIT
     // --------------------------------------------------------
     async function init() {
-        // Force clear any stuck transcription state
         composerInputRow?.classList.remove("is-transcribing");
         isListening = false;
 
@@ -730,7 +819,7 @@
         configureSecurityHooks();
         initializeSidebarState();
         setupEventListeners();
-        setupPremiumTooltips();   // premium tooltip system
+        setupPremiumTooltips();
         setupFreemiumLogic();
         setupDragAndDrop();
         setupPasteUpload();
@@ -1108,7 +1197,6 @@
             return tooltip;
         }
 
-        // --- FIX 1: added [data-neo-native-title] ---
         function getTooltipTarget(element) {
             if (!(element instanceof Element)) {
                 return null;
@@ -1333,7 +1421,6 @@
                 return;
             }
 
-            // FIX 3: reduced delay to 20ms
             hideTimer = setTimeout(
                 close,
                 20
@@ -1372,7 +1459,6 @@
             }
         );
 
-        // FIX 2: new pointerout listener
         document.addEventListener(
             "pointerout",
             event => {
@@ -2030,7 +2116,6 @@
         }
     }
 
-    // --- stopListening (clean version) ---
     function stopListening() {
         isListening = false;
 
@@ -2133,7 +2218,6 @@
             }
         );
 
-    // ----- RENAME conversation (now throws error) -----
     async function renameConversation(conversationId, newTitle) {
         const response = await fetch("/api/history", {
             method: "POST",
@@ -2155,7 +2239,6 @@
         }
     }
 
-    // ----- PIN / UNPIN conversation (now throws error) -----
     async function togglePinConversation(conversationId, pin) {
         const response = await fetch("/api/history", {
             method: "POST",
@@ -2173,7 +2256,6 @@
         await loadHistoryFromSupabase();
     }
 
-    // ----- loadChatMessages (with signed URLs) -----
     async function loadChatMessages(
         conversationId
     ) {
@@ -2300,8 +2382,6 @@
     // --------------------------------------------------------
     //  UI RENDERERS
     // --------------------------------------------------------
-
-    // ----- File icon helper -----
     function getFileIcon(file) {
         const mime = (file.mimeType || file.type || "").toLowerCase();
         const name = (file.name || "").toLowerCase();
@@ -2317,7 +2397,6 @@
         return "file";
     }
 
-    // ----- renderMessageToUI (with signed URLs) -----
     function renderMessageToUI(
         role,
         content,
@@ -2442,7 +2521,6 @@
         return message;
     }
 
-    // ----- renderUserMessageWrapper (with signed URLs and icons, secure file names) -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
@@ -2460,7 +2538,6 @@
         wrapper.className =
             "message-wrapper";
 
-        // Text content
         const content =
             document.createElement(
                 "div"
@@ -2473,7 +2550,6 @@
 
         wrapper.appendChild(content);
 
-        // Attachments (media grid) — secure file names
         if (attachments && attachments.length > 0) {
             const mediaGrid = document.createElement("div");
             mediaGrid.className = "message-media-grid";
@@ -2513,7 +2589,6 @@
             wrapper.appendChild(mediaGrid);
         }
 
-        // Actions (edit/copy)
         const actions =
             document.createElement(
                 "div"
@@ -2597,7 +2672,6 @@
         }
     }
 
-    // ----- enableUserMessageEdit (unchanged) -----
     function enableUserMessageEdit(
         messageElement,
         originalText,
@@ -2713,7 +2787,6 @@
             };
     }
 
-    // ----- handleEditedSend (unchanged) -----
     async function handleEditedSend(
         newText,
         targetIndex,
@@ -2818,7 +2891,6 @@
         }
     }
 
-    // ----- copyWithFeedback (unchanged) -----
     function copyWithFeedback(
         text,
         button,
@@ -2867,7 +2939,7 @@
     }
 
     // --------------------------------------------------------
-    //  CHAT ACTIONS (unchanged)
+    //  CHAT ACTIONS
     // --------------------------------------------------------
     chatMessages
         ?.addEventListener(
@@ -3518,67 +3590,67 @@
     }
 
     // --------------------------------------------------------
-    //  SETTINGS UI — fully connected
+    //  SETTINGS UI
     // --------------------------------------------------------
     function setupSettingsUI() {
-        // Open settings from user popup
         settingsBtn?.addEventListener(
             "click",
             event => {
                 event.preventDefault();
                 event.stopPropagation();
 
-                closeUserPopup();
-                closeHistoryPopup();
-
-                neoSettingsOverlay?.classList.add("show");
-                neoSettingsOverlay?.setAttribute("aria-hidden", "false");
+                openNeoSettings(
+                    "general"
+                );
             }
         );
 
-        // Close settings
-        neoSettingsCloseBtn?.addEventListener(
-            "click",
-            () => {
-                neoSettingsOverlay?.classList.remove("show");
-                neoSettingsOverlay?.setAttribute("aria-hidden", "true");
-            }
-        );
+        neoSettingsCloseBtn
+            ?.addEventListener(
+                "click",
+                closeNeoSettings
+            );
 
-        // Close on backdrop click
-        neoSettingsOverlay?.addEventListener(
-            "click",
-            event => {
-                if (event.target === neoSettingsOverlay) {
-                    neoSettingsOverlay?.classList.remove("show");
-                    neoSettingsOverlay?.setAttribute("aria-hidden", "true");
+        neoSettingsOverlay
+            ?.addEventListener(
+                "click",
+                event => {
+                    if (
+                        event.target ===
+                        neoSettingsOverlay
+                    ) {
+                        closeNeoSettings();
+                    }
                 }
-            }
-        );
+            );
 
-        // Tab switching
-        document.querySelectorAll(".neo-settings-tab").forEach(tab => {
+        settingsTabs.forEach(tab => {
             tab.addEventListener(
                 "click",
                 () => {
-                    document.querySelectorAll(".neo-settings-tab").forEach(t => {
-                        t.classList.remove("active");
-                    });
-                    tab.classList.add("active");
-
-                    const target = tab.dataset.settingsTab;
-                    document.querySelectorAll(".neo-settings-panel").forEach(panel => {
-                        panel.classList.remove("active");
-                    });
-                    const panel = document.getElementById(`settingsPanel${target.charAt(0).toUpperCase() + target.slice(1)}`);
-                    if (panel) {
-                        panel.classList.add("active");
-                    }
+                    activateSettingsTab(
+                        tab.dataset.settingsTab ||
+                            "general"
+                    );
                 }
             );
         });
 
-        // Theme button (syncs with main theme toggle)
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (
+                    event.key === "Escape" &&
+                    neoSettingsOverlay
+                        ?.classList.contains(
+                            "show"
+                        )
+                ) {
+                    closeNeoSettings();
+                }
+            }
+        );
+
         settingsThemeBtn?.addEventListener(
             "click",
             () => {
@@ -3588,12 +3660,10 @@
                     "neo_theme",
                     !isDark ? "dark" : "light"
                 );
-                // Update button text to reflect new state
                 settingsThemeBtn.textContent = !isDark ? "Dark" : "Light";
             }
         );
 
-        // Profile save (placeholder)
         saveProfileSettingsBtn?.addEventListener(
             "click",
             () => {
@@ -3609,7 +3679,6 @@
             }
         );
 
-        // Profile reset (placeholder)
         resetProfileSettingsBtn?.addEventListener(
             "click",
             () => {
@@ -3620,7 +3689,6 @@
             }
         );
 
-        // Settings upgrade button (reuses checkout logic)
         settingsUpgradeBtn?.addEventListener(
             "click",
             () => {
@@ -4040,8 +4108,27 @@
 
                 closeHistoryPopup();
 
-                userPopupMenu?.classList.toggle(
-                    "show"
+                const willOpen =
+                    !userPopupMenu
+                        ?.classList.contains(
+                            "show"
+                        );
+
+                userPopupMenu
+                    ?.classList.toggle(
+                        "show",
+                        willOpen
+                    );
+
+                userPopupMenu
+                    ?.setAttribute(
+                        "aria-hidden",
+                        String(!willOpen)
+                    );
+
+                userProfileBtn.setAttribute(
+                    "aria-expanded",
+                    String(willOpen)
                 );
             }
         );
@@ -4050,25 +4137,10 @@
         sidebarPersonalitiesBtn
             ?.addEventListener(
                 "click",
-
                 () => {
-                    userPopupMenu?.classList.remove("show");
-
-                    neoSettingsOverlay?.classList.add("show");
-                    neoSettingsOverlay?.setAttribute("aria-hidden", "false");
-
-                    document.querySelectorAll(".neo-settings-tab").forEach(tab => {
-                        tab.classList.toggle(
-                            "active",
-                            tab.dataset.settingsTab === "personalities"
-                        );
-                    });
-
-                    document.querySelectorAll(".neo-settings-panel").forEach(panel => {
-                        panel.classList.remove("active");
-                    });
-
-                    document.getElementById("settingsPanelPersonalities")?.classList.add("active");
+                    openNeoSettings(
+                        "personalities"
+                    );
                 }
             );
 
@@ -4201,8 +4273,6 @@
     // --------------------------------------------------------
     //  ADDITIONAL FUNCTIONS
     // --------------------------------------------------------
-
-    // --- Dynamic adaptive suggestions ---
     function renderAdaptiveSuggestions() {
         if (!liveSuggestions || !chatInput) return;
 
@@ -4272,7 +4342,6 @@
         });
     }
 
-    // --- Sidebar state management ---
     function initializeSidebarState() {
         const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
@@ -4294,7 +4363,6 @@
         document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
     }
 
-    // --- Enhanced drag & drop ---
     function setupDragAndDrop() {
         if (!composerWrapper) return;
 
@@ -4320,17 +4388,12 @@
         });
     }
 
-    // --- Paste upload ---
     function setupPasteUpload() {
         document.addEventListener("paste", event => {
             const files = Array.from(event.clipboardData?.files || []);
             if (files.length) handleFileProcessing(files);
         });
     }
-
-    // --------------------------------------------------------
-    //  Image attachment helpers & enhanced rendering
-    // --------------------------------------------------------
 
     function isImageAttachment(file) {
         if (!file) return false;
@@ -4350,10 +4413,7 @@
     function getAttachmentPreviewUrl(file) {
         if (!file) return "";
 
-        // Use signedUrl from backend first
         if (file.signedUrl) return file.signedUrl;
-
-        // Fallback to existing previewUrl or data
         if (file.previewUrl) return file.previewUrl;
 
         if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
@@ -4370,7 +4430,6 @@
         return "";
     }
 
-    // --- renderAttachedChips (secure file names) ---
     function renderAttachedChips() {
         if (!attachedChipsWrapper) return;
 
@@ -4427,7 +4486,6 @@
         }
     }
 
-    // --- getFileCategory ---
     function getFileCategory(file) {
         const type = file.type || "";
 
@@ -4439,7 +4497,6 @@
         return "text";
     }
 
-    // --- handleFileProcessing ---
     async function handleFileProcessing(files) {
         const selected =
             Array.from(files || [])
@@ -4487,7 +4544,6 @@
         updateComposerShape();
     }
 
-    // --- Profile rendering ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -4539,7 +4595,6 @@
         }
     }
 
-    // --- loadHistoryFromSupabase (with three-dot button, rename, pin/unpin) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -4559,55 +4614,20 @@
             conversations.forEach(item => {
                 const row = document.createElement("div");
                 row.className = "history-item-wrapper";
-                row.style.position = "relative";
-                row.style.display = "flex";
-                row.style.alignItems = "center";
-                row.style.gap = "4px";
-                row.style.padding = "2px 4px";
-                row.style.borderRadius = "10px";
-                row.style.transition = "background 0.15s ease";
 
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "history-item";
                 button.textContent = item.title || "New conversation";
-                button.style.flex = "1";
-                button.style.minHeight = "36px";
-                button.style.padding = "8px 10px";
-                button.style.background = "transparent";
-                button.style.border = "none";
-                button.style.color = "var(--text-primary)";
-                button.style.textAlign = "left";
-                button.style.cursor = "pointer";
-                button.style.overflow = "hidden";
-                button.style.whiteSpace = "nowrap";
-                button.style.textOverflow = "ellipsis";
-                button.style.borderRadius = "8px";
-                button.style.fontSize = "14px";
-                button.style.lineHeight = "20px";
-                button.style.height = "36px";
-                button.style.minHeight = "36px";
 
                 button.addEventListener("click", () => {
                     loadChatMessages(item.id);
                 });
 
-                // Three-dot button (always visible)
                 const dotBtn = document.createElement("button");
                 dotBtn.type = "button";
                 dotBtn.className = "history-three-dot";
                 dotBtn.innerHTML = '<i data-lucide="more-vertical" size="16"></i>';
-                dotBtn.style.background = "transparent";
-                dotBtn.style.border = "none";
-                dotBtn.style.color = "var(--text-muted)";
-                dotBtn.style.cursor = "pointer";
-                dotBtn.style.padding = "4px 6px";
-                dotBtn.style.borderRadius = "6px";
-                dotBtn.style.display = "flex";
-                dotBtn.style.alignItems = "center";
-                dotBtn.style.justifyContent = "center";
-                dotBtn.style.transition = "background 0.12s ease, color 0.12s ease";
-                dotBtn.style.flexShrink = "0";
 
                 dotBtn.addEventListener(
                     "click",
@@ -4635,7 +4655,6 @@
                 row.appendChild(dotBtn);
                 historyList.appendChild(row);
 
-                // Pin indicator (optional)
                 if (item.is_pinned) {
                     const pinIcon = document.createElement("span");
                     pinIcon.style.marginLeft = "6px";
@@ -4646,7 +4665,6 @@
 
                 row.dataset.id = item.id;
 
-                // ---- Context menu (right-click) ----
                 row.addEventListener(
                     "contextmenu",
                     event => {
