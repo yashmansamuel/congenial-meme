@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co; connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co https://unpkg.com https://cdnjs.cloudflare.com;">
 
   <title>NEO • Signaturesi</title>
-  <link rel="stylesheet" href="/neo.css?v=50">
+  <link rel="stylesheet" href="/neo.css?v=51">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -75,7 +75,6 @@
           <span class="user-name" id="userNameDisplay">@user</span>
           <span class="user-badge" id="userPlanBadge">Free Plan</span>
         </div>
-        <!-- Restored original bolt icon -->
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="more-icon" aria-hidden="true">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
           <circle cx="12" cy="12" r="4"/>
@@ -218,7 +217,95 @@
         </button>
       </aside>
       <section class="neo-settings-content">
-        <!-- Panels omitted for brevity – same as v=48 -->
+        <div class="neo-settings-panel active" id="settingsPanelGeneral">
+          <h2>General</h2>
+          <div class="settings-row">
+            <div><strong>Appearance</strong><small>Choose how NEO looks on this device.</small></div>
+            <button class="settings-pill-btn" id="settingsThemeBtn" type="button">System</button>
+          </div>
+          <div class="settings-row">
+            <div><strong>Language</strong><small>Auto-detect Urdu, Roman Urdu, Hindi, and English.</small></div>
+            <button class="settings-pill-btn" type="button">Auto</button>
+          </div>
+          <div class="settings-row">
+            <div><strong>Deep Research</strong><small>Use backend URL context when a link is attached.</small></div>
+            <span class="settings-status-pill">Ready</span>
+          </div>
+        </div>
+        <div class="neo-settings-panel" id="settingsPanelProfile">
+          <h2>Profile</h2>
+          <div class="profile-editor-card">
+            <div class="profile-editor-avatar" id="settingsAvatarPreview">U</div>
+            <div class="profile-editor-main">
+              <label>Display name <input id="settingsDisplayNameInput" type="text" placeholder="Your NEO name"></label>
+              <label>Username <input id="settingsUsernameInput" type="text" placeholder="@username"></label>
+              <label>Avatar URL <input id="settingsAvatarUrlInput" type="url" placeholder="https://... or Supabase avatar path"></label>
+              <div class="profile-editor-actions">
+                <button class="settings-primary-btn" id="saveProfileSettingsBtn" type="button">Save profile</button>
+                <button class="settings-ghost-btn" id="resetProfileSettingsBtn" type="button">Reset</button>
+              </div>
+              <small class="settings-helper-text">Bean ID users can use NEO safely without showing private card/payment details.</small>
+            </div>
+          </div>
+        </div>
+        <div class="neo-settings-panel" id="settingsPanelNotifications">
+          <h2>Notifications</h2>
+          <div class="notification-center" id="notificationCenter">
+            <div class="notification-empty-state">
+              <i data-lucide="inbox" size="22"></i><strong>No new notifications</strong>
+              <small>Important account, billing, and NEO updates will appear here.</small>
+            </div>
+          </div>
+        </div>
+        <div class="neo-settings-panel" id="settingsPanelPersonalities">
+          <h2>NEO Personalities</h2>
+          <p class="settings-subtitle">Choose how NEO should respond. Custom personality is Pro only.</p>
+          <div class="personality-grid" id="personalityGrid">
+            <button class="personality-card active" type="button" data-personality="default">
+              <span class="personality-avatar"><i data-lucide="zap" size="20"></i></span>
+              <strong>Default NEO</strong><small>Balanced and helpful</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="teacher">
+              <span class="personality-avatar"><i data-lucide="graduation-cap" size="20"></i></span>
+              <strong>Teacher</strong><small>Simple learning style</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="coder">
+              <span class="personality-avatar"><i data-lucide="code" size="20"></i></span>
+              <strong>Coder</strong><small>Clean coding help</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="researcher">
+              <span class="personality-avatar"><i data-lucide="search" size="20"></i></span>
+              <strong>Researcher</strong><small>Careful deep answers</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="business">
+              <span class="personality-avatar"><i data-lucide="chart-line" size="20"></i></span>
+              <strong>Business</strong><small>Growth and planning</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="creative">
+              <span class="personality-avatar"><i data-lucide="palette" size="20"></i></span>
+              <strong>Creative</strong><small>Ideas and writing</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="calm">
+              <span class="personality-avatar"><i data-lucide="leaf" size="20"></i></span>
+              <strong>Calm</strong><small>Soft supportive tone</small>
+            </button>
+            <button class="personality-card" type="button" data-personality="direct">
+              <span class="personality-avatar"><i data-lucide="target" size="20"></i></span>
+              <strong>Direct</strong><small>Short and focused</small>
+            </button>
+            <button class="personality-card pro-personality" type="button" data-personality="custom">
+              <span class="personality-avatar"><i data-lucide="sparkles" size="20"></i></span>
+              <strong>Custom</strong><small>Pro only</small>
+            </button>
+          </div>
+        </div>
+        <div class="neo-settings-panel" id="settingsPanelBilling">
+          <h2>Billing</h2>
+          <div class="settings-row">
+            <div><strong id="billingPlanText">Free Plan</strong><small>Upgrade to unlock more usage and advanced features.</small></div>
+            <button class="settings-primary-btn" id="settingsUpgradeBtn" type="button">Upgrade</button>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -252,6 +339,6 @@
     </div>
   </div>
 
-  <script src="/neo.js?v=48"></script>
+  <script src="/neo.js?v=51"></script>
 </body>
 </html>
