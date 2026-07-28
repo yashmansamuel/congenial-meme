@@ -2596,3 +2596,89 @@ button:disabled[title] {
 .message-content li > p {
     margin-bottom: 6px !important;
 }
+
+/* =========================================================
+   PREMIUM MATH & PHYSICS FORMAT (v=54)
+   ========================================================= */
+
+/* Inline equations */
+.message-content mjx-container:not([display="true"]) {
+    margin: 0 0.12em !important;
+    font-size: 1em !important;
+    color: var(--text-primary);
+}
+
+/* Equations on their own line */
+.message-content mjx-container[display="true"] {
+    width: 100%;
+    max-width: 100%;
+
+    margin: 18px 0 !important;
+    padding: 15px 18px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+
+    background: var(--bg-sidebar);
+    color: var(--text-primary);
+
+    text-align: center;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+        rgba(120, 120, 128, 0.25)
+        transparent;
+}
+
+/* MathJax internal equation sizing */
+.message-content
+mjx-container[display="true"]
+mjx-math {
+    font-size: 108% !important;
+}
+
+/* Prevent long formulas from breaking layout */
+.message-content mjx-container {
+    max-width: 100%;
+}
+
+.message-content
+mjx-container[display="true"]::-webkit-scrollbar {
+    height: 4px;
+}
+
+.message-content
+mjx-container[display="true"]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.message-content
+mjx-container[display="true"]::-webkit-scrollbar-thumb {
+    background:
+        rgba(120, 120, 128, 0.25);
+    border-radius: 999px;
+}
+
+/* Symbol explanation list */
+.message-content li mjx-container {
+    font-size: 0.98em !important;
+}
+
+/* Mobile math */
+@media (max-width: 767px) {
+    .message-content
+    mjx-container[display="true"] {
+        margin: 14px 0 !important;
+        padding: 13px 12px;
+        text-align: left;
+    }
+
+    .message-content
+    mjx-container[display="true"]
+    mjx-math {
+        font-size: 100% !important;
+    }
+}
