@@ -1078,7 +1078,7 @@
     }
 
     // --------------------------------------------------------
-    // PREMIUM NEO TOOLTIPS
+    // PREMIUM NEO TOOLTIPS — FIXED
     // --------------------------------------------------------
     function setupPremiumTooltips() {
         let tooltip = null;
@@ -1108,13 +1108,14 @@
             return tooltip;
         }
 
+        // --- FIX 1: added [data-neo-native-title] ---
         function getTooltipTarget(element) {
             if (!(element instanceof Element)) {
                 return null;
             }
 
             return element.closest(
-                "[data-tooltip], [title]"
+                "[data-tooltip], [title], [data-neo-native-title]"
             );
         }
 
@@ -1332,9 +1333,10 @@
                 return;
             }
 
+            // FIX 3: reduced delay to 20ms
             hideTimer = setTimeout(
                 close,
-                80
+                20
             );
         }
 
@@ -1370,12 +1372,16 @@
             }
         );
 
+        // FIX 2: new pointerout listener
         document.addEventListener(
             "pointerout",
             event => {
                 const target =
-                    getTooltipTarget(
-                        event.target
+                    getTooltipTarget(event.target) ||
+                    (
+                        activeTarget?.contains(event.target)
+                            ? activeTarget
+                            : null
                     );
 
                 if (!target) {
@@ -1384,14 +1390,14 @@
 
                 if (
                     event.relatedTarget &&
-                    target.contains(
-                        event.relatedTarget
-                    )
+                    target.contains(event.relatedTarget)
                 ) {
                     return;
                 }
 
-                hideTooltip();
+                hideTooltip({
+                    immediate: true
+                });
             }
         );
 
@@ -1418,7 +1424,9 @@
                     );
 
                 if (target) {
-                    hideTooltip();
+                    hideTooltip({
+                        immediate: true
+                    });
                 }
             }
         );
