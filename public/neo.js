@@ -813,6 +813,41 @@
     }
 
     // --------------------------------------------------------
+    // MARKDOWN NORMALIZATION — fix raw ### headings
+    // --------------------------------------------------------
+    function normalizeMarkdownForDisplay(value) {
+        const source = String(value || "")
+            .replace(/\r\n?/g, "\n");
+
+        const sections = source.split(
+            /(```[\s\S]*?```)/g
+        );
+
+        return sections
+            .map((section, index) => {
+                /* Never modify fenced code blocks */
+                if (index % 2 === 1) {
+                    return section;
+                }
+
+                return section
+                    /* Fix: text.### Heading */
+                    .replace(
+                        /([^\n])\s*(#{1,6}\s+)/g,
+                        "$1\n\n$2"
+                    )
+
+                    /* Remove excessive blank lines */
+                    .replace(
+                        /\n{3,}/g,
+                        "\n\n"
+                    );
+            })
+            .join("")
+            .trim();
+    }
+
+    // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
     async function init() {
@@ -1061,7 +1096,7 @@
 
     function safeParseMarkdown(text) {
         const source =
-            String(text || "");
+            normalizeMarkdownForDisplay(text);
 
         if (
             window.marked &&
