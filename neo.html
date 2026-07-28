@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ujclhweqqifgoiscvqmd.supabase.co; connect-src 'self' https://ujclhweqqifgoiscvqmd.supabase.co https://unpkg.com https://cdnjs.cloudflare.com;">
 
   <title>NEO • Signaturesi</title>
-  <link rel="stylesheet" href="/neo.css?v=51">
+  <link rel="stylesheet" href="/neo.css?v=52">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -186,7 +186,7 @@
     </footer>
   </main>
 
-  <!-- History popup, Settings overlay, Upgrade modal (unchanged) -->
+  <!-- History popup -->
   <div class="history-popup-menu" id="historyPopupMenu">
     <div class="history-popup-item" id="hpShareBtn"><i data-lucide="share-2" size="16"></i>Share conversation</div>
     <div class="history-popup-item" id="hpPinBtn"><i data-lucide="pin" size="16"></i>Pin</div>
@@ -194,6 +194,7 @@
     <div class="history-popup-item danger" id="hpDeleteBtn"><i data-lucide="trash-2" size="16"></i>Delete</div>
   </div>
 
+  <!-- Settings overlay -->
   <div class="neo-settings-overlay" id="neoSettingsOverlay" aria-hidden="true">
     <div class="neo-settings-modal" role="dialog" aria-modal="true" aria-label="NEO Settings">
       <aside class="neo-settings-sidebar">
@@ -310,6 +311,7 @@
     </div>
   </div>
 
+  <!-- Upgrade modal -->
   <div class="modal-overlay" id="upgradeModal">
     <div class="modal-card">
       <button class="modal-close-btn" id="modalCloseBtn" type="button">&times;</button>
@@ -339,6 +341,6 @@
     </div>
   </div>
 
-  <script src="/neo.js?v=51"></script>
+  <script src="/neo.js?v=52"></script>
 </body>
 </html>
