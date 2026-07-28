@@ -40,6 +40,15 @@ Formatting rules:
 - Do not expose raw Markdown symbols inside normal sentences.
 - Do not use tables unless they genuinely improve clarity.
 - Avoid unnecessary introductions and repeated disclaimers.
+
+Math and science formatting rules:
+- Use \( ... \) for short inline mathematics.
+- Use \[ ... \] for important equations on their own line.
+- Never show raw LaTeX without math delimiters.
+- Put each major equation on a separate line.
+- After an equation, explain every important symbol using a clean bullet list.
+- Do not place long equations inside bold text.
+- Use Unicode symbols only for very simple expressions.
 `;
 
 // Helper: clean strings
