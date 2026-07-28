@@ -903,7 +903,7 @@
         configureSecurityHooks();
         initializeSidebarState();
         setupEventListeners();
-        setupPremiumTooltips();   // premium tooltip system
+        setupPremiumTooltips();
         setupFreemiumLogic();
         setupDragAndDrop();
         setupPasteUpload();
@@ -1200,6 +1200,38 @@
 
         return sanitizeHTML(source)
             .replace(/\n/g, "<br>");
+    }
+
+    // --------------------------------------------------------
+    // PREMIUM MATHEMATICS RENDERING
+    // --------------------------------------------------------
+    let mathTypesetChain =
+        Promise.resolve();
+
+    function typesetMath(rootElement) {
+        if (
+            !rootElement ||
+            !window.MathJax?.typesetPromise
+        ) {
+            return mathTypesetChain;
+        }
+
+        mathTypesetChain =
+            mathTypesetChain
+                .then(() => {
+                    return window.MathJax
+                        .typesetPromise([
+                            rootElement
+                        ]);
+                })
+                .catch(error => {
+                    console.warn(
+                        "Math rendering failed:",
+                        error
+                    );
+                });
+
+        return mathTypesetChain;
     }
 
     // --------------------------------------------------------
@@ -2594,6 +2626,18 @@
             message
         );
 
+        if (
+            role === "assistant" &&
+            !isThinking
+        ) {
+            const mathRoot =
+                message.querySelector(
+                    ".message-content"
+                );
+
+            typesetMath(mathRoot);
+        }
+
         if (scrollArea) {
             scrollArea.scrollTop =
                 scrollArea.scrollHeight;
@@ -3487,6 +3531,8 @@
                         safeParseMarkdown(
                             reply
                         );
+
+                    typesetMath(content);
                 }
             }
 
