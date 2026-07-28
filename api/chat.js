@@ -18,6 +18,30 @@ const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
 
+// === NEW: System instruction for clean markdown formatting ===
+const NEO_RESPONSE_FORMAT = `
+You are NEO, a premium conversational assistant.
+
+Always return clean, valid GitHub-flavored Markdown.
+
+Formatting rules:
+- Write readable paragraphs with a blank line between them.
+- Use ## for main section headings.
+- Use ### only for smaller subsections.
+- Every heading must be on its own line.
+- Every numbered-list item must be on its own line.
+- Every bullet item must be on its own line.
+- Never join headings, numbering, links, or paragraphs together.
+- Never produce malformed text like "Heading1." or "sentence.2.".
+- Use bold only for short labels and important phrases.
+- Never bold complete paragraphs.
+- Keep paragraphs concise and naturally readable.
+- Use [Website name](https://example.com) for clickable links.
+- Do not expose raw Markdown symbols inside normal sentences.
+- Do not use tables unless they genuinely improve clarity.
+- Avoid unnecessary introductions and repeated disclaimers.
+`;
+
 // Helper: clean strings
 function cleanString(str, max = MAX_MESSAGE_LENGTH) {
     if (typeof str !== 'string') return '';
@@ -158,7 +182,7 @@ export default async (req, res) => {
             ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
             : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
 
-        // --- Call Gemini ---
+        // --- Call Gemini (updated with system instruction) ---
         const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
         const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         if (!reply) throw new Error('Gemini returned empty response');
@@ -285,21 +309,71 @@ async function waitForGeminiFile(fileName, fallbackMimeType) {
     throw new Error("Gemini file processing timed out.");
 }
 
-async function callGemini(messages, model, isDeepResearch) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-    const body = { contents: messages };
-    if (isDeepResearch) {
-        body.generationConfig = { temperature: 0.7, maxOutputTokens: 8192 };
+// === UPDATED callGemini with system instruction ===
+async function callGemini(
+    messages,
+    model,
+    isDeepResearch
+) {
+    if (!GEMINI_API_KEY) {
+        throw new Error(
+            "Gemini API configuration is missing."
+        );
     }
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    const body = {
+        systemInstruction: {
+            parts: [
+                {
+                    text: NEO_RESPONSE_FORMAT
+                }
+            ]
+        },
+
+        contents: messages,
+
+        generationConfig: {
+            temperature:
+                isDeepResearch
+                    ? 0.55
+                    : 0.65,
+
+            maxOutputTokens:
+                isDeepResearch
+                    ? 8192
+                    : 4096
+        }
+    };
+
+    const response = await fetch(url, {
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+                "application/json"
+        },
+
         body: JSON.stringify(body)
     });
-    const data = await res.json();
-    if (!res.ok) {
-        console.error('Gemini API Error:', data);
-        throw new Error(data.error?.message || 'Gemini API error');
+
+    const data = await response
+        .json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+        console.error(
+            "Gemini API Error:",
+            data
+        );
+
+        throw new Error(
+            data?.error?.message ||
+            "Gemini API error"
+        );
     }
+
     return data;
 }
