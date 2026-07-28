@@ -2567,3 +2567,32 @@ button:disabled[title] {
         line-height: 1.65 !important;
     }
 }
+
+/* =========================================================
+   PREMIUM TYPOGRAPHY PATCH (v=52)
+   ========================================================= */
+
+.message-content strong {
+    font-weight: 650 !important;
+}
+
+.message-content h3 {
+    margin: 18px 0 9px !important;
+    font-size: 17px !important;
+    line-height: 1.35 !important;
+    font-weight: 680 !important;
+}
+
+.message-content ol,
+.message-content ul {
+    margin-top: 10px !important;
+    margin-bottom: 16px !important;
+}
+
+.message-content li {
+    margin-bottom: 8px !important;
+}
+
+.message-content li > p {
+    margin-bottom: 6px !important;
+}
