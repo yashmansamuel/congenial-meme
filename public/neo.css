@@ -2467,3 +2467,35 @@ textarea#chatInput:focus {
 .composer-dock {
     padding-bottom: 10px !important;
 }
+/* FINAL VOICE CONTROL STATE FIX */
+
+/* Normal state */
+.composer-input-row:not(.is-transcribing) .voice-transcribe-container,
+.composer-input-row:not(.is-transcribing) .stop-recording-btn {
+    display: none !important;
+}
+
+.composer-input-row:not(.is-transcribing) .mic-btn,
+.composer-input-row:not(.is-transcribing) .send-btn {
+    display: flex !important;
+}
+
+/* Recording state */
+.composer-input-row.is-transcribing .voice-transcribe-container,
+.composer-input-row.is-transcribing .stop-recording-btn {
+    display: flex !important;
+}
+
+.composer-input-row.is-transcribing .mic-btn,
+.composer-input-row.is-transcribing .send-btn {
+    display: none !important;
+}
+
+/* Send icon always visible in normal mode */
+.composer-input-row:not(.is-transcribing) .send-btn svg,
+.composer-input-row:not(.is-transcribing) .send-btn i {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    stroke: currentColor !important;
+}
