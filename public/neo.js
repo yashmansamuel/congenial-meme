@@ -690,6 +690,10 @@
     //  INIT
     // --------------------------------------------------------
     async function init() {
+        // Force clear any stuck transcription state
+        composerInputRow?.classList.remove("is-transcribing");
+        isListening = false;
+
         if (window.lucide) {
             window.lucide.createIcons();
         }
@@ -1596,9 +1600,22 @@
         }
     }
 
+    // --- REPLACED stopListening ---
     function stopListening() {
         isListening = false;
-        composerInputRow?.classList.remove("is-transcribing");
+
+        composerInputRow?.classList.remove(
+            "is-transcribing"
+        );
+
+        if (sendBtn) {
+            sendBtn.style.display = "";
+        }
+
+        if (micBtn) {
+            micBtn.style.display = "";
+        }
+
         stopAudioVisualizer();
     }
 
