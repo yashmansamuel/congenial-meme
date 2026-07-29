@@ -888,6 +888,24 @@
     }
 
     // --------------------------------------------------------
+    // MATH DELIMITER NORMALIZATION — FIX RAW $ BRACKETS
+    // --------------------------------------------------------
+    function normalizeMathDelimiters(value) {
+        return String(value || "")
+            /* ($equation$) → \(equation\) */
+            .replace(
+                /\(\$([^$\n]+)\$\)/g,
+                "\\($1\\)"
+            )
+
+            /* [$equation$] → \[equation\] */
+            .replace(
+                /\[\$([\s\S]*?)\$\]/g,
+                "\\[$1\\]"
+            );
+    }
+
+    // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
     async function init() {
@@ -1136,7 +1154,9 @@
 
     function safeParseMarkdown(text) {
         const source =
-            normalizeMarkdownForDisplay(text);
+            normalizeMathDelimiters(text)
+                .replace(/\r\n?/g, "\n")
+                .trim();
 
         if (
             window.marked &&
@@ -1203,23 +1223,57 @@
     }
 
     // --------------------------------------------------------
-    // PREMIUM MATHEMATICS RENDERING
+    // PREMIUM MATHEMATICS RENDERING (ROBUST)
     // --------------------------------------------------------
     let mathTypesetChain =
         Promise.resolve();
 
-    function typesetMath(rootElement) {
-        if (
-            !rootElement ||
-            !window.MathJax?.typesetPromise
+    async function waitForMathJax() {
+        for (
+            let attempt = 0;
+            attempt < 40;
+            attempt += 1
         ) {
+            if (
+                window.MathJax
+                    ?.typesetPromise
+            ) {
+                return true;
+            }
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 50)
+            );
+        }
+
+        return false;
+    }
+
+    function typesetMath(rootElement) {
+        if (!rootElement) {
             return mathTypesetChain;
         }
 
         mathTypesetChain =
             mathTypesetChain
-                .then(() => {
-                    return window.MathJax
+                .then(async () => {
+                    const ready =
+                        await waitForMathJax();
+
+                    if (!ready) {
+                        return;
+                    }
+
+                    await window.MathJax
+                        .startup
+                        ?.promise;
+
+                    window.MathJax
+                        .typesetClear?.([
+                            rootElement
+                        ]);
+
+                    await window.MathJax
                         .typesetPromise([
                             rootElement
                         ]);
