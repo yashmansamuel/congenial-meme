@@ -154,78 +154,122 @@ function deduplicateUrls(urls) {
 }
 
 // ================================================================
-// DUCKDUCKGO SEARCH (HTML parsing)
+// DUCKDUCKGO SEARCH – robust version (no cheerio)
 // ================================================================
 
-async function searchDuckDuckGo(query) {
-    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+function normalizeDuckDuckGoUrl(rawHref) {
+    if (!rawHref) return null;
     try {
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': DDG_USER_AGENT,
-                'Accept': 'text/html'
-            }
+        const parsed = new URL(rawHref, "https://duckduckgo.com");
+        let destination = parsed.searchParams.get("uddg");
+        if (destination) {
+            destination = decodeURIComponent(destination);
+        } else {
+            destination = parsed.href;
+        }
+        const finalUrl = new URL(destination);
+        if (!["http:", "https:"].includes(finalUrl.protocol)) return null;
+        if (finalUrl.hostname.toLowerCase().includes("duckduckgo.com")) return null;
+        finalUrl.hash = "";
+        ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach(key => {
+            finalUrl.searchParams.delete(key);
         });
-        if (!response.ok) throw new Error(`DDG returned ${response.status}`);
-        const html = await response.text();
-
-        // Extract results from HTML – look for <a rel="nofollow" class="result__a" href="...">
-        const results = [];
-        // Simple regex to find result links with titles and snippets
-        const linkRegex = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
-        const snippetRegex = /<a class="result__snippet"[^>]*>([^<]+)<\/a>/g;
-
-        let match;
-        const links = [];
-        while ((match = linkRegex.exec(html)) !== null) {
-            const href = match[1];
-            const title = match[2].replace(/&quot;/g, '"').replace(/&#x27;/g, "'");
-            links.push({ href, title });
-        }
-        const snippets = [];
-        while ((match = snippetRegex.exec(html)) !== null) {
-            snippets.push(match[1].replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
-        }
-
-        // Combine: each link corresponds to the snippet at same index
-        links.forEach((link, i) => {
-            const snippet = snippets[i] || '';
-            // Ensure the URL is absolute
-            let absoluteUrl = link.href;
-            if (absoluteUrl.startsWith('/')) {
-                absoluteUrl = 'https://duckduckgo.com' + absoluteUrl;
-            }
-            results.push({
-                title: link.title,
-                url: absoluteUrl,
-                snippet: snippet
-            });
-        });
-
-        // Also try to get results from the 'result__body' pattern (fallback)
-        if (results.length === 0) {
-            // Alternative pattern
-            const altRegex = /<a class="result__url"[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
-            while ((match = altRegex.exec(html)) !== null) {
-                const href = match[1];
-                const title = match[2];
-                let absoluteUrl = href;
-                if (absoluteUrl.startsWith('/')) {
-                    absoluteUrl = 'https://duckduckgo.com' + absoluteUrl;
-                }
-                results.push({
-                    title: title,
-                    url: absoluteUrl,
-                    snippet: ''
-                });
-            }
-        }
-
-        return results.slice(0, 10); // limit
-    } catch (error) {
-        console.warn('DuckDuckGo search failed:', error);
-        return [];
+        return finalUrl.href;
+    } catch {
+        return null;
     }
+}
+
+async function searchDuckDuckGo(query, limit = 10) {
+    const cleanQuery = String(query || "").trim();
+    if (!cleanQuery) return [];
+
+    const endpoints = [
+        `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanQuery)}`,
+        `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(cleanQuery)}`
+    ];
+
+    for (const endpoint of endpoints) {
+        try {
+            const response = await fetch(endpoint, {
+                method: "GET",
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml",
+                    "Accept-Language": "en-US,en;q=0.9"
+                },
+                redirect: "follow"
+            });
+
+            if (!response.ok) {
+                console.warn("DuckDuckGo HTTP error:", response.status, endpoint);
+                continue;
+            }
+
+            const html = await response.text();
+            console.log("DuckDuckGo response:", { endpoint, htmlLength: html.length });
+
+            if (!html || html.length < 500 || /captcha|unusual traffic|anomaly/i.test(html)) {
+                console.warn("DuckDuckGo returned blocked or empty HTML.");
+                continue;
+            }
+
+            // Parse results – try both HTML and lite versions
+            const results = [];
+            const seen = new Set();
+
+            // Common patterns: result__a, result-link, etc.
+            // For lite version: <a href="...">
+            const linkRegex = /<a\s+(?:[^>]*\s+)?href="([^"]+)"[^>]*>([^<]*)<\/a>/gi;
+            const snippetRegex = /<div\s+class="result__snippet"[^>]*>([^<]*)<\/div>/gi;
+            const liteSnippetRegex = /<td\s+class="result-snippet"[^>]*>([^<]*)<\/td>/gi;
+
+            // First, try to find result containers
+            const resultBlocks = html.split(/<div class="result[^"]*">/gi);
+            if (resultBlocks.length > 1) {
+                // HTML version
+                for (const block of resultBlocks) {
+                    if (results.length >= limit) break;
+                    const anchorMatch = block.match(/<a\s+[^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/i);
+                    if (!anchorMatch) continue;
+                    const rawHref = anchorMatch[1];
+                    const title = anchorMatch[2].replace(/<[^>]*>/g, '').trim();
+                    const url = normalizeDuckDuckGoUrl(rawHref);
+                    if (!url || seen.has(url) || !title) continue;
+                    const snippetMatch = block.match(/<div\s+class="result__snippet"[^>]*>([^<]*)<\/div>/i);
+                    const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+                    seen.add(url);
+                    results.push({ url, title, snippet });
+                }
+            }
+
+            // If no results from HTML version, try lite version
+            if (results.length === 0) {
+                // Lite version: rows with links
+                const trs = html.split(/<tr\s*>/gi);
+                for (const tr of trs) {
+                    if (results.length >= limit) break;
+                    const linkMatch = tr.match(/<a\s+[^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/i);
+                    if (!linkMatch) continue;
+                    const rawHref = linkMatch[1];
+                    const title = linkMatch[2].replace(/<[^>]*>/g, '').trim();
+                    const url = normalizeDuckDuckGoUrl(rawHref);
+                    if (!url || seen.has(url) || !title) continue;
+                    const snippetMatch = tr.match(/<td[^>]*class="result-snippet"[^>]*>([^<]*)<\/td>/i);
+                    const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+                    seen.add(url);
+                    results.push({ url, title, snippet });
+                }
+            }
+
+            console.log("DuckDuckGo parsed results:", results.length);
+            if (results.length > 0) return results;
+
+        } catch (error) {
+            console.warn("DuckDuckGo search failed:", error);
+        }
+    }
+    return [];
 }
 
 // ================================================================
@@ -450,28 +494,26 @@ async function smartWebAnswer(query, model, isDeepResearch) {
     // Step 3: rank
     let ranked = rankSearchResults(allResults, plan);
 
-    // Step 4: if top score too low, do focused retry
-    if (ranked.length === 0 || ranked[0].score < 20) {
+    // Step 4: if no results, do focused retry
+    if (ranked.length === 0) {
         const retryResults = await runFocusedSearch(plan, ranked);
         const combined = [...ranked, ...retryResults];
         ranked = rankSearchResults(combined, plan);
     }
 
-    // Step 5: select top 5 URLs
-    const topUrls = ranked.slice(0, 5).map(r => r.url);
+    // Step 5: select top URLs
+    const urls = ranked
+        .filter(item => item?.url)
+        .slice(0, 5)
+        .map(item => item.url);
 
-    if (topUrls.length === 0) {
-        // fallback: use direct URL context with a generic search if no results
-        // but we should return a clear message
-        return {
-            reply: "I could not find any relevant pages to verify your question. Please try rephrasing or providing a specific URL.",
-            sources: [],
-            usedUrlContext: false
-        };
+    if (urls.length === 0) {
+        console.warn("No usable DuckDuckGo URLs found.", { query, plan, searchResultCount: allResults.length });
+        throw new Error("I could not find usable pages for this request.");
     }
 
     // Step 6: call Gemini with URL Context
-    const geminiResponse = await callGeminiUrlContext(query, topUrls, model, isDeepResearch);
+    const geminiResponse = await callGeminiUrlContext(query, urls, model, isDeepResearch);
     const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // Extract metadata from URL Context response
@@ -485,7 +527,7 @@ async function smartWebAnswer(query, model, isDeepResearch) {
         }));
 
     // If no metadata, use the top URLs as sources (fallback)
-    const finalSources = sources.length > 0 ? sources : topUrls.map(url => ({
+    const finalSources = sources.length > 0 ? sources : urls.map(url => ({
         title: new URL(url).hostname.replace(/^www\./, ''),
         url: url,
         status: 'success'
@@ -527,7 +569,7 @@ async function callGemini(messages, model, isDeepResearch) {
 }
 
 // ================================================================
-// GEMINI FILE UPLOAD HELPERS (unchanged from previous)
+// GEMINI FILE UPLOAD HELPERS (unchanged)
 // ================================================================
 
 async function deleteGeminiFile(apiKey, fileName) {
