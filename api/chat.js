@@ -18,8 +18,11 @@ const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
 const MAX_URL_CONTEXT_SOURCES = 5;
+const DDG_USER_AGENT = "NEO/1.0 (https://signaturesi.com; contact@signaturesi.com)";
 
-// === Refined system instruction for natural, human-like responses ===
+// ================================================================
+// REFINED SYSTEM INSTRUCTION – natural, human-like responses
+// ================================================================
 const NEO_RESPONSE_FORMAT = `
 You are NEO, a natural, intelligent conversational assistant.
 
@@ -79,28 +82,23 @@ Bad response:
 "Bilkul honest jawab deta hoon! Here are several observations about your personality and professional background..."
 `;
 
-// Helper: clean strings (PRESERVES newlines and tabs)
-function cleanString(str, max = MAX_MESSAGE_LENGTH) {
-    if (typeof str !== "string") {
-        return "";
-    }
+// ================================================================
+// HELPERS (cleaning, validation, etc.)
+// ================================================================
 
+function cleanString(str, max = MAX_MESSAGE_LENGTH) {
+    if (typeof str !== "string") return "";
     return str
         .replace(/\r\n?/g, "\n")
-        .replace(
-            /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
-            ""
-        )
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
         .trim()
         .slice(0, max);
 }
 
-// Helper: clean env var
 function cleanEnv(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
 
-// Helper: validate attachments
 function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
     if (!Array.isArray(attachments)) return [];
     return attachments.slice(0, max).map(f => ({
@@ -115,10 +113,6 @@ function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
     })).filter(f => f.path && f.path.startsWith(`users/${userId}/`) && !f.path.includes('..'));
 }
 
-// ================================================================
-// URL CONTEXT HELPERS
-// ================================================================
-
 function extractUrlsFromText(text) {
     if (!text) return [];
     const urlRegex = /https?:\/\/[^\s<>"']+/g;
@@ -126,7 +120,7 @@ function extractUrlsFromText(text) {
     return matches.filter(url => {
         try {
             const parsed = new URL(url);
-            return parsed.protocol === 'https:' && 
+            return parsed.protocol === 'https:' &&
                    !parsed.hostname.includes('localhost') &&
                    !parsed.hostname.match(/^127\.\d+\.\d+\.\d+$/) &&
                    !parsed.hostname.match(/^192\.168\./) &&
@@ -159,6 +153,383 @@ function deduplicateUrls(urls) {
     });
 }
 
+// ================================================================
+// DUCKDUCKGO SEARCH (HTML parsing)
+// ================================================================
+
+async function searchDuckDuckGo(query) {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': DDG_USER_AGENT,
+                'Accept': 'text/html'
+            }
+        });
+        if (!response.ok) throw new Error(`DDG returned ${response.status}`);
+        const html = await response.text();
+
+        // Extract results from HTML – look for <a rel="nofollow" class="result__a" href="...">
+        const results = [];
+        // Simple regex to find result links with titles and snippets
+        const linkRegex = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
+        const snippetRegex = /<a class="result__snippet"[^>]*>([^<]+)<\/a>/g;
+
+        let match;
+        const links = [];
+        while ((match = linkRegex.exec(html)) !== null) {
+            const href = match[1];
+            const title = match[2].replace(/&quot;/g, '"').replace(/&#x27;/g, "'");
+            links.push({ href, title });
+        }
+        const snippets = [];
+        while ((match = snippetRegex.exec(html)) !== null) {
+            snippets.push(match[1].replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
+        }
+
+        // Combine: each link corresponds to the snippet at same index
+        links.forEach((link, i) => {
+            const snippet = snippets[i] || '';
+            // Ensure the URL is absolute
+            let absoluteUrl = link.href;
+            if (absoluteUrl.startsWith('/')) {
+                absoluteUrl = 'https://duckduckgo.com' + absoluteUrl;
+            }
+            results.push({
+                title: link.title,
+                url: absoluteUrl,
+                snippet: snippet
+            });
+        });
+
+        // Also try to get results from the 'result__body' pattern (fallback)
+        if (results.length === 0) {
+            // Alternative pattern
+            const altRegex = /<a class="result__url"[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
+            while ((match = altRegex.exec(html)) !== null) {
+                const href = match[1];
+                const title = match[2];
+                let absoluteUrl = href;
+                if (absoluteUrl.startsWith('/')) {
+                    absoluteUrl = 'https://duckduckgo.com' + absoluteUrl;
+                }
+                results.push({
+                    title: title,
+                    url: absoluteUrl,
+                    snippet: ''
+                });
+            }
+        }
+
+        return results.slice(0, 10); // limit
+    } catch (error) {
+        console.warn('DuckDuckGo search failed:', error);
+        return [];
+    }
+}
+
+// ================================================================
+// SEARCH PLANNER (Gemini generates queries)
+// ================================================================
+
+async function createSmartSearchPlan(query) {
+    const planningPrompt = `
+You are a search planner. Given a user's question, generate 2–3 specific web search queries to find the most accurate and current information.
+
+Return ONLY a JSON object with the following structure:
+{
+  "mode": "web",
+  "queries": ["query1", "query2", "query3"],
+  "entity": "main entity name (if any)",
+  "preferredPageTypes": ["type1", "type2"],
+  "avoidPageTypes": ["type1", "type2"]
+}
+
+Rules:
+- Queries should be specific and include context like current year, latest, or real‑time if relevant.
+- Prefer queries that target direct profiles, official pages, or real‑time data sources.
+- Avoid queries that return generic lists or homepages.
+- If the question is about a person, include their full name.
+- If about a company, include the official name.
+- Return only JSON, no other text.
+
+User question: ${query}
+`;
+    try {
+        const response = await callGeminiForJson(planningPrompt);
+        const text = response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+        // fallback
+        return {
+            mode: "web",
+            queries: [query, `${query} latest`, `${query} 2026`],
+            entity: "",
+            preferredPageTypes: ["direct profile", "official page", "real-time"],
+            avoidPageTypes: ["generic list", "homepage", "social media"]
+        };
+    } catch (error) {
+        console.warn('Search planning failed, using fallback:', error);
+        return {
+            mode: "web",
+            queries: [query, `${query} latest`, `${query} 2026`],
+            entity: "",
+            preferredPageTypes: ["direct profile", "official page", "real-time"],
+            avoidPageTypes: ["generic list", "homepage", "social media"]
+        };
+    }
+}
+
+// Helper to call Gemini with a simple text prompt (no conversation history)
+async function callGeminiForJson(prompt) {
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key missing");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const body = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 512 }
+    };
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data?.error?.message || "Planning API error");
+    return data;
+}
+
+// ================================================================
+// RESULT RANKING
+// ================================================================
+
+function rankSearchResults(results, plan) {
+    return results.map(item => {
+        let score = 0;
+        const title = (item.title || '').toLowerCase();
+        const url = (item.url || '').toLowerCase();
+        const domain = url.replace(/^https?:\/\//, '').split('/')[0] || '';
+
+        // Entity match in title
+        if (plan.entity && title.includes(plan.entity.toLowerCase())) {
+            score += 35;
+        }
+
+        // Preferred page types: check for /profile/, /real-time/, /latest/, etc.
+        if (url.includes('/profile/')) score += 30;
+        else if (url.includes('/real-time')) score += 25;
+        else if (url.includes('/latest')) score += 20;
+        else if (url.includes('/today')) score += 15;
+
+        // Domain reputation
+        if (domain.includes('bloomberg')) score += 25;
+        else if (domain.includes('forbes')) score += 20;
+        else if (domain.includes('reuters') || domain.includes('apnews')) score += 18;
+        else if (domain.includes('wsj') || domain.includes('ft')) score += 15;
+        else if (domain.includes('wikipedia')) score += 10;
+        else if (domain.includes('twitter') || domain.includes('facebook') || domain.includes('instagram')) score -= 50;
+        else if (domain.includes('reddit') || domain.includes('quora')) score -= 20;
+        else if (domain.includes('youtube')) score -= 10;
+
+        // Avoid generic terms
+        if (url.includes('/worlds-billionaires')) score -= 20; // generic list
+        if (url.includes('/list/')) score -= 15;
+        if (url.includes('/home/')) score -= 30;
+        if (url.includes('/search')) score -= 25;
+
+        // Boost recent looking URLs with year
+        const yearMatch = url.match(/20[2-9][0-9]/);
+        if (yearMatch) score += 10;
+
+        // Length of snippet: longer snippets might be more informative
+        if (item.snippet && item.snippet.length > 100) score += 5;
+
+        return {
+            ...item,
+            score: Math.max(0, score)
+        };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10); // keep top 10
+}
+
+// ================================================================
+// FOCUSED RETRY SEARCH
+// ================================================================
+
+async function runFocusedSearch(plan, rankedResults) {
+    // Try to generate domain-specific queries from the top results
+    const domains = rankedResults.slice(0, 3).map(r => {
+        try {
+            const url = new URL(r.url);
+            return url.hostname.replace(/^www\./, '');
+        } catch { return null; }
+    }).filter(Boolean);
+    const extraQueries = [];
+    const entity = plan.entity || '';
+    domains.forEach(domain => {
+        if (domain) {
+            extraQueries.push(`site:${domain} "${entity}"`);
+        }
+    });
+    if (extraQueries.length === 0) {
+        // fallback: add a more specific query
+        extraQueries.push(`"${entity}" profile`);
+    }
+    // Search each extra query and collect results
+    const searchPromises = extraQueries.slice(0, 2).map(q => searchDuckDuckGo(q));
+    const results = await Promise.all(searchPromises);
+    return results.flat();
+}
+
+// ================================================================
+// GEMINI URL CONTEXT CALL
+// ================================================================
+
+async function callGeminiUrlContext(query, urls, model, isDeepResearch) {
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key missing");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    const contextPrompt = `
+Read only these URLs and answer the user's question based on their content:
+
+${urls.map((u, i) => `${i + 1}. ${u}`).join('\n')}
+
+Original question: ${query}
+
+Rules:
+- Extract only the requested information from these URLs.
+- If a URL cannot be accessed, note that.
+- Do not search the web or add information from other sources.
+- Cite the source for each piece of information.
+- If multiple sources show different values, explain the difference.
+- Be concise and answer the actual question first.
+- If the answer is not found in any URL, say "I could not verify this from the provided sources."
+`;
+
+    const body = {
+        systemInstruction: {
+            parts: [{ text: NEO_RESPONSE_FORMAT }]
+        },
+        contents: [{ role: "user", parts: [{ text: contextPrompt }] }],
+        tools: [{ url_context: {} }],
+        generationConfig: {
+            temperature: isDeepResearch ? 0.5 : 0.6,
+            maxOutputTokens: isDeepResearch ? 8192 : 4096
+        }
+    };
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        console.error('Gemini URL Context error:', data);
+        throw new Error(data?.error?.message || 'Gemini API error');
+    }
+    return data;
+}
+
+// ================================================================
+// SMART WEB ANSWER — orchestrates search + verification
+// ================================================================
+
+async function smartWebAnswer(query, model, isDeepResearch) {
+    // Step 1: plan search
+    const plan = await createSmartSearchPlan(query);
+
+    // Step 2: execute search queries
+    const searchResults = await Promise.all(
+        plan.queries.slice(0, 3).map(q => searchDuckDuckGo(q))
+    );
+    let allResults = searchResults.flat();
+
+    // Step 3: rank
+    let ranked = rankSearchResults(allResults, plan);
+
+    // Step 4: if top score too low, do focused retry
+    if (ranked.length === 0 || ranked[0].score < 20) {
+        const retryResults = await runFocusedSearch(plan, ranked);
+        const combined = [...ranked, ...retryResults];
+        ranked = rankSearchResults(combined, plan);
+    }
+
+    // Step 5: select top 5 URLs
+    const topUrls = ranked.slice(0, 5).map(r => r.url);
+
+    if (topUrls.length === 0) {
+        // fallback: use direct URL context with a generic search if no results
+        // but we should return a clear message
+        return {
+            reply: "I could not find any relevant pages to verify your question. Please try rephrasing or providing a specific URL.",
+            sources: [],
+            usedUrlContext: false
+        };
+    }
+
+    // Step 6: call Gemini with URL Context
+    const geminiResponse = await callGeminiUrlContext(query, topUrls, model, isDeepResearch);
+    const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Extract metadata from URL Context response
+    const urlMetadata = geminiResponse?.candidates?.[0]?.url_context_metadata?.url_metadata || [];
+    const sources = urlMetadata
+        .filter(m => m.url_retrieval_status === 'URL_RETRIEVAL_STATUS_SUCCESS')
+        .map(m => ({
+            title: m.url || 'Source',
+            url: m.url,
+            status: 'success'
+        }));
+
+    // If no metadata, use the top URLs as sources (fallback)
+    const finalSources = sources.length > 0 ? sources : topUrls.map(url => ({
+        title: new URL(url).hostname.replace(/^www\./, ''),
+        url: url,
+        status: 'success'
+    }));
+
+    return {
+        reply: reply || "No reply generated.",
+        sources: finalSources,
+        usedUrlContext: true
+    };
+}
+
+// ================================================================
+// STANDARD GEMINI CALL (no search)
+// ================================================================
+
+async function callGemini(messages, model, isDeepResearch) {
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key missing");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const body = {
+        systemInstruction: { parts: [{ text: NEO_RESPONSE_FORMAT }] },
+        contents: messages,
+        generationConfig: {
+            temperature: isDeepResearch ? 0.55 : 0.65,
+            maxOutputTokens: isDeepResearch ? 8192 : 4096
+        }
+    };
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        console.error('Gemini API error:', data);
+        throw new Error(data?.error?.message || 'Gemini API error');
+    }
+    return data;
+}
+
+// ================================================================
+// GEMINI FILE UPLOAD HELPERS (unchanged from previous)
+// ================================================================
+
 async function deleteGeminiFile(apiKey, fileName) {
     if (!fileName || !apiKey) return;
     const safeName = String(fileName).replace(/^\/+/, "");
@@ -171,232 +542,6 @@ async function deleteGeminiFile(apiKey, fileName) {
         console.warn("Gemini temporary file deletion failed:", error);
     }
 }
-
-async function saveMessage(supabase, conversationId, role, content, attachments, sources) {
-    const { error } = await supabase.from('chat_messages').insert({
-        conversation_id: conversationId,
-        role,
-        content: cleanString(content, MAX_MESSAGE_LENGTH),
-        attachments: attachments || [],
-        sources: sources || []
-    });
-    if (error) throw new Error(error.message);
-}
-
-// ================================================================
-// MAIN HANDLER
-// ================================================================
-
-export default async (req, res) => {
-    const geminiFiles = [];
-
-    try {
-        // --- AUTH ---
-        const auth = getAuthenticatedUser(req);
-        if (!auth?.userId) {
-            return res.status(401).json({ error: "Authentication required. Please log in." });
-        }
-        const user = {
-            id: auth.userId,
-            username: auth.username || "user",
-            planType: auth.planType || "free"
-        };
-
-        const { messages, conversationId, isDeepResearch, title } = req.body;
-
-        if (!Array.isArray(messages) || messages.length === 0) {
-            return res.status(400).json({ error: 'Messages array required' });
-        }
-
-        const lastMsg = messages[messages.length - 1];
-        if (lastMsg?.role !== 'user') {
-            return res.status(400).json({ error: 'Last message must be user' });
-        }
-
-        // --- Attachments extraction ---
-        const receivedAttachments = Array.isArray(req.body.attachments) 
-            ? req.body.attachments 
-            : (lastMsg?.attachments || []);
-        
-        let attachments = validAttachmentList(receivedAttachments, user.id);
-
-        // --- Prepare Gemini messages ---
-        const history = messages.slice(-MAX_HISTORY_MESSAGES);
-        const geminiMessages = history.map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : msg.role,
-            parts: [{ text: cleanString(msg.content || '') }]
-        })).filter(m => m.parts[0].text || m.attachments?.length);
-
-        // --- Upload attachments to Gemini (resumable) ---
-        if (attachments.length > 0 && GEMINI_API_KEY) {
-            const lastGeminiMessage = geminiMessages[geminiMessages.length - 1];
-            if (!lastGeminiMessage) {
-                throw new Error("Unable to prepare attachment message.");
-            }
-
-            const originalText = cleanString(lastMsg.content || "Please analyze the attached file.");
-            const attachmentParts = [];
-
-            for (const file of attachments) {
-                const geminiFile = await uploadSupabaseFileToGemini(file);
-                if (!geminiFile?.uri) continue;
-                geminiFiles.push(geminiFile.name);
-                attachmentParts.push({
-                    fileData: {
-                        mimeType: geminiFile.mimeType,
-                        fileUri: geminiFile.uri
-                    }
-                });
-            }
-
-            lastGeminiMessage.parts = [
-                { text: originalText },
-                ...attachmentParts
-            ];
-        }
-
-        // --- Create conversation if new ---
-        let convId = conversationId || null;
-        if (!convId) {
-            const { data: newConv, error: convError } = await supabase
-                .from('chat_conversations')
-                .insert({ user_id: user.id, title: cleanString(title || 'New conversation', 100) })
-                .select('id')
-                .single();
-            if (convError) throw new Error(convError.message);
-            convId = newConv.id;
-        }
-
-        // --- Save user message ---
-        const userText = cleanString(lastMsg.content || "");
-        await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments, []);
-
-        // --- Model mapping (Pro vs Free) ---
-        const isPro = user.planType === 'pro';
-        const model = isPro
-            ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
-            : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
-
-        // --- URL Context logic ---
-        let usedUrlContext = false;
-        let sources = [];
-        let reply = '';
-
-        const userMessageText = cleanString(lastMsg.content || '');
-        const extractedUrls = extractUrlsFromText(userMessageText);
-        const uniqueUrls = deduplicateUrls(extractedUrls).slice(0, MAX_URL_CONTEXT_SOURCES);
-
-        // Check if this is a "current" / "real-time" / "compare" query
-        const lowerQuery = userMessageText.toLowerCase();
-        const isCurrentQuery = /\b(current|now|latest|today|this month|july|august|202[4-9]|real[- ]time)\b/.test(lowerQuery);
-        const isUrlQuery = uniqueUrls.length > 0;
-        const isCompareQuery = /\b(compare|difference|versus|vs|different|which|between)\b/.test(lowerQuery);
-        const isSpecificQuery = /\b(how much|what is|value|price|net worth|population|weather|stock|price|rate|exchange)\b/.test(lowerQuery);
-
-        // Determine if we should use URL Context
-        const shouldUseUrlContext = (isUrlQuery && (isCurrentQuery || isCompareQuery || isSpecificQuery)) || 
-                                    (isCurrentQuery && isCompareQuery) ||
-                                    (userMessageText.includes('read') && userMessageText.includes('link'));
-
-        // --- First call: normal generation (without URL Context) ---
-        let normalResponse = null;
-        let candidateUrls = [];
-
-        if (shouldUseUrlContext && GEMINI_API_KEY) {
-            try {
-                // First, get the normal response to extract candidate URLs
-                const firstGeminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
-                const firstReply = firstGeminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                
-                if (firstReply) {
-                    normalResponse = firstReply;
-                    
-                    // Try to extract candidate URLs from the first response
-                    const responseUrls = extractUrlsFromText(firstReply);
-                    const uniqueResponseUrls = deduplicateUrls(responseUrls).slice(0, MAX_URL_CONTEXT_SOURCES);
-                    
-                    // Also use any URLs from the user's message if the model didn't suggest any
-                    if (uniqueResponseUrls.length > 0) {
-                        candidateUrls = uniqueResponseUrls;
-                    } else if (uniqueUrls.length > 0) {
-                        candidateUrls = uniqueUrls;
-                    }
-                    
-                    // If we have candidate URLs, make a second call with URL Context
-                    if (candidateUrls.length > 0) {
-                        const contextResponse = await callGeminiWithUrlContext(
-                            geminiMessages,
-                            model,
-                            isDeepResearch,
-                            candidateUrls,
-                            userMessageText
-                        );
-                        
-                        const contextReply = contextResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                        
-                        if (contextReply) {
-                            reply = contextReply;
-                            usedUrlContext = true;
-                            
-                            // Extract metadata from URL Context response
-                            const urlMetadata = contextResponse?.candidates?.[0]?.url_context_metadata?.url_metadata || [];
-                            if (Array.isArray(urlMetadata)) {
-                                sources = urlMetadata
-                                    .filter(m => m.url_retrieval_status === 'URL_RETRIEVAL_STATUS_SUCCESS')
-                                    .map(m => ({
-                                        title: m.url || 'Source',
-                                        url: m.url,
-                                        status: 'success'
-                                    }));
-                            }
-                            
-                            // If no metadata from Gemini, use candidate URLs as sources
-                            if (sources.length === 0) {
-                                sources = candidateUrls.map(url => ({
-                                    title: new URL(url).hostname.replace(/^www\./, ''),
-                                    url: url,
-                                    status: 'success'
-                                }));
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.warn('URL Context attempt failed, falling back to normal response:', error);
-                // Fall through to normal response
-            }
-        }
-
-        // If we don't have a reply yet (URL Context didn't work or wasn't needed), use normal response
-        if (!reply) {
-            const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
-            reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (!reply) throw new Error('Gemini returned empty response');
-        }
-
-        // --- Save assistant message ---
-        await saveMessage(supabase, convId, 'assistant', reply, [], sources);
-
-        return res.json({
-            reply,
-            conversationId: convId,
-            usedUrlContext,
-            sources: sources.length > 0 ? sources : undefined
-        });
-
-    } catch (error) {
-        console.error('Chat error:', error);
-        return res.status(500).json({ error: error.message });
-    } finally {
-        if (geminiFiles.length > 0 && GEMINI_API_KEY) {
-            await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
-        }
-    }
-};
-
-// ================================================================
-// HELPER FUNCTIONS (Gemini API calls)
-// ================================================================
 
 async function uploadSupabaseFileToGemini(file) {
     const { data: storedFile, error } = await supabase.storage
@@ -475,16 +620,13 @@ async function uploadSupabaseFileToGemini(file) {
 async function waitForGeminiFile(fileName, fallbackMimeType) {
     for (let attempt = 0; attempt < 60; attempt += 1) {
         await new Promise(resolve => setTimeout(resolve, 2000));
-
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${encodeURIComponent(GEMINI_API_KEY)}`
         );
         const data = await response.json().catch(() => ({}));
-
         if (!response.ok) {
             throw new Error(data?.error?.message || "Unable to check Gemini file status.");
         }
-
         if (data.state === "ACTIVE") {
             return {
                 name: data.name,
@@ -499,118 +641,181 @@ async function waitForGeminiFile(fileName, fallbackMimeType) {
     throw new Error("Gemini file processing timed out.");
 }
 
-// === Standard Gemini call ===
-async function callGemini(
-    messages,
-    model,
-    isDeepResearch
-) {
-    if (!GEMINI_API_KEY) {
-        throw new Error("Gemini API configuration is missing.");
-    }
-
-    const url =
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-
-    const body = {
-        systemInstruction: {
-            parts: [
-                {
-                    text: NEO_RESPONSE_FORMAT
-                }
-            ]
-        },
-        contents: messages,
-        generationConfig: {
-            temperature: isDeepResearch ? 0.55 : 0.65,
-            maxOutputTokens: isDeepResearch ? 8192 : 4096
-        }
-    };
-
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+async function saveMessage(supabase, conversationId, role, content, attachments, sources) {
+    const { error } = await supabase.from('chat_messages').insert({
+        conversation_id: conversationId,
+        role,
+        content: cleanString(content, MAX_MESSAGE_LENGTH),
+        attachments: attachments || [],
+        sources: sources || []
     });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-        console.error("Gemini API Error:", data);
-        throw new Error(data?.error?.message || "Gemini API error");
-    }
-
-    return data;
+    if (error) throw new Error(error.message);
 }
 
-// === Gemini call with URL Context (no Google Search) ===
-async function callGeminiWithUrlContext(
-    messages,
-    model,
-    isDeepResearch,
-    urls,
-    originalQuery
-) {
-    if (!GEMINI_API_KEY) {
-        throw new Error("Gemini API configuration is missing.");
-    }
+// ================================================================
+// MAIN HANDLER
+// ================================================================
 
-    // Build a focused prompt asking Gemini to read the provided URLs
-    const urlContextPrompt = `
-Read only these URLs and answer the user's question based on their content:
+export default async (req, res) => {
+    const geminiFiles = [];
 
-${urls.map((url, i) => `${i + 1}. ${url}`).join('\n')}
-
-Original question: ${originalQuery}
-
-Rules:
-- Extract only the requested information from these URLs.
-- If a URL returns an error or cannot be accessed, note that.
-- Do not search the web or add information from other sources.
-- Cite the source for each piece of information.
-- If multiple sources show different values, explain the difference.
-- Be concise and answer the actual question first.
-`;
-
-    const contextMessages = [
-        ...messages.slice(0, -1),
-        {
-            role: 'user',
-            parts: [{ text: urlContextPrompt }]
+    try {
+        // --- AUTH ---
+        const auth = getAuthenticatedUser(req);
+        if (!auth?.userId) {
+            return res.status(401).json({ error: "Authentication required. Please log in." });
         }
-    ];
+        const user = {
+            id: auth.userId,
+            username: auth.username || "user",
+            planType: auth.planType || "free"
+        };
 
-    const url =
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+        const { messages, conversationId, isDeepResearch, title } = req.body;
 
-    const body = {
-        systemInstruction: {
-            parts: [{ text: NEO_RESPONSE_FORMAT }]
-        },
-        contents: contextMessages,
-        tools: [
-            {
-                url_context: {}
+        if (!Array.isArray(messages) || messages.length === 0) {
+            return res.status(400).json({ error: 'Messages array required' });
+        }
+
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg?.role !== 'user') {
+            return res.status(400).json({ error: 'Last message must be user' });
+        }
+
+        // --- Attachments extraction ---
+        const receivedAttachments = Array.isArray(req.body.attachments)
+            ? req.body.attachments
+            : (lastMsg?.attachments || []);
+        let attachments = validAttachmentList(receivedAttachments, user.id);
+
+        // --- Prepare Gemini messages (for normal conversation) ---
+        const history = messages.slice(-MAX_HISTORY_MESSAGES);
+        const geminiMessages = history.map(msg => ({
+            role: msg.role === 'assistant' ? 'model' : msg.role,
+            parts: [{ text: cleanString(msg.content || '') }]
+        })).filter(m => m.parts[0].text || m.attachments?.length);
+
+        // --- Upload attachments to Gemini (resumable) ---
+        if (attachments.length > 0 && GEMINI_API_KEY) {
+            const lastGeminiMessage = geminiMessages[geminiMessages.length - 1];
+            if (!lastGeminiMessage) {
+                throw new Error("Unable to prepare attachment message.");
             }
-        ],
-        generationConfig: {
-            temperature: isDeepResearch ? 0.5 : 0.6,
-            maxOutputTokens: isDeepResearch ? 8192 : 4096
+            const originalText = cleanString(lastMsg.content || "Please analyze the attached file.");
+            const attachmentParts = [];
+            for (const file of attachments) {
+                const geminiFile = await uploadSupabaseFileToGemini(file);
+                if (!geminiFile?.uri) continue;
+                geminiFiles.push(geminiFile.name);
+                attachmentParts.push({
+                    fileData: {
+                        mimeType: geminiFile.mimeType,
+                        fileUri: geminiFile.uri
+                    }
+                });
+            }
+            lastGeminiMessage.parts = [
+                { text: originalText },
+                ...attachmentParts
+            ];
         }
-    };
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
+        // --- Create conversation if new ---
+        let convId = conversationId || null;
+        if (!convId) {
+            const { data: newConv, error: convError } = await supabase
+                .from('chat_conversations')
+                .insert({ user_id: user.id, title: cleanString(title || 'New conversation', 100) })
+                .select('id')
+                .single();
+            if (convError) throw new Error(convError.message);
+            convId = newConv.id;
+        }
 
-    const data = await response.json().catch(() => ({}));
+        // --- Save user message ---
+        const userText = cleanString(lastMsg.content || "");
+        await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments, []);
 
-    if (!response.ok) {
-        console.error("Gemini API Error (URL Context):", data);
-        throw new Error(data?.error?.message || "Gemini API error");
+        // --- Model mapping ---
+        const isPro = user.planType === 'pro';
+        const model = isPro
+            ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
+            : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
+
+        // --- Determine if we need smart web search ---
+        const lowerQuery = userText.toLowerCase();
+        const isCurrentQuery = /\b(current|now|latest|today|this month|july|august|202[4-9]|real[- ]time)\b/.test(lowerQuery);
+        const isCompareQuery = /\b(compare|difference|versus|vs|different|which|between)\b/.test(lowerQuery);
+        const isSpecificQuery = /\b(how much|what is|value|price|net worth|population|weather|stock|price|rate|exchange|who|which company|where is)\b/.test(lowerQuery);
+        const hasUrl = extractUrlsFromText(userText).length > 0;
+
+        let reply = '';
+        let sources = [];
+        let usedUrlContext = false;
+
+        // If the user pasted a URL, go directly to URL Context (skip search)
+        if (hasUrl) {
+            const urls = extractUrlsFromText(userText).slice(0, MAX_URL_CONTEXT_SOURCES);
+            try {
+                const contextResponse = await callGeminiUrlContext(userText, urls, model, isDeepResearch);
+                reply = contextResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const metadata = contextResponse?.candidates?.[0]?.url_context_metadata?.url_metadata || [];
+                sources = metadata
+                    .filter(m => m.url_retrieval_status === 'URL_RETRIEVAL_STATUS_SUCCESS')
+                    .map(m => ({
+                        title: m.url || 'Source',
+                        url: m.url,
+                        status: 'success'
+                    }));
+                if (sources.length === 0) {
+                    sources = urls.map(url => ({
+                        title: new URL(url).hostname.replace(/^www\./, ''),
+                        url: url,
+                        status: 'success'
+                    }));
+                }
+                usedUrlContext = true;
+            } catch (error) {
+                console.warn('Direct URL Context failed:', error);
+                // fallback to normal Gemini
+            }
+        } else if (isCurrentQuery || isCompareQuery || isSpecificQuery) {
+            // Use smart web search
+            try {
+                const result = await smartWebAnswer(userText, model, isDeepResearch);
+                reply = result.reply;
+                sources = result.sources || [];
+                usedUrlContext = result.usedUrlContext || false;
+            } catch (error) {
+                console.warn('Smart web search failed, falling back to normal Gemini:', error);
+                // fall through to normal Gemini
+            }
+        }
+
+        // If no reply yet (either no search or search failed), use normal Gemini
+        if (!reply) {
+            const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
+            reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (!reply) throw new Error('Gemini returned empty response');
+        }
+
+        // --- Save assistant message ---
+        await saveMessage(supabase, convId, 'assistant', reply, [], sources);
+
+        // --- Return response ---
+        return res.json({
+            reply,
+            conversationId: convId,
+            usedUrlContext,
+            sources: sources.length > 0 ? sources : undefined
+        });
+
+    } catch (error) {
+        console.error('Chat error:', error);
+        return res.status(500).json({ error: error.message });
+    } finally {
+        if (geminiFiles.length > 0 && GEMINI_API_KEY) {
+            await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
+        }
     }
-
-    return data;
-}
+};
