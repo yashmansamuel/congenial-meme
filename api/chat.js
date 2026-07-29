@@ -18,7 +18,7 @@ const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
 
-// === NEW: System instruction for clean markdown formatting ===
+// === System instruction for clean markdown + math formatting ===
 const NEO_RESPONSE_FORMAT = `
 You are NEO, a premium conversational assistant.
 
@@ -49,6 +49,7 @@ Math and science formatting rules:
 - After an equation, explain every important symbol using a clean bullet list.
 - Do not place long equations inside bold text.
 - Use Unicode symbols only for very simple expressions.
+- Never use $...$, ($...$), or [$...$]. Always use \( ... \) for inline math and \[ ... \] for display equations.
 `;
 
 // Helper: clean strings
@@ -318,7 +319,7 @@ async function waitForGeminiFile(fileName, fallbackMimeType) {
     throw new Error("Gemini file processing timed out.");
 }
 
-// === UPDATED callGemini with system instruction ===
+// === Updated callGemini with system instruction ===
 async function callGemini(
     messages,
     model,
