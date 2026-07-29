@@ -21,7 +21,7 @@ const MAX_URL_CONTEXT_SOURCES = 5;
 const DDG_USER_AGENT = "NEO/1.0 (https://signaturesi.com; contact@signaturesi.com)";
 
 // ================================================================
-// REFINED SYSTEM INSTRUCTION – natural, human-like responses
+// NEO SYSTEM INSTRUCTION – natural, human-like responses
 // ================================================================
 const NEO_RESPONSE_FORMAT = `
 You are NEO, a natural, intelligent conversational assistant.
@@ -218,16 +218,9 @@ async function searchDuckDuckGo(query, limit = 10) {
             const results = [];
             const seen = new Set();
 
-            // Common patterns: result__a, result-link, etc.
-            // For lite version: <a href="...">
-            const linkRegex = /<a\s+(?:[^>]*\s+)?href="([^"]+)"[^>]*>([^<]*)<\/a>/gi;
-            const snippetRegex = /<div\s+class="result__snippet"[^>]*>([^<]*)<\/div>/gi;
-            const liteSnippetRegex = /<td\s+class="result-snippet"[^>]*>([^<]*)<\/td>/gi;
-
-            // First, try to find result containers
+            // For HTML version: look for result blocks
             const resultBlocks = html.split(/<div class="result[^"]*">/gi);
             if (resultBlocks.length > 1) {
-                // HTML version
                 for (const block of resultBlocks) {
                     if (results.length >= limit) break;
                     const anchorMatch = block.match(/<a\s+[^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/i);
@@ -245,7 +238,6 @@ async function searchDuckDuckGo(query, limit = 10) {
 
             // If no results from HTML version, try lite version
             if (results.length === 0) {
-                // Lite version: rows with links
                 const trs = html.split(/<tr\s*>/gi);
                 for (const tr of trs) {
                     if (results.length >= limit) break;
@@ -428,7 +420,7 @@ async function runFocusedSearch(plan, rankedResults) {
 }
 
 // ================================================================
-// GEMINI URL CONTEXT CALL
+// GEMINI URL CONTEXT CALL (no Google Search)
 // ================================================================
 
 async function callGeminiUrlContext(query, urls, model, isDeepResearch) {
