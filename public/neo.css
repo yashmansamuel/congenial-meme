@@ -2682,3 +2682,94 @@ mjx-container[display="true"]::-webkit-scrollbar-thumb {
         font-size: 100% !important;
     }
 }
+/* FINAL PREMIUM RESPONSE FORMAT */
+
+.message.assistant .message-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    color: var(--text-primary);
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.7 !important;
+    letter-spacing: -0.006em;
+}
+
+.message-content p {
+    margin: 0 0 16px !important;
+    font-weight: 400 !important;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+}
+
+.message-content h1 {
+    margin: 26px 0 12px !important;
+    font-size: 24px !important;
+    line-height: 1.28 !important;
+    font-weight: 700 !important;
+}
+
+.message-content h2 {
+    margin: 24px 0 11px !important;
+    font-size: 20px !important;
+    line-height: 1.32 !important;
+    font-weight: 680 !important;
+}
+
+.message-content h3 {
+    margin: 20px 0 9px !important;
+    font-size: 17px !important;
+    line-height: 1.38 !important;
+    font-weight: 650 !important;
+}
+
+.message-content strong {
+    font-weight: 650 !important;
+}
+
+.message-content ul,
+.message-content ol {
+    margin: 10px 0 18px !important;
+    padding-left: 26px !important;
+}
+
+.message-content li {
+    margin: 0 0 9px !important;
+    padding-left: 2px !important;
+    font-weight: 400 !important;
+}
+
+.message-content pre {
+    margin: 16px 0 !important;
+    padding: 16px !important;
+    overflow-x: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.message-content pre code {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+}
+
+.message-content a {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
