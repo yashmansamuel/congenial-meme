@@ -826,58 +826,40 @@
 
         return chunks
             .map((chunk, index) => {
-                /* Code blocks ko bilkul modify mat karo */
                 if (index % 2 === 1) {
                     return chunk;
                 }
 
                 return chunk
-                    /* Remove trailing spaces */
                     .replace(/[ \t]+\n/g, "\n")
-
-                    /* Fix: sentence.**Next paragraph */
                     .replace(
                         /([.!?])\*\*(?=[A-Z0-9])/g,
                         "$1**\n\n"
                     )
-
-                    /* Fix: **Section title**1. First item */
                     .replace(
                         /(\*\*[^*\n]{3,100}\*\*)(?=\d{1,2}\.\s)/g,
                         "$1\n\n"
                     )
-
-                    /* Fix: Generation1. Krea AI */
                     .replace(
                         /([A-Za-z)])(\d{1,2}\.\s+(?=[A-Z]))/g,
                         "$1\n\n$2"
                     )
-
-                    /* Fix: instantly.2. Next item */
                     .replace(
                         /([.!?])(?=\d{1,2}\.\s+[A-Z])/g,
                         "$1\n\n"
                     )
-
-                    /* Embedded headings ko new line par lao */
                     .replace(
                         /([^\n])\s*(#{1,6}\s+)/g,
                         "$1\n\n$2"
                     )
-
-                    /* Short standalone bold title → heading */
                     .replace(
                         /^\*\*([^*\n]{3,80})\*\*\s*$/gm,
                         "### $1"
                     )
-
-                    /* Bullets ko separate lines par lao */
                     .replace(
                         /([.!?])\s*(?=[-*+]\s+\S)/g,
                         "$1\n\n"
                     )
-
-                    /* Excess blank lines clean */
                     .replace(
                         /\n{3,}/g,
                         "\n\n"
@@ -888,17 +870,14 @@
     }
 
     // --------------------------------------------------------
-    // MATH DELIMITER NORMALIZATION — FIX RAW $ BRACKETS
+    // MATH DELIMITER NORMALIZATION
     // --------------------------------------------------------
     function normalizeMathDelimiters(value) {
         return String(value || "")
-            /* ($equation$) → \(equation\) */
             .replace(
                 /\(\$([^$\n]+)\$\)/g,
                 "\\($1\\)"
             )
-
-            /* [$equation$] → \[equation\] */
             .replace(
                 /\[\$([\s\S]*?)\$\]/g,
                 "\\[$1\\]"
@@ -909,7 +888,6 @@
     //  INIT
     // --------------------------------------------------------
     async function init() {
-        // Force clear any stuck transcription state
         composerInputRow?.classList.remove("is-transcribing");
         isListening = false;
 
@@ -1136,7 +1114,7 @@
     }
 
     // --------------------------------------------------------
-    //  SANITIZATION & MARKDOWN (UPDATED)
+    //  SANITIZATION & MARKDOWN
     // --------------------------------------------------------
     function sanitizeHTML(value) {
         const source =
@@ -1152,7 +1130,6 @@
         return element.innerHTML;
     }
 
-    // --- REPLACED safeParseMarkdown with clean version ---
     function safeParseMarkdown(text) {
         const source =
             normalizeMathDelimiters(text)
@@ -1222,7 +1199,7 @@
     }
 
     // --------------------------------------------------------
-    // KATEX MATH RENDERING (replaces MathJax)
+    // KATEX MATH RENDERING
     // --------------------------------------------------------
     function renderNeoMath(element) {
         if (
@@ -1281,6 +1258,43 @@
     }
 
     // --------------------------------------------------------
+    // SOURCE PILLS RENDERING
+    // --------------------------------------------------------
+    function renderSourcePills(parentElement, sources) {
+        if (!parentElement || !sources || sources.length === 0) {
+            return;
+        }
+
+        const container = document.createElement("div");
+        container.className = "neo-source-pills";
+
+        const label = document.createElement("span");
+        label.className = "neo-source-label";
+        label.textContent = `Sources ${sources.length}`;
+        container.appendChild(label);
+
+        sources.forEach(source => {
+            const pill = document.createElement("a");
+            pill.className = "neo-source-pill";
+            pill.href = source.url || "#";
+            pill.target = "_blank";
+            pill.rel = "noopener noreferrer";
+
+            const title = source.title || source.url || "Source";
+            pill.textContent = title;
+
+            const arrow = document.createElement("span");
+            arrow.className = "neo-source-arrow";
+            arrow.textContent = "↗";
+            pill.appendChild(arrow);
+
+            container.appendChild(pill);
+        });
+
+        parentElement.appendChild(container);
+    }
+
+    // --------------------------------------------------------
     //  API HELPER
     // --------------------------------------------------------
     async function readJsonResponse(
@@ -1324,7 +1338,7 @@
     }
 
     // --------------------------------------------------------
-    // PREMIUM NEO TOOLTIPS — FIXED
+    // PREMIUM NEO TOOLTIPS
     // --------------------------------------------------------
     function setupPremiumTooltips() {
         let tooltip = null;
@@ -2273,7 +2287,6 @@
         }
     }
 
-    // --- stopListening (clean version) ---
     function stopListening() {
         isListening = false;
 
@@ -2376,7 +2389,6 @@
             }
         );
 
-    // ----- RENAME conversation (now throws error) -----
     async function renameConversation(conversationId, newTitle) {
         const response = await fetch("/api/history", {
             method: "POST",
@@ -2398,7 +2410,6 @@
         }
     }
 
-    // ----- PIN / UNPIN conversation (now throws error) -----
     async function togglePinConversation(conversationId, pin) {
         const response = await fetch("/api/history", {
             method: "POST",
@@ -2416,7 +2427,6 @@
         await loadHistoryFromSupabase();
     }
 
-    // ----- loadChatMessages (with signed URLs) -----
     async function loadChatMessages(
         conversationId
     ) {
@@ -2473,6 +2483,9 @@
                     content: message.content || "",
                     attachments: Array.isArray(message.attachments)
                         ? message.attachments
+                        : [],
+                    sources: Array.isArray(message.sources)
+                        ? message.sources
                         : []
                 }));
 
@@ -2500,7 +2513,8 @@
                             message.content,
                             index,
                             false,
-                            message.attachments || []
+                            message.attachments || [],
+                            message.sources || []
                         );
                     }
                 }
@@ -2543,8 +2557,6 @@
     // --------------------------------------------------------
     //  UI RENDERERS
     // --------------------------------------------------------
-
-    // ----- File icon helper -----
     function getFileIcon(file) {
         const mime = (file.mimeType || file.type || "").toLowerCase();
         const name = (file.name || "").toLowerCase();
@@ -2560,13 +2572,13 @@
         return "file";
     }
 
-    // ----- renderMessageToUI (with signed URLs) -----
     function renderMessageToUI(
         role,
         content,
         messageIndex = null,
         isThinking = false,
-        attachments = []
+        attachments = [],
+        sources = []
     ) {
         if (!chatMessages) {
             return null;
@@ -2640,6 +2652,11 @@
                 contentElement
             );
 
+            // Render source pills if available
+            if (sources && sources.length > 0 && !isThinking) {
+                renderSourcePills(message, sources);
+            }
+
             const actions =
                 document
                     .createElement(
@@ -2672,16 +2689,16 @@
             message
         );
 
-        // Render KaTeX for assistant messages
         if (
             role === "assistant" &&
             !isThinking
         ) {
-            renderNeoMath(
+            const mathRoot =
                 message.querySelector(
                     ".message-content"
-                )
-            );
+                );
+
+            renderNeoMath(mathRoot);
         }
 
         if (scrollArea) {
@@ -2697,7 +2714,6 @@
         return message;
     }
 
-    // ----- renderUserMessageWrapper (with signed URLs and icons, secure file names) -----
     function renderUserMessageWrapper(
         containerElement,
         textContent,
@@ -2715,7 +2731,6 @@
         wrapper.className =
             "message-wrapper";
 
-        // Text content
         const content =
             document.createElement(
                 "div"
@@ -2728,7 +2743,6 @@
 
         wrapper.appendChild(content);
 
-        // Attachments (media grid) — secure file names
         if (attachments && attachments.length > 0) {
             const mediaGrid = document.createElement("div");
             mediaGrid.className = "message-media-grid";
@@ -2768,7 +2782,6 @@
             wrapper.appendChild(mediaGrid);
         }
 
-        // Actions (edit/copy)
         const actions =
             document.createElement(
                 "div"
@@ -2852,7 +2865,6 @@
         }
     }
 
-    // ----- enableUserMessageEdit (unchanged) -----
     function enableUserMessageEdit(
         messageElement,
         originalText,
@@ -2968,7 +2980,6 @@
             };
     }
 
-    // ----- handleEditedSend (unchanged) -----
     async function handleEditedSend(
         newText,
         targetIndex,
@@ -3073,7 +3084,6 @@
         }
     }
 
-    // ----- copyWithFeedback (unchanged) -----
     function copyWithFeedback(
         text,
         button,
@@ -3122,7 +3132,7 @@
     }
 
     // --------------------------------------------------------
-    //  CHAT ACTIONS (unchanged)
+    //  CHAT ACTIONS
     // --------------------------------------------------------
     chatMessages
         ?.addEventListener(
@@ -3556,6 +3566,9 @@
                     .trim();
         }
 
+        // Extract sources from response
+        const sources = data.sources || [];
+
         try {
             if (aiBubble) {
                 aiBubble.classList
@@ -3578,8 +3591,12 @@
                             reply
                         );
 
-                    // Render KaTeX on the new content
                     renderNeoMath(content);
+                }
+
+                // Render source pills
+                if (sources && sources.length > 0) {
+                    renderSourcePills(aiBubble, sources);
                 }
             }
 
@@ -3588,7 +3605,10 @@
                     "assistant",
 
                 content:
-                    reply
+                    reply,
+
+                sources:
+                    sources
             });
 
             if (scrollArea) {
@@ -3640,7 +3660,10 @@
                         "assistant",
 
                     content:
-                        reply
+                        reply,
+
+                    sources:
+                        sources
                 });
             }
         } finally {
@@ -3776,10 +3799,9 @@
     }
 
     // --------------------------------------------------------
-    //  SETTINGS UI — fully connected
+    //  SETTINGS UI
     // --------------------------------------------------------
     function setupSettingsUI() {
-        // Open settings from user popup
         settingsBtn?.addEventListener(
             "click",
             event => {
@@ -3794,7 +3816,6 @@
             }
         );
 
-        // Close settings
         neoSettingsCloseBtn?.addEventListener(
             "click",
             () => {
@@ -3803,7 +3824,6 @@
             }
         );
 
-        // Close on backdrop click
         neoSettingsOverlay?.addEventListener(
             "click",
             event => {
@@ -3814,7 +3834,6 @@
             }
         );
 
-        // Tab switching
         settingsTabs.forEach(tab => {
             tab.addEventListener(
                 "click",
@@ -3836,7 +3855,21 @@
             );
         });
 
-        // Theme button (syncs with main theme toggle)
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (
+                    event.key === "Escape" &&
+                    neoSettingsOverlay
+                        ?.classList.contains(
+                            "show"
+                        )
+                ) {
+                    closeNeoSettings();
+                }
+            }
+        );
+
         settingsThemeBtn?.addEventListener(
             "click",
             () => {
@@ -3846,12 +3879,10 @@
                     "neo_theme",
                     !isDark ? "dark" : "light"
                 );
-                // Update button text to reflect new state
                 settingsThemeBtn.textContent = !isDark ? "Dark" : "Light";
             }
         );
 
-        // Profile save (placeholder)
         saveProfileSettingsBtn?.addEventListener(
             "click",
             () => {
@@ -3867,7 +3898,6 @@
             }
         );
 
-        // Profile reset (placeholder)
         resetProfileSettingsBtn?.addEventListener(
             "click",
             () => {
@@ -3878,7 +3908,6 @@
             }
         );
 
-        // Settings upgrade button (reuses checkout logic)
         settingsUpgradeBtn?.addEventListener(
             "click",
             () => {
@@ -4153,7 +4182,6 @@
                 }
             );
 
-        // ---- Rename, Pin, Share listeners ----
         hpRenameBtn?.addEventListener(
             "click",
             async event => {
@@ -4289,7 +4317,6 @@
             }
         );
 
-        // ---- User profile button ----
         userProfileBtn?.addEventListener(
             "click",
             event => {
@@ -4323,7 +4350,6 @@
             }
         );
 
-        // ---- Sidebar personalities button ----
         sidebarPersonalitiesBtn
             ?.addEventListener(
                 "click",
@@ -4349,15 +4375,12 @@
                 }
             );
 
-        // ---- Connect Settings UI ----
         setupSettingsUI();
 
-        // ---- Global outside-click handling ----
         document.addEventListener(
             "click",
 
             event => {
-                // Close history popup
                 if (
                     !historyPopupMenu?.contains(
                         event.target
@@ -4369,7 +4392,6 @@
                     closeHistoryPopup();
                 }
 
-                // Close user popup
                 if (
                     !userProfileBtn?.contains(
                         event.target
@@ -4381,7 +4403,6 @@
                     closeUserPopup();
                 }
 
-                // Close attachment popup
                 if (
                     !attachBtn?.contains(
                         event.target
@@ -4397,7 +4418,6 @@
                         );
                 }
 
-                // Close model dropdown
                 if (
                     !modelBadgeBtn?.contains(
                         event.target
@@ -4478,8 +4498,6 @@
     // --------------------------------------------------------
     //  ADDITIONAL FUNCTIONS
     // --------------------------------------------------------
-
-    // --- Dynamic adaptive suggestions ---
     function renderAdaptiveSuggestions() {
         if (!liveSuggestions || !chatInput) return;
 
@@ -4549,7 +4567,6 @@
         });
     }
 
-    // --- Sidebar state management ---
     function initializeSidebarState() {
         const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
@@ -4571,7 +4588,6 @@
         document.body.classList.toggle("sidebar-collapsed", Boolean(collapsed));
     }
 
-    // --- Enhanced drag & drop ---
     function setupDragAndDrop() {
         if (!composerWrapper) return;
 
@@ -4597,17 +4613,12 @@
         });
     }
 
-    // --- Paste upload ---
     function setupPasteUpload() {
         document.addEventListener("paste", event => {
             const files = Array.from(event.clipboardData?.files || []);
             if (files.length) handleFileProcessing(files);
         });
     }
-
-    // --------------------------------------------------------
-    //  Image attachment helpers & enhanced rendering
-    // --------------------------------------------------------
 
     function isImageAttachment(file) {
         if (!file) return false;
@@ -4627,10 +4638,7 @@
     function getAttachmentPreviewUrl(file) {
         if (!file) return "";
 
-        // Use signedUrl from backend first
         if (file.signedUrl) return file.signedUrl;
-
-        // Fallback to existing previewUrl or data
         if (file.previewUrl) return file.previewUrl;
 
         if (typeof file.data === "string" && file.data.startsWith("data:image/")) {
@@ -4647,7 +4655,6 @@
         return "";
     }
 
-    // --- renderAttachedChips (secure file names) ---
     function renderAttachedChips() {
         if (!attachedChipsWrapper) return;
 
@@ -4704,7 +4711,6 @@
         }
     }
 
-    // --- getFileCategory ---
     function getFileCategory(file) {
         const type = file.type || "";
 
@@ -4716,7 +4722,6 @@
         return "text";
     }
 
-    // --- handleFileProcessing ---
     async function handleFileProcessing(files) {
         const selected =
             Array.from(files || [])
@@ -4764,7 +4769,6 @@
         updateComposerShape();
     }
 
-    // --- Profile rendering ---
     async function renderUserProfile() {
         let profile = null;
 
@@ -4816,7 +4820,6 @@
         }
     }
 
-    // --- loadHistoryFromSupabase (with three-dot button, rename, pin/unpin) ---
     async function loadHistoryFromSupabase() {
         if (!historyList) return;
 
@@ -4869,7 +4872,6 @@
                     loadChatMessages(item.id);
                 });
 
-                // Three-dot button (always visible)
                 const dotBtn = document.createElement("button");
                 dotBtn.type = "button";
                 dotBtn.className = "history-three-dot";
@@ -4912,7 +4914,6 @@
                 row.appendChild(dotBtn);
                 historyList.appendChild(row);
 
-                // Pin indicator (optional)
                 if (item.is_pinned) {
                     const pinIcon = document.createElement("span");
                     pinIcon.style.marginLeft = "6px";
@@ -4923,7 +4924,6 @@
 
                 row.dataset.id = item.id;
 
-                // ---- Context menu (right-click) ----
                 row.addEventListener(
                     "contextmenu",
                     event => {
