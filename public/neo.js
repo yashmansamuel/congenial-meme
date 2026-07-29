@@ -813,6 +813,99 @@
     }
 
     // --------------------------------------------------------
+    // MARKDOWN NORMALIZATION — FIX MALFORMED OUTPUT
+    // --------------------------------------------------------
+    function normalizeMarkdownForDisplay(value) {
+        const source = String(value || "")
+            .replace(/\r\n?/g, "\n")
+            .trim();
+
+        const chunks = source.split(
+            /(```[\s\S]*?```)/g
+        );
+
+        return chunks
+            .map((chunk, index) => {
+                /* Code blocks ko bilkul modify mat karo */
+                if (index % 2 === 1) {
+                    return chunk;
+                }
+
+                return chunk
+                    /* Remove trailing spaces */
+                    .replace(/[ \t]+\n/g, "\n")
+
+                    /* Fix: sentence.**Next paragraph */
+                    .replace(
+                        /([.!?])\*\*(?=[A-Z0-9])/g,
+                        "$1**\n\n"
+                    )
+
+                    /* Fix: **Section title**1. First item */
+                    .replace(
+                        /(\*\*[^*\n]{3,100}\*\*)(?=\d{1,2}\.\s)/g,
+                        "$1\n\n"
+                    )
+
+                    /* Fix: Generation1. Krea AI */
+                    .replace(
+                        /([A-Za-z)])(\d{1,2}\.\s+(?=[A-Z]))/g,
+                        "$1\n\n$2"
+                    )
+
+                    /* Fix: instantly.2. Next item */
+                    .replace(
+                        /([.!?])(?=\d{1,2}\.\s+[A-Z])/g,
+                        "$1\n\n"
+                    )
+
+                    /* Embedded headings ko new line par lao */
+                    .replace(
+                        /([^\n])\s*(#{1,6}\s+)/g,
+                        "$1\n\n$2"
+                    )
+
+                    /* Short standalone bold title → heading */
+                    .replace(
+                        /^\*\*([^*\n]{3,80})\*\*\s*$/gm,
+                        "### $1"
+                    )
+
+                    /* Bullets ko separate lines par lao */
+                    .replace(
+                        /([.!?])\s*(?=[-*+]\s+\S)/g,
+                        "$1\n\n"
+                    )
+
+                    /* Excess blank lines clean */
+                    .replace(
+                        /\n{3,}/g,
+                        "\n\n"
+                    );
+            })
+            .join("")
+            .trim();
+    }
+
+    // --------------------------------------------------------
+    // MATH DELIMITER NORMALIZATION — FIX RAW $ BRACKETS
+    // --------------------------------------------------------
+    function normalizeMathDelimiters(value) {
+        return String(value || "")
+            /* ($equation$) → \(equation\) */
+            .replace(
+                /\(\$([^$\n]+)\$\)/g,
+                "\\($1\\)"
+            )
+
+            /* [$equation$] → \[equation\] */
+            .replace(
+                /\[\$([\s\S]*?)\$\]/g,
+                "\\[$1\\]"
+            );
+    }
+
+    // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
     async function init() {
@@ -1062,7 +1155,7 @@
     // --- REPLACED safeParseMarkdown with clean version ---
     function safeParseMarkdown(text) {
         const source =
-            String(text || "")
+            normalizeMathDelimiters(text)
                 .replace(/\r\n?/g, "\n")
                 .trim();
 
@@ -1125,6 +1218,65 @@
 
             return sanitizeHTML(source)
                 .replace(/\n/g, "<br>");
+        }
+    }
+
+    // --------------------------------------------------------
+    // KATEX MATH RENDERING (replaces MathJax)
+    // --------------------------------------------------------
+    function renderNeoMath(element) {
+        if (
+            !element ||
+            typeof window.renderMathInElement !==
+                "function"
+        ) {
+            return;
+        }
+
+        try {
+            window.renderMathInElement(
+                element,
+                {
+                    delimiters: [
+                        {
+                            left: "$$",
+                            right: "$$",
+                            display: true
+                        },
+                        {
+                            left: "\\[",
+                            right: "\\]",
+                            display: true
+                        },
+                        {
+                            left: "\\(",
+                            right: "\\)",
+                            display: false
+                        },
+                        {
+                            left: "$",
+                            right: "$",
+                            display: false
+                        }
+                    ],
+
+                    throwOnError: false,
+
+                    ignoredTags: [
+                        "script",
+                        "noscript",
+                        "style",
+                        "textarea",
+                        "pre",
+                        "code"
+                    ]
+                }
+            );
+        } catch (error) {
+            console.warn(
+                "KaTeX rendering failed:",
+                error
+            );
         }
     }
 
@@ -2520,6 +2672,18 @@
             message
         );
 
+        // Render KaTeX for assistant messages
+        if (
+            role === "assistant" &&
+            !isThinking
+        ) {
+            renderNeoMath(
+                message.querySelector(
+                    ".message-content"
+                )
+            );
+        }
+
         if (scrollArea) {
             scrollArea.scrollTop =
                 scrollArea.scrollHeight;
@@ -3413,6 +3577,9 @@
                         safeParseMarkdown(
                             reply
                         );
+
+                    // Render KaTeX on the new content
+                    renderNeoMath(content);
                 }
             }
 
