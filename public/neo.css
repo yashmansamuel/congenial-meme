@@ -2574,3 +2574,87 @@ button:disabled[title] {
         text-align: left;
     }
 }
+/* Premium Source Pills (v=58) */
+
+.neo-source-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 14px;
+    padding: 10px 0 4px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.neo-source-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-right: 4px;
+}
+
+.neo-source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px 4px 14px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.1s ease;
+    border: 1px solid var(--border-subtle);
+    line-height: 1.4;
+    max-width: 240px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.neo-source-pill:hover {
+    background: var(--bg-active);
+    transform: translateY(-1px);
+    border-color: var(--text-muted);
+}
+
+.neo-source-pill:active {
+    transform: scale(0.97);
+}
+
+.neo-source-arrow {
+    font-size: 11px;
+    opacity: 0.6;
+    transition: opacity 0.12s ease;
+    margin-left: 2px;
+}
+
+.neo-source-pill:hover .neo-source-arrow {
+    opacity: 1;
+}
+
+body.dark-mode .neo-source-pill {
+    background: var(--bg-sidebar);
+    border-color: var(--border-subtle);
+}
+
+body.dark-mode .neo-source-pill:hover {
+    background: var(--bg-hover);
+}
+
+@media (max-width: 520px) {
+    .neo-source-pills {
+        gap: 6px 10px;
+        padding-top: 8px;
+    }
+    .neo-source-pill {
+        font-size: 12px;
+        padding: 3px 10px 3px 12px;
+        max-width: 180px;
+    }
+    .neo-source-label {
+        font-size: 11px;
+    }
+}
