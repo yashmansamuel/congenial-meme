@@ -813,99 +813,6 @@
     }
 
     // --------------------------------------------------------
-    // MARKDOWN NORMALIZATION — FIX MALFORMED OUTPUT
-    // --------------------------------------------------------
-    function normalizeMarkdownForDisplay(value) {
-        const source = String(value || "")
-            .replace(/\r\n?/g, "\n")
-            .trim();
-
-        const chunks = source.split(
-            /(```[\s\S]*?```)/g
-        );
-
-        return chunks
-            .map((chunk, index) => {
-                /* Code blocks ko bilkul modify mat karo */
-                if (index % 2 === 1) {
-                    return chunk;
-                }
-
-                return chunk
-                    /* Remove trailing spaces */
-                    .replace(/[ \t]+\n/g, "\n")
-
-                    /* Fix: sentence.**Next paragraph */
-                    .replace(
-                        /([.!?])\*\*(?=[A-Z0-9])/g,
-                        "$1**\n\n"
-                    )
-
-                    /* Fix: **Section title**1. First item */
-                    .replace(
-                        /(\*\*[^*\n]{3,100}\*\*)(?=\d{1,2}\.\s)/g,
-                        "$1\n\n"
-                    )
-
-                    /* Fix: Generation1. Krea AI */
-                    .replace(
-                        /([A-Za-z)])(\d{1,2}\.\s+(?=[A-Z]))/g,
-                        "$1\n\n$2"
-                    )
-
-                    /* Fix: instantly.2. Next item */
-                    .replace(
-                        /([.!?])(?=\d{1,2}\.\s+[A-Z])/g,
-                        "$1\n\n"
-                    )
-
-                    /* Embedded headings ko new line par lao */
-                    .replace(
-                        /([^\n])\s*(#{1,6}\s+)/g,
-                        "$1\n\n$2"
-                    )
-
-                    /* Short standalone bold title → heading */
-                    .replace(
-                        /^\*\*([^*\n]{3,80})\*\*\s*$/gm,
-                        "### $1"
-                    )
-
-                    /* Bullets ko separate lines par lao */
-                    .replace(
-                        /([.!?])\s*(?=[-*+]\s+\S)/g,
-                        "$1\n\n"
-                    )
-
-                    /* Excess blank lines clean */
-                    .replace(
-                        /\n{3,}/g,
-                        "\n\n"
-                    );
-            })
-            .join("")
-            .trim();
-    }
-
-    // --------------------------------------------------------
-    // MATH DELIMITER NORMALIZATION — FIX RAW $ BRACKETS
-    // --------------------------------------------------------
-    function normalizeMathDelimiters(value) {
-        return String(value || "")
-            /* ($equation$) → \(equation\) */
-            .replace(
-                /\(\$([^$\n]+)\$\)/g,
-                "\\($1\\)"
-            )
-
-            /* [$equation$] → \[equation\] */
-            .replace(
-                /\[\$([\s\S]*?)\$\]/g,
-                "\\[$1\\]"
-            );
-    }
-
-    // --------------------------------------------------------
     //  INIT
     // --------------------------------------------------------
     async function init() {
@@ -1152,36 +1059,30 @@
         return element.innerHTML;
     }
 
+    // --- REPLACED safeParseMarkdown with clean version ---
     function safeParseMarkdown(text) {
         const source =
-            normalizeMathDelimiters(text)
+            String(text || "")
                 .replace(/\r\n?/g, "\n")
                 .trim();
 
         if (
-            window.marked &&
-            window.DOMPurify
+            !window.marked ||
+            !window.DOMPurify
         ) {
-            let parsed;
+            return sanitizeHTML(source)
+                .replace(/\n/g, "<br>");
+        }
 
-            try {
-                parsed =
-                    window.marked.parse(
-                        source,
-                        {
-                            gfm: true,
-                            breaks: true
-                        }
-                    );
-            } catch (error) {
-                console.warn(
-                    "Markdown parsing failed:",
-                    error
+        try {
+            const parsed =
+                window.marked.parse(
+                    source,
+                    {
+                        gfm: true,
+                        breaks: false
+                    }
                 );
-
-                return sanitizeHTML(source)
-                    .replace(/\n/g, "<br>");
-            }
 
             return window.DOMPurify.sanitize(
                 parsed,
@@ -1216,76 +1117,15 @@
                     ]
                 }
             );
-        }
-
-        return sanitizeHTML(source)
-            .replace(/\n/g, "<br>");
-    }
-
-    // --------------------------------------------------------
-    // PREMIUM MATHEMATICS RENDERING (ROBUST)
-    // --------------------------------------------------------
-    let mathTypesetChain =
-        Promise.resolve();
-
-    async function waitForMathJax() {
-        for (
-            let attempt = 0;
-            attempt < 40;
-            attempt += 1
-        ) {
-            if (
-                window.MathJax
-                    ?.typesetPromise
-            ) {
-                return true;
-            }
-
-            await new Promise(resolve =>
-                setTimeout(resolve, 50)
+        } catch (error) {
+            console.warn(
+                "Markdown parsing failed:",
+                error
             );
+
+            return sanitizeHTML(source)
+                .replace(/\n/g, "<br>");
         }
-
-        return false;
-    }
-
-    function typesetMath(rootElement) {
-        if (!rootElement) {
-            return mathTypesetChain;
-        }
-
-        mathTypesetChain =
-            mathTypesetChain
-                .then(async () => {
-                    const ready =
-                        await waitForMathJax();
-
-                    if (!ready) {
-                        return;
-                    }
-
-                    await window.MathJax
-                        .startup
-                        ?.promise;
-
-                    window.MathJax
-                        .typesetClear?.([
-                            rootElement
-                        ]);
-
-                    await window.MathJax
-                        .typesetPromise([
-                            rootElement
-                        ]);
-                })
-                .catch(error => {
-                    console.warn(
-                        "Math rendering failed:",
-                        error
-                    );
-                });
-
-        return mathTypesetChain;
     }
 
     // --------------------------------------------------------
@@ -2680,18 +2520,6 @@
             message
         );
 
-        if (
-            role === "assistant" &&
-            !isThinking
-        ) {
-            const mathRoot =
-                message.querySelector(
-                    ".message-content"
-                );
-
-            typesetMath(mathRoot);
-        }
-
         if (scrollArea) {
             scrollArea.scrollTop =
                 scrollArea.scrollHeight;
@@ -3585,8 +3413,6 @@
                         safeParseMarkdown(
                             reply
                         );
-
-                    typesetMath(content);
                 }
             }
 
