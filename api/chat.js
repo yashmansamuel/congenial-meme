@@ -45,10 +45,25 @@ Math rules:
 - Explain important symbols after the equation.
 `;
 
-// Helper: clean strings
+// Helper: clean strings (PRESERVES newlines and tabs)
 function cleanString(str, max = MAX_MESSAGE_LENGTH) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, max);
+    if (typeof str !== "string") {
+        return "";
+    }
+
+    return str
+        /* Windows line endings → normal newline */
+        .replace(/\r\n?/g, "\n")
+
+        /* Remove unsafe control characters,
+           but preserve tab (0x09) and newline (0x0A) */
+        .replace(
+            /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
+            ""
+        )
+
+        .trim()
+        .slice(0, max);
 }
 
 // Helper: clean env var
