@@ -12,7 +12,8 @@
       https://unpkg.com
       https://cdnjs.cloudflare.com;
     style-src 'self' 'unsafe-inline'
-      https://fonts.googleapis.com;
+      https://fonts.googleapis.com
+      https://cdn.jsdelivr.net;
     font-src 'self'
       https://fonts.gstatic.com
       https://cdn.jsdelivr.net;
@@ -26,43 +27,17 @@
   ">
 
   <title>NEO • Signaturesi</title>
-  <link rel="stylesheet" href="/neo.css?v=56">
+  <link rel="stylesheet" href="/neo.css?v=57">
+
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
-
-  <!-- MathJax configuration -->
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [
-          ["$", "$"],
-          ["\\(", "\\)"]
-        ],
-        displayMath: [
-          ["$$", "$$"],
-          ["\\[", "\\]"]
-        ],
-        processEscapes: true
-      },
-      options: {
-        skipHtmlTags: [
-          "script",
-          "noscript",
-          "style",
-          "textarea",
-          "pre",
-          "code"
-        ]
-      },
-      startup: {
-        typeset: false
-      }
-    };
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js"></script>
 </head>
 <body class="sidebar-collapsed">
 
@@ -390,6 +365,6 @@
     </div>
   </div>
 
-  <script src="/neo.js?v=56"></script>
+  <script src="/neo.js?v=57"></script>
 </body>
 </html>
