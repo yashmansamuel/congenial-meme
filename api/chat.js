@@ -17,32 +17,66 @@ const UPLOAD_BUCKET = "neo-uploads";
 const MAX_ATTACHMENTS = 5;
 const MAX_MESSAGE_LENGTH = 50000;
 const MAX_HISTORY_MESSAGES = 50;
+const MAX_URL_CONTEXT_SOURCES = 5;
 
-// === System instruction for clean markdown + math formatting ===
+// === Refined system instruction for natural, human-like responses ===
 const NEO_RESPONSE_FORMAT = `
-You are NEO, a premium conversational assistant.
+You are NEO, a natural, intelligent conversational assistant.
 
-Always return clean, valid GitHub-flavored Markdown.
+VOICE AND TONE
+- Match the user's language, tone, and level of formality.
+- When the user writes Roman Urdu, respond in natural Roman Urdu.
+- Sound human, direct, calm, and confident.
+- Avoid generic openings such as:
+  "Bilkul honest jawab deta hoon",
+  "Great question",
+  "Certainly",
+  or "As an AI".
+- Do not sound corporate, scripted, overly cheerful, or robotic.
+- Use emojis only when they genuinely fit the user's tone, with a maximum of one.
+- Do not repeat the user's question before answering.
+- Do not end every answer with a question or invitation.
 
-Rules:
-- Use normal paragraphs with blank lines between them.
-- Use ## for main headings.
-- Use ### for smaller headings.
+ORGANIZATION
+- Keep the structure proportional to the request.
+- For simple questions, use one or two natural paragraphs.
+- Use headings only when the answer has genuinely different sections.
+- Avoid excessive bullet points, checkmarks, numbered lists, and separators.
+- Prefer short paragraphs over template-style lists.
+- Do not restate the same idea in multiple sections.
+
+ACCURACY AND JUDGMENT
+- Do not invent the user's education, job, personality, background, or intentions.
+- Only make personal inferences when directly supported by the conversation.
+- Clearly label uncertain observations as impressions, not facts.
+- Avoid exaggerated certainty.
+- Answer the actual question first.
+
+WRITING QUALITY
+- Use clean, valid GitHub-flavored Markdown.
 - Put every heading on its own line.
-- Put every numbered-list item on its own line.
-- Put every bullet item on its own line.
-- Never combine headings, numbering, links, or paragraphs.
-- Use bold only for short labels and important phrases.
+- Put each list item on its own line.
+- Use bold only for short labels or genuinely important phrases.
 - Never bold entire paragraphs.
+- Use fenced code blocks with the correct language.
 - Use [Website name](https://example.com) for links.
-- Use fenced code blocks with a language name.
-- Avoid unnecessary introductions and repeated disclaimers.
+- Keep paragraphs readable and naturally paced.
 
-Math rules:
+MATH AND SCIENCE
 - Use \\( ... \\) for inline mathematics.
-- Use \\[ ... \\] for equations on separate lines.
-- Never show raw LaTeX without delimiters.
-- Explain important symbols after the equation.
+- Use \\[ ... \\] for display equations.
+- Put major equations on separate lines.
+- Explain important symbols clearly after the equation.
+- Never expose raw LaTeX without delimiters.
+
+STYLE EXAMPLE
+User: "Kya meri baaton se main human lagta hoon?"
+
+Good response:
+"Haan, bilkul. Aapka style direct, spontaneous aur feedback-driven hai, jo natural human conversation jaisa lagta hai. Aap kabhi formal ho jate ho, lekin overall bot-like feel nahi aati."
+
+Bad response:
+"Bilkul honest jawab deta hoon! Here are several observations about your personality and professional background..."
 `;
 
 // Helper: clean strings (PRESERVES newlines and tabs)
@@ -52,16 +86,11 @@ function cleanString(str, max = MAX_MESSAGE_LENGTH) {
     }
 
     return str
-        /* Windows line endings → normal newline */
         .replace(/\r\n?/g, "\n")
-
-        /* Remove unsafe control characters,
-           but preserve tab (0x09) and newline (0x0A) */
         .replace(
             /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
             ""
         )
-
         .trim()
         .slice(0, max);
 }
@@ -86,6 +115,50 @@ function validAttachmentList(attachments, userId, max = MAX_ATTACHMENTS) {
     })).filter(f => f.path && f.path.startsWith(`users/${userId}/`) && !f.path.includes('..'));
 }
 
+// ================================================================
+// URL CONTEXT HELPERS
+// ================================================================
+
+function extractUrlsFromText(text) {
+    if (!text) return [];
+    const urlRegex = /https?:\/\/[^\s<>"']+/g;
+    const matches = text.match(urlRegex) || [];
+    return matches.filter(url => {
+        try {
+            const parsed = new URL(url);
+            return parsed.protocol === 'https:' && 
+                   !parsed.hostname.includes('localhost') &&
+                   !parsed.hostname.match(/^127\.\d+\.\d+\.\d+$/) &&
+                   !parsed.hostname.match(/^192\.168\./) &&
+                   !parsed.hostname.match(/^10\./) &&
+                   !parsed.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./);
+        } catch {
+            return false;
+        }
+    });
+}
+
+function normalizeUrl(url) {
+    try {
+        const parsed = new URL(url);
+        parsed.search = '';
+        parsed.hash = '';
+        return parsed.toString();
+    } catch {
+        return url;
+    }
+}
+
+function deduplicateUrls(urls) {
+    const seen = new Set();
+    return urls.filter(url => {
+        const normalized = normalizeUrl(url);
+        if (seen.has(normalized)) return false;
+        seen.add(normalized);
+        return true;
+    });
+}
+
 async function deleteGeminiFile(apiKey, fileName) {
     if (!fileName || !apiKey) return;
     const safeName = String(fileName).replace(/^\/+/, "");
@@ -99,15 +172,20 @@ async function deleteGeminiFile(apiKey, fileName) {
     }
 }
 
-async function saveMessage(supabase, conversationId, role, content, attachments) {
+async function saveMessage(supabase, conversationId, role, content, attachments, sources) {
     const { error } = await supabase.from('chat_messages').insert({
         conversation_id: conversationId,
         role,
         content: cleanString(content, MAX_MESSAGE_LENGTH),
-        attachments: attachments || []
+        attachments: attachments || [],
+        sources: sources || []
     });
     if (error) throw new Error(error.message);
 }
+
+// ================================================================
+// MAIN HANDLER
+// ================================================================
 
 export default async (req, res) => {
     const geminiFiles = [];
@@ -171,7 +249,6 @@ export default async (req, res) => {
                 });
             }
 
-            // Preserve user text and append file parts
             lastGeminiMessage.parts = [
                 { text: originalText },
                 ...attachmentParts
@@ -192,7 +269,7 @@ export default async (req, res) => {
 
         // --- Save user message ---
         const userText = cleanString(lastMsg.content || "");
-        await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments);
+        await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments, []);
 
         // --- Model mapping (Pro vs Free) ---
         const isPro = user.planType === 'pro';
@@ -200,15 +277,112 @@ export default async (req, res) => {
             ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
             : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
 
-        // --- Call Gemini (updated with system instruction) ---
-        const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
-        const reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (!reply) throw new Error('Gemini returned empty response');
+        // --- URL Context logic ---
+        let usedUrlContext = false;
+        let sources = [];
+        let reply = '';
+
+        const userMessageText = cleanString(lastMsg.content || '');
+        const extractedUrls = extractUrlsFromText(userMessageText);
+        const uniqueUrls = deduplicateUrls(extractedUrls).slice(0, MAX_URL_CONTEXT_SOURCES);
+
+        // Check if this is a "current" / "real-time" / "compare" query
+        const lowerQuery = userMessageText.toLowerCase();
+        const isCurrentQuery = /\b(current|now|latest|today|this month|july|august|202[4-9]|real[- ]time)\b/.test(lowerQuery);
+        const isUrlQuery = uniqueUrls.length > 0;
+        const isCompareQuery = /\b(compare|difference|versus|vs|different|which|between)\b/.test(lowerQuery);
+        const isSpecificQuery = /\b(how much|what is|value|price|net worth|population|weather|stock|price|rate|exchange)\b/.test(lowerQuery);
+
+        // Determine if we should use URL Context
+        const shouldUseUrlContext = (isUrlQuery && (isCurrentQuery || isCompareQuery || isSpecificQuery)) || 
+                                    (isCurrentQuery && isCompareQuery) ||
+                                    (userMessageText.includes('read') && userMessageText.includes('link'));
+
+        // --- First call: normal generation (without URL Context) ---
+        let normalResponse = null;
+        let candidateUrls = [];
+
+        if (shouldUseUrlContext && GEMINI_API_KEY) {
+            try {
+                // First, get the normal response to extract candidate URLs
+                const firstGeminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
+                const firstReply = firstGeminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                
+                if (firstReply) {
+                    normalResponse = firstReply;
+                    
+                    // Try to extract candidate URLs from the first response
+                    const responseUrls = extractUrlsFromText(firstReply);
+                    const uniqueResponseUrls = deduplicateUrls(responseUrls).slice(0, MAX_URL_CONTEXT_SOURCES);
+                    
+                    // Also use any URLs from the user's message if the model didn't suggest any
+                    if (uniqueResponseUrls.length > 0) {
+                        candidateUrls = uniqueResponseUrls;
+                    } else if (uniqueUrls.length > 0) {
+                        candidateUrls = uniqueUrls;
+                    }
+                    
+                    // If we have candidate URLs, make a second call with URL Context
+                    if (candidateUrls.length > 0) {
+                        const contextResponse = await callGeminiWithUrlContext(
+                            geminiMessages,
+                            model,
+                            isDeepResearch,
+                            candidateUrls,
+                            userMessageText
+                        );
+                        
+                        const contextReply = contextResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                        
+                        if (contextReply) {
+                            reply = contextReply;
+                            usedUrlContext = true;
+                            
+                            // Extract metadata from URL Context response
+                            const urlMetadata = contextResponse?.candidates?.[0]?.url_context_metadata?.url_metadata || [];
+                            if (Array.isArray(urlMetadata)) {
+                                sources = urlMetadata
+                                    .filter(m => m.url_retrieval_status === 'URL_RETRIEVAL_STATUS_SUCCESS')
+                                    .map(m => ({
+                                        title: m.url || 'Source',
+                                        url: m.url,
+                                        status: 'success'
+                                    }));
+                            }
+                            
+                            // If no metadata from Gemini, use candidate URLs as sources
+                            if (sources.length === 0) {
+                                sources = candidateUrls.map(url => ({
+                                    title: new URL(url).hostname.replace(/^www\./, ''),
+                                    url: url,
+                                    status: 'success'
+                                }));
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('URL Context attempt failed, falling back to normal response:', error);
+                // Fall through to normal response
+            }
+        }
+
+        // If we don't have a reply yet (URL Context didn't work or wasn't needed), use normal response
+        if (!reply) {
+            const geminiResponse = await callGemini(geminiMessages, model, isDeepResearch);
+            reply = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (!reply) throw new Error('Gemini returned empty response');
+        }
 
         // --- Save assistant message ---
-        await saveMessage(supabase, convId, 'assistant', reply, []);
+        await saveMessage(supabase, convId, 'assistant', reply, [], sources);
 
-        return res.json({ reply, conversationId: convId });
+        return res.json({
+            reply,
+            conversationId: convId,
+            usedUrlContext,
+            sources: sources.length > 0 ? sources : undefined
+        });
 
     } catch (error) {
         console.error('Chat error:', error);
@@ -221,7 +395,7 @@ export default async (req, res) => {
 };
 
 // ================================================================
-// HELPER FUNCTIONS (Gemini resumable upload & API call)
+// HELPER FUNCTIONS (Gemini API calls)
 // ================================================================
 
 async function uploadSupabaseFileToGemini(file) {
@@ -236,7 +410,6 @@ async function uploadSupabaseFileToGemini(file) {
     const mimeType = file.mimeType || storedFile.type || "application/octet-stream";
     const bytes = await storedFile.arrayBuffer();
 
-    // Start resumable upload
     const startResponse = await fetch(
         `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${encodeURIComponent(GEMINI_API_KEY)}`,
         {
@@ -264,7 +437,6 @@ async function uploadSupabaseFileToGemini(file) {
         throw new Error("Gemini upload URL was not returned.");
     }
 
-    // Upload bytes and finalize
     const uploadResponse = await fetch(uploadUrl, {
         method: "POST",
         headers: {
@@ -327,16 +499,14 @@ async function waitForGeminiFile(fileName, fallbackMimeType) {
     throw new Error("Gemini file processing timed out.");
 }
 
-// === Updated callGemini with system instruction ===
+// === Standard Gemini call ===
 async function callGemini(
     messages,
     model,
     isDeepResearch
 ) {
     if (!GEMINI_API_KEY) {
-        throw new Error(
-            "Gemini API configuration is missing."
-        );
+        throw new Error("Gemini API configuration is missing.");
     }
 
     const url =
@@ -350,47 +520,96 @@ async function callGemini(
                 }
             ]
         },
-
         contents: messages,
-
         generationConfig: {
-            temperature:
-                isDeepResearch
-                    ? 0.55
-                    : 0.65,
-
-            maxOutputTokens:
-                isDeepResearch
-                    ? 8192
-                    : 4096
+            temperature: isDeepResearch ? 0.55 : 0.65,
+            maxOutputTokens: isDeepResearch ? 8192 : 4096
         }
     };
 
     const response = await fetch(url, {
         method: "POST",
-
-        headers: {
-            "Content-Type":
-                "application/json"
-        },
-
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
     });
 
-    const data = await response
-        .json()
-        .catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-        console.error(
-            "Gemini API Error:",
-            data
-        );
+        console.error("Gemini API Error:", data);
+        throw new Error(data?.error?.message || "Gemini API error");
+    }
 
-        throw new Error(
-            data?.error?.message ||
-            "Gemini API error"
-        );
+    return data;
+}
+
+// === Gemini call with URL Context (no Google Search) ===
+async function callGeminiWithUrlContext(
+    messages,
+    model,
+    isDeepResearch,
+    urls,
+    originalQuery
+) {
+    if (!GEMINI_API_KEY) {
+        throw new Error("Gemini API configuration is missing.");
+    }
+
+    // Build a focused prompt asking Gemini to read the provided URLs
+    const urlContextPrompt = `
+Read only these URLs and answer the user's question based on their content:
+
+${urls.map((url, i) => `${i + 1}. ${url}`).join('\n')}
+
+Original question: ${originalQuery}
+
+Rules:
+- Extract only the requested information from these URLs.
+- If a URL returns an error or cannot be accessed, note that.
+- Do not search the web or add information from other sources.
+- Cite the source for each piece of information.
+- If multiple sources show different values, explain the difference.
+- Be concise and answer the actual question first.
+`;
+
+    const contextMessages = [
+        ...messages.slice(0, -1),
+        {
+            role: 'user',
+            parts: [{ text: urlContextPrompt }]
+        }
+    ];
+
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    const body = {
+        systemInstruction: {
+            parts: [{ text: NEO_RESPONSE_FORMAT }]
+        },
+        contents: contextMessages,
+        tools: [
+            {
+                url_context: {}
+            }
+        ],
+        generationConfig: {
+            temperature: isDeepResearch ? 0.5 : 0.6,
+            maxOutputTokens: isDeepResearch ? 8192 : 4096
+        }
+    };
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        console.error("Gemini API Error (URL Context):", data);
+        throw new Error(data?.error?.message || "Gemini API error");
     }
 
     return data;
