@@ -9,7 +9,9 @@ function cleanEnv(value) {
 
 function createSupabaseAdmin() {
   const supabaseUrl = cleanEnv(process.env.SUPABASE_URL);
-  const serviceRoleKey = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const serviceRoleKey = cleanEnv(
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase configuration is missing.");
@@ -24,45 +26,28 @@ function createSupabaseAdmin() {
   });
 }
 
+// === UPDATED cleanString: preserves newlines and tabs ===
 function cleanString(str, max = 50000) {
-  if (typeof str !== "string") return "";
+  if (typeof str !== "string") {
+    return "";
+  }
+
   return str
-    .replace(/[\x00-\x1F\x7F]/g, "")
+    /* Windows line endings → normal newline */
+    .replace(/\r\n?/g, "\n")
+
+    /* Remove unsafe control characters,
+       but preserve tab (0x09) and newline (0x0A) */
+    .replace(
+      /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
+      ""
+    )
+
     .trim()
     .slice(0, max);
 }
 
-// Generate signed URLs for image attachments
-async function enrichAttachmentsWithSignedUrls(attachments, supabase) {
-  if (!Array.isArray(attachments) || attachments.length === 0) return attachments;
-
-  const enriched = [];
-  for (const file of attachments) {
-    const enrichedFile = { ...file };
-
-    // If it's an image, generate a signed URL (valid for 5 minutes)
-    if (file.category === "image" && file.bucket && file.path) {
-      try {
-        const { data, error } = await supabase.storage
-          .from(file.bucket)
-          .createSignedUrl(file.path, 300); // 5 minutes
-
-        if (!error && data?.signedUrl) {
-          enrichedFile.signedUrl = data.signedUrl;
-        } else {
-          console.warn("Signed URL generation failed for", file.path, error);
-        }
-      } catch (e) {
-        console.warn("Error generating signed URL:", e);
-      }
-    }
-
-    enriched.push(enrichedFile);
-  }
-  return enriched;
-}
-
-function safeMessage(message, supabase) {
+function safeMessage(message) {
   const attachments = Array.isArray(message.attachments)
     ? message.attachments
         .slice(0, 5)
@@ -103,7 +88,7 @@ function safeMessage(message, supabase) {
         : "system",
     content: cleanString(message.content, 50000),
     displayContent: cleanString(message.content, 50000),
-    attachments, // will be enriched later
+    attachments,
     createdAt: message.created_at || null
   };
 }
@@ -111,8 +96,11 @@ function safeMessage(message, supabase) {
 export default async function handler(req, res) {
   try {
     const auth = getAuthenticatedUser(req);
+
     if (!auth?.userId) {
-      return res.status(401).json({ error: "Authentication required." });
+      return res.status(401).json({
+        error: "Authentication required."
+      });
     }
 
     const supabase = createSupabaseAdmin();
@@ -129,13 +117,12 @@ export default async function handler(req, res) {
     const conversationId = body.conversationId;
     const title = body.title;
 
-    // GET: list conversations (pinned first)
     if (req.method === "GET") {
       const { data, error } = await supabase
         .from("chat_conversations")
         .select("id, title, is_pinned, created_at, updated_at")
         .eq("user_id", userId)
-        .order("is_pinned", { ascending: false }) // pinned first
+        .order("is_pinned", { ascending: false })
         .order("updated_at", { ascending: false });
 
       if (error) {
@@ -149,13 +136,16 @@ export default async function handler(req, res) {
 
     if (req.method === "POST") {
       if (!action) {
-        return res.status(400).json({ error: "Missing action" });
+        return res.status(400).json({
+          error: "Missing action"
+        });
       }
 
-      // GET conversation with messages + signed URLs for images
       if (action === "get") {
         if (!conversationId) {
-          return res.status(400).json({ error: "Missing conversationId" });
+          return res.status(400).json({
+            error: "Missing conversationId"
+          });
         }
 
         const { data: conversation, error: conversationError } =
@@ -171,25 +161,30 @@ export default async function handler(req, res) {
         }
 
         if (!conversation) {
-          return res.status(404).json({ error: "Conversation not found" });
+          return res.status(404).json({
+            error: "Conversation not found"
+          });
         }
 
         const { data: messages, error: messagesError } =
           await supabase
             .from("chat_messages")
-            .select("id, role, content, attachments, created_at")
+            .select(
+              "id, role, content, attachments, created_at"
+            )
             .eq("conversation_id", conversationId)
-            .order("created_at", { ascending: true });
+            .order("created_at", {
+              ascending: true
+            });
 
         if (messagesError) {
           throw messagesError;
         }
 
-        // Enrich each message's attachments with signed URLs
+        // Enrich attachments with signed URLs for images
         const enrichedMessages = [];
-        for (const msg of messages) {
-          const safeMsg = safeMessage(msg, supabase);
-          // Enrich attachments
+        for (const msg of messages || []) {
+          const safeMsg = safeMessage(msg);
           if (safeMsg.attachments && safeMsg.attachments.length > 0) {
             safeMsg.attachments = await enrichAttachmentsWithSignedUrls(
               safeMsg.attachments,
@@ -204,10 +199,11 @@ export default async function handler(req, res) {
         });
       }
 
-      // DELETE conversation
       if (action === "delete") {
         if (!conversationId) {
-          return res.status(400).json({ error: "Missing conversationId" });
+          return res.status(400).json({
+            error: "Missing conversationId"
+          });
         }
 
         const { error } = await supabase
@@ -220,10 +216,11 @@ export default async function handler(req, res) {
           throw error;
         }
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({
+          success: true
+        });
       }
 
-      // RENAME conversation
       if (action === "rename") {
         if (!conversationId || !title) {
           return res.status(400).json({
@@ -244,13 +241,16 @@ export default async function handler(req, res) {
           throw error;
         }
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({
+          success: true
+        });
       }
 
-      // PIN conversation
       if (action === "pin") {
         if (!conversationId) {
-          return res.status(400).json({ error: "Missing conversationId" });
+          return res.status(400).json({
+            error: "Missing conversationId"
+          });
         }
 
         const { error } = await supabase
@@ -263,13 +263,16 @@ export default async function handler(req, res) {
           throw error;
         }
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({
+          success: true
+        });
       }
 
-      // UNPIN conversation
       if (action === "unpin") {
         if (!conversationId) {
-          return res.status(400).json({ error: "Missing conversationId" });
+          return res.status(400).json({
+            error: "Missing conversationId"
+          });
         }
 
         const { error } = await supabase
@@ -282,18 +285,58 @@ export default async function handler(req, res) {
           throw error;
         }
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({
+          success: true
+        });
       }
 
-      return res.status(400).json({ error: "Invalid action" });
+      return res.status(400).json({
+        error: "Invalid action"
+      });
     }
 
     res.setHeader("Allow", "GET, POST");
-    return res.status(405).json({ error: "Method not allowed" });
+
+    return res.status(405).json({
+      error: "Method not allowed"
+    });
   } catch (error) {
     console.error("History error:", error);
+
     return res.status(500).json({
-      error: error?.message || "Unable to load conversation history."
+      error:
+        error?.message ||
+        "Unable to load conversation history."
     });
   }
+}
+
+// ================================================================
+// HELPER: Signed URLs for image attachments
+// ================================================================
+
+async function enrichAttachmentsWithSignedUrls(attachments, supabase) {
+  if (!Array.isArray(attachments) || attachments.length === 0) return attachments;
+
+  const enriched = [];
+  for (const file of attachments) {
+    const enrichedFile = { ...file };
+
+    if (file.category === "image" && file.bucket && file.path) {
+      try {
+        const { data, error } = await supabase.storage
+          .from(file.bucket)
+          .createSignedUrl(file.path, 300);
+
+        if (!error && data?.signedUrl) {
+          enrichedFile.signedUrl = data.signedUrl;
+        }
+      } catch (e) {
+        console.warn("Error generating signed URL:", e);
+      }
+    }
+
+    enriched.push(enrichedFile);
+  }
+  return enriched;
 }
