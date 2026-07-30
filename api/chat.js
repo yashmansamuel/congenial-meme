@@ -692,6 +692,9 @@ async function saveMessage(supabase, conversationId, role, content, attachments,
 
 export default async (req, res) => {
     const geminiFiles = [];
+    let userId = null;
+    let reservedType = null;
+    let isPro = false;
 
     try {
         // --- AUTH ---
@@ -701,9 +704,9 @@ export default async (req, res) => {
         }
         const user = {
             id: auth.userId,
-            username: auth.username || "user",
-            planType: auth.planType || "free"
+            username: auth.username || "user"
         };
+        userId = user.id;
 
         const { messages, conversationId, isDeepResearch, title } = req.body;
 
@@ -715,6 +718,32 @@ export default async (req, res) => {
         if (lastMsg?.role !== 'user') {
             return res.status(400).json({ error: 'Last message must be user' });
         }
+
+        // ================================================================
+        // CREDIT RESERVATION (before attachments, Gemini, etc.)
+        // ================================================================
+        const { data: reserveResult, error: reserveError } = await supabase
+            .rpc("reserve_message", {
+                p_user_id: userId
+            });
+
+        if (reserveError) {
+            console.error("Credit reservation failed:", reserveError);
+            return res.status(500).json({
+                error: "Unable to check message credits."
+            });
+        }
+
+        reservedType = reserveResult;
+
+        if (reservedType === "limit") {
+            return res.status(429).json({
+                error: "MESSAGE_LIMIT_REACHED",
+                creditsRemaining: 0
+            });
+        }
+
+        isPro = (reservedType === "pro");
 
         // --- Attachments extraction ---
         const receivedAttachments = Array.isArray(req.body.attachments)
@@ -771,7 +800,6 @@ export default async (req, res) => {
         await saveMessage(supabase, convId, 'user', userText || "Attachment", attachments, []);
 
         // --- Model mapping ---
-        const isPro = user.planType === 'pro';
         const model = isPro
             ? cleanEnv(process.env.GEMINI_PRO_MODEL) || "gemini-3.5-flash-lite"
             : cleanEnv(process.env.GEMINI_FREE_MODEL) || "gemini-3.1-flash-lite";
@@ -841,12 +869,29 @@ export default async (req, res) => {
             reply,
             conversationId: convId,
             usedUrlContext,
-            sources: sources.length > 0 ? sources : undefined
+            sources: sources.length > 0 ? sources : undefined,
+            creditType: reservedType
         });
 
     } catch (error) {
         console.error('Chat error:', error);
-        return res.status(500).json({ error: error.message });
+
+        // --- REFUND CREDIT if we reserved a free or reward credit ---
+        if (userId && (reservedType === "free" || reservedType === "reward")) {
+            const { error: refundError } = await supabase
+                .rpc("refund_message", {
+                    p_user_id: userId,
+                    p_type: reservedType
+                });
+
+            if (refundError) {
+                console.error("Credit refund failed:", refundError);
+            }
+        }
+
+        return res.status(500).json({
+            error: error.message || "Unable to complete request."
+        });
     } finally {
         if (geminiFiles.length > 0 && GEMINI_API_KEY) {
             await Promise.all(geminiFiles.map(uri => deleteGeminiFile(GEMINI_API_KEY, uri)));
