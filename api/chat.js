@@ -736,6 +736,11 @@ export default async (req, res) => {
 
         reservedType = reserveResult;
 
+        // Validate the returned type
+        if (!["pro", "free", "reward", "limit"].includes(reservedType)) {
+            throw new Error("Invalid credit reservation response.");
+        }
+
         if (reservedType === "limit") {
             return res.status(429).json({
                 error: "MESSAGE_LIMIT_REACHED",
