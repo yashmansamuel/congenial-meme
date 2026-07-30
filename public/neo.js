@@ -3502,6 +3502,39 @@
                     }
                 );
 
+            // ---- Handle 429 (credit limit) ----
+            if (response.status === 429) {
+                // Remove the last user message from UI and conversation
+                const userBubble = aiBubble?.previousElementSibling;
+
+                if (
+                    userBubble &&
+                    userBubble.classList.contains("user")
+                ) {
+                    userBubble.remove();
+                }
+
+                if (
+                    conversation.length > 0 &&
+                    conversation.at(-1)?.role === "user"
+                ) {
+                    conversation.pop();
+                }
+
+                // Remove the AI bubble if it exists
+                if (aiBubble) {
+                    aiBubble.remove();
+                }
+
+                // Show the reward ad modal
+                showAdRewardModal();
+
+                // Reset generating state
+                isGenerating = false;
+                return;
+            }
+
+            // For other errors, read response
             data =
                 await readJsonResponse(
                     response
@@ -4960,37 +4993,54 @@
     }
 
     // --------------------------------------------------------
+    //  NEW: REWARDED AD INTEGRATION (placeholder)
+    // --------------------------------------------------------
+
+    // Show the upgrade modal with "Watch Ad" button when limit reached
+    function showAdRewardModal() {
+        // Ensure the modal already has the Watch Ad button
+        injectWatchAdButton();
+
+        // Show the modal
+        upgradeModal?.classList.add("show");
+    }
+
+    function injectWatchAdButton() {
+        const footerActions = document.querySelector(".modal-footer-actions");
+        if (!footerActions) return;
+
+        // If button already exists, don't add again
+        if (document.getElementById("watchAdBtn")) return;
+
+        const watchBtn = document.createElement("button");
+        watchBtn.type = "button";
+        watchBtn.id = "watchAdBtn";
+        watchBtn.className = "upgrade-btn-secondary"; // use existing style
+        watchBtn.textContent = "Watch Ad for 5 messages";
+        watchBtn.style.marginTop = "8px"; // some spacing
+
+        watchBtn.addEventListener("click", onWatchAdClick);
+
+        // Insert after the maybe-later button or at the end
+        const maybeLater = document.getElementById("modalMaybeLaterBtn");
+        if (maybeLater) {
+            maybeLater.parentNode.insertBefore(watchBtn, maybeLater.nextSibling);
+        } else {
+            footerActions.appendChild(watchBtn);
+        }
+    }
+
+    async function onWatchAdClick() {
+        const watchBtn = document.getElementById("watchAdBtn");
+        if (!watchBtn) return;
+
+        // Placeholder – real ad integration will be added later
+        showToast("Ad integration will be available soon.", "info");
+    }
+
+    // --------------------------------------------------------
     //  BOOT
     // --------------------------------------------------------
-    document.addEventListener(
-        "DOMContentLoaded",
+    init();
 
-        () => {
-            document
-                .documentElement
-                .dataset
-                .neoRuntime =
-                "ready";
-
-            init().catch(
-                error => {
-                    console.error(
-                        "NEO initialization failed:",
-                        error
-                    );
-
-                    const input =
-                        document
-                            .getElementById(
-                                "chatInput"
-                            );
-
-                    if (input) {
-                        input.placeholder =
-                            "NEO could not initialize. Check console.";
-                    }
-                }
-            );
-        }
-    );
 })();
