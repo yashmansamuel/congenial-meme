@@ -1,6 +1,166 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Current operational status for Signaturesi, NEO, Bean and Bean ID."><title>Status — Signaturesi</title>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Current operational status for Signaturesi, NEO, Bean and Bean ID.">
+  <title>Status — Signaturesi</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/favicon.png">
-<link rel="stylesheet" href="status.css">  <link rel="stylesheet" href="premium-ui.css">
-</head><body><header class="nav"><a class="brand" href="index.html"><img src="assets/signaturesi.png" alt=""><span>Signaturesi</span></a><nav><a href="index.html#products">Products</a><a href="research.html">Research</a><a href="about.html">About</a><a class="pill" href="signup.html">Get started</a></nav></header><main><section class="hero"><div class="status-dot"></div><span class="eyebrow">System status</span><h1>All systems are in development.</h1><p>This static page does not perform live monitoring yet. Connect it to real health checks before publishing operational claims.</p></section><section class="panel"><header><div><span class="eyebrow">Services</span><h2>Current components</h2></div><span class="badge">Development</span></header><div class="service"><div><b>Website</b><p>Public Signaturesi pages</p></div><span>Not monitored</span></div><div class="service"><div><b>NEO</b><p>AI workspace and memory</p></div><span>Development</span></div><div class="service"><div><b>Bean</b><p>Messaging and calls</p></div><span>Development</span></div><div class="service"><div><b>Bean ID</b><p>Authentication and identity</p></div><span>Development</span></div><div class="service"><div><b>API</b><p>Backend and integrations</p></div><span>Not monitored</span></div></section><section class="history"><span class="eyebrow">Incident history</span><h2>No public incidents recorded.</h2><p>Once production begins, publish timestamps, affected systems, updates and resolution notes here.</p></section></main><footer class="footer"><div><a class="brand" href="index.html"><img src="assets/signaturesi.png" alt=""><span>Signaturesi</span></a><p>Intelligence, communication and mobile-first AI research.</p></div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="security.html">Security</a><a href="contact.html">Contact</a></div><span>© 2026 Signaturesi</span></footer>  <script src="premium-ui.js" defer></script>
-</body></html>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* page-only; prefixed with "main" (see DESIGN-SIMPLE.md) */
+    main .hero + .section { padding-top: 8px; }
+    main .status-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    main .service { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    main .services { border-top: 1px solid var(--border); }
+    main .service p { color: var(--muted); font-size: 14px; }
+    main .service > span { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="navbar">
+    <div class="container header-inner">
+      <a href="index.html" class="brand" aria-label="Signaturesi home">
+        <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+        <span>Signaturesi</span>
+      </a>
+
+      <button type="button" class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
+
+      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
+        <div class="nav-links">
+          <a href="index.html#products">Products</a>
+          <a href="research.html">Research</a>
+          <a href="latest.html">Latest</a>
+        </div>
+        <div class="nav-actions">
+          <a href="signup.html?mode=login" class="nav-signin">Sign in</a>
+          <a href="signup.html" class="btn btn-sm">Get started</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container narrow">
+        <span class="eyebrow">System status</span>
+        <h1>All systems are in development.</h1>
+        <p class="lede">This static page does not perform live monitoring yet. Connect it to real health checks before publishing operational claims.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container narrow" data-reveal>
+        <header class="status-head">
+          <div>
+            <span class="eyebrow">Services</span>
+            <h2>Current components</h2>
+          </div>
+          <span class="badge">Development</span>
+        </header>
+        <div class="services">
+          <div class="service"><div><strong>Website</strong><p>Public Signaturesi pages</p></div><span>Not monitored</span></div>
+          <div class="service"><div><strong>NEO</strong><p>AI workspace and memory</p></div><span>Development</span></div>
+          <div class="service"><div><strong>Bean</strong><p>Messaging and calls</p></div><span>Development</span></div>
+          <div class="service"><div><strong>Bean ID</strong><p>Authentication and identity</p></div><span>Development</span></div>
+          <div class="service"><div><strong>API</strong><p>Backend and integrations</p></div><span>Not monitored</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container narrow" data-reveal>
+        <span class="eyebrow">Incident history</span>
+        <h2>No public incidents recorded.</h2>
+        <p class="muted mt-16">Once production begins, publish timestamps, affected systems, updates and resolution notes here.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+            <span>Signaturesi</span>
+          </a>
+          <p>Intelligence, communication and mobile-first AI research.</p>
+          <div class="footer-socials">
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+            </a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 20 20"></path><path d="M20 4 4 20"></path></svg>
+            </a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path><path d="m10 9 5 3-5 3Z"></path></svg>
+            </a>
+            <a href="bean.html" aria-label="Bean">
+              <img src="assets/bean.png" alt="" width="18" height="18" loading="lazy" decoding="async" draggable="false">
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-cols">
+          <div>
+            <h3>Products</h3>
+            <a href="https://neyo.signaturesi.com/">NEO</a>
+            <a href="bean.html">Bean</a>
+            <a href="signup.html">Bean ID</a>
+            <a href="latest.html">Personalities</a>
+          </div>
+          <div>
+            <h3>Research</h3>
+            <a href="research.html">Research library</a>
+            <a href="research-article.html">NEO L1 report</a>
+            <a href="research.html">Green AI</a>
+            <a href="security.html">Safety</a>
+          </div>
+          <div>
+            <h3>Company</h3>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="status.html" aria-current="page">System status</a>
+            <a href="latest.html">Latest</a>
+          </div>
+          <div>
+            <h3>Legal</h3>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Use</a>
+            <a href="acceptable-use.html">Acceptable Use</a>
+            <a href="cookies.html">Cookie Policy</a>
+            <a href="security.html">Security</a>
+          </div>
+          <div>
+            <h3>Connect</h3>
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer">X</a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="bean.html">Bean</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Signaturesi</p>
+        <div class="footer-meta">
+          <span>Designed by Leo</span>
+          <a href="status.html">System status</a>
+          <button type="button" aria-label="Current language: English">English</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/site.js" defer></script>
+  <script src="/premium-ui.js" defer></script>
+</body>
+</html>

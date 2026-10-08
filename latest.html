@@ -2,314 +2,212 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
   >
-
   <meta
     name="description"
     content="Discover the latest NEO personalities from Signaturesi."
   >
-
   <meta name="theme-color" content="#43a8f5">
-
   <title>Latest — NEO Personalities</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/favicon.png">
 
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap"
-    rel="stylesheet"
-  >
-
-  <link rel="stylesheet" href="latest.css">
-  <link rel="stylesheet" href="premium-ui.css">
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* page-only additions; prefixed with "main" so they win over site.css (Vite emits site.css after this block) */
+    main .hero .eyebrow { display: block; }
+    main .featured-personality { padding: 0 0 80px; }
+    main .featured { display: flex; align-items: center; justify-content: center; gap: 24px; }
+    main .featured-card { display: flex; flex-direction: column; align-items: center; gap: 16px; width: min(420px, 100%); }
+    main .featured-image { position: relative; width: 100%; aspect-ratio: 1; padding: 32px; }
+    main .featured-image img { width: 100%; max-width: 320px; height: auto; }
+    main .featured-fallback { display: none; font-size: 32px; font-weight: 600; color: var(--muted); }
+    main .featured-image.missing-image .featured-fallback { display: block; }
+    main .featured-name { font-size: 18px; font-weight: 600; }
+    main .personality-control { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--border); border-radius: 999px; background: #fff; font-size: 18px; }
+    main .personality-control:hover { border-color: var(--text); }
+    main .card-media { min-height: 240px; }
+    @media (max-width: 720px) {
+      main .featured-personality { padding-bottom: 56px; }
+      main .featured { gap: 12px; }
+      main .featured-image { padding: 20px; }
+    }
+  </style>
 </head>
 
 <body>
-  <header class="latest-navbar">
-    <div class="latest-nav-inner">
-      <a
-        href="index.html"
-        class="latest-brand"
-        aria-label="Back to Signaturesi home"
-      >
-        <span class="latest-brand-icon">
-          <img
-            src="assets/signaturesi.png"
-            alt=""
-            width="32"
-            height="32"
-            draggable="false"
-          >
-        </span>
-
-        <span>
-          Signaturesi
-        </span>
+  <header class="site-header" id="navbar">
+    <div class="container header-inner">
+      <a href="index.html" class="brand" aria-label="Back to Signaturesi home">
+        <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+        <span>Signaturesi</span>
       </a>
 
-      <a
-        href="index.html"
-        class="back-link"
-      >
-        Back home
+      <button type="button" class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
 
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M5 12h14"></path>
-          <path d="m13 6 6 6-6 6"></path>
-        </svg>
-      </a>
+      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
+        <div class="nav-links">
+          <a href="index.html#products">Products</a>
+          <a href="research.html">Research</a>
+          <a href="latest.html" aria-current="page">Latest</a>
+        </div>
+        <div class="nav-actions">
+          <a href="signup.html?mode=login" class="nav-signin">Sign in</a>
+          <a href="signup.html" class="btn btn-sm">Get started</a>
+        </div>
+      </nav>
     </div>
   </header>
 
   <main>
-    <section class="latest-hero">
-      <div
-        class="latest-background-sphere latest-sphere-one"
-        aria-hidden="true"
-      ></div>
-
-      <div
-        class="latest-background-sphere latest-sphere-two"
-        aria-hidden="true"
-      ></div>
-
-      <div
-        class="latest-dots"
-        aria-hidden="true"
-      ></div>
-
-      <div class="latest-hero-copy">
-        <span class="latest-eyebrow">
-          Signaturesi presents
-        </span>
-
-        <h1>
-          NEO Legacy
-          <span>1.0</span>
-        </h1>
-
-        <p>
-          Meet the personalities designed to make NEO feel
-          more human, focused and personal.
-        </p>
+    <section class="hero">
+      <div class="container">
+        <a href="index.html" class="back-link"><span aria-hidden="true">←</span> Back home</a>
+        <span class="eyebrow">Signaturesi presents</span>
+        <h1>NEO Legacy <span>1.0</span></h1>
+        <p class="lede">Meet the personalities designed to make NEO feel more human, focused and personal.</p>
       </div>
     </section>
 
-    <section
-      class="featured-personality"
-      aria-label="Featured NEO personality"
-    >
-      <button
-        type="button"
-        class="personality-control"
-        id="previousPersonality"
-        aria-label="Previous personality"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m15 18-6-6 6-6"></path>
-        </svg>
-      </button>
+    <section class="featured-personality" aria-label="Featured NEO personality">
+      <div class="container">
+        <div class="featured">
+          <button type="button" class="personality-control" id="previousPersonality" aria-label="Previous personality"><span aria-hidden="true">←</span></button>
 
-      <article class="featured-card">
-        <div class="featured-image-outer">
-          <div class="featured-image-inner">
-            <img
-              id="featuredPersonalityImage"
-              src="assets/neo-legacy1.png"
-              alt="NEO Legacy personality"
-              width="360"
-              height="360"
-              loading="eager"
-              decoding="async"
-              referrerpolicy="no-referrer"
-              draggable="false"
-            >
+          <article class="featured-card">
+            <div class="panel featured-image">
+              <img id="featuredPersonalityImage" src="assets/neo-legacy1.png" alt="NEO Legacy personality" width="360" height="360" loading="eager" decoding="async" referrerpolicy="no-referrer" draggable="false">
+              <span class="featured-fallback">NEO</span>
+            </div>
+            <div class="featured-name" id="featuredPersonalityName">NEO</div>
+          </article>
 
-            <span class="featured-fallback">
-              NEO
-            </span>
-          </div>
+          <button type="button" class="personality-control" id="nextPersonality" aria-label="Next personality"><span aria-hidden="true">→</span></button>
         </div>
-
-        <div
-          class="featured-name"
-          id="featuredPersonalityName"
-        >
-          NEO
-        </div>
-      </article>
-
-      <button
-        type="button"
-        class="personality-control"
-        id="nextPersonality"
-        aria-label="Next personality"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m9 18 6-6-6-6"></path>
-        </svg>
-      </button>
+      </div>
     </section>
 
-    <section class="personalities-section">
-      <div class="personalities-inner">
-        <header class="personalities-heading">
-          <span class="section-label">
-            Introducing
-          </span>
-
-          <h2>
-            Personalities
-          </h2>
-
-          <p>
-            Each NEO personality has its own identity, tone and
-            purpose. Choose the one that feels right for the way
-            you think and work.
-          </p>
+    <section class="section">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <span class="eyebrow">Introducing</span>
+          <h2>Personalities</h2>
+          <p class="lede">Each NEO personality has its own identity, tone and purpose. Choose the one that feels right for the way you think and work.</p>
         </header>
 
-        <div class="personalities-grid">
-          <article class="personality-tile featured-tile">
-            <div class="tile-image">
-              <img
-                src="assets/neo-legacy1.png"
-                alt="NEO Legacy personality"
-                width="240"
-                height="240"
-                loading="lazy"
-                decoding="async"
-                referrerpolicy="no-referrer"
-                draggable="false"
-              >
-            </div>
-
-            <div class="tile-copy">
-              <span>
-                Featured
-              </span>
-
-              <h3>
-                NEO Legacy
-              </h3>
-
-              <p>
-                Balanced, calm and focused for everyday
-                intelligence.
-              </p>
-            </div>
+        <div class="grid grid-3">
+          <article class="card" data-reveal>
+            <div class="card-media"><img src="assets/neo-legacy1.png" alt="NEO Legacy personality" width="240" height="240" loading="lazy" decoding="async" referrerpolicy="no-referrer" draggable="false"></div>
+            <div class="card-meta"><span class="badge">Featured</span></div>
+            <h3>NEO Legacy</h3>
+            <p>Balanced, calm and focused for everyday intelligence.</p>
           </article>
 
-          <article class="personality-tile">
-            <div class="tile-placeholder">
-              <span></span>
-            </div>
-
-            <div class="tile-copy">
-              <span>
-                Coming next
-              </span>
-
-              <h3>
-                New personality
-              </h3>
-
-              <p>
-                A distinct new identity is being prepared
-                for the NEO family.
-              </p>
-            </div>
+          <article class="card" data-reveal>
+            <div class="card-media"></div>
+            <div class="card-meta"><span class="badge">Coming next</span></div>
+            <h3>New personality</h3>
+            <p>A distinct new identity is being prepared for the NEO family.</p>
           </article>
 
-          <article class="personality-tile">
-            <div class="tile-placeholder purple-placeholder">
-              <span></span>
-            </div>
-
-            <div class="tile-copy">
-              <span>
-                In development
-              </span>
-
-              <h3>
-                More identities
-              </h3>
-
-              <p>
-                Personalities for learning, creativity and
-                focused work.
-              </p>
-            </div>
+          <article class="card" data-reveal>
+            <div class="card-media"></div>
+            <div class="card-meta"><span class="badge">In development</span></div>
+            <h3>More identities</h3>
+            <p>Personalities for learning, creativity and focused work.</p>
           </article>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="latest-footer">
-    <div class="latest-footer-inner">
-      <a
-        href="index.html"
-        class="latest-footer-brand"
-      >
-        <img
-          src="assets/signaturesi.png"
-          alt=""
-          width="28"
-          height="28"
-          loading="lazy"
-          decoding="async"
-          draggable="false"
-        >
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+            <span>Signaturesi</span>
+          </a>
+          <p>A focused ecosystem for intelligence, communication and mobile-first AI research.</p>
+          <div class="footer-socials">
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+            </a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 20 20"></path><path d="M20 4 4 20"></path></svg>
+            </a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path><path d="m10 9 5 3-5 3Z"></path></svg>
+            </a>
+            <a href="bean.html" aria-label="Bean">
+              <img src="assets/bean.png" alt="" width="18" height="18" loading="lazy" decoding="async" draggable="false">
+            </a>
+          </div>
+        </div>
 
-        <span>
-          Signaturesi
-        </span>
-      </a>
+        <div class="footer-cols">
+          <div>
+            <h3>Products</h3>
+            <a href="https://neyo.signaturesi.com/">NEO</a>
+            <a href="bean.html">Bean</a>
+            <a href="signup.html">Bean ID</a>
+            <a href="latest.html">Personalities</a>
+          </div>
+          <div>
+            <h3>Research</h3>
+            <a href="research.html">Research library</a>
+            <a href="research-article.html">NEO L1 report</a>
+            <a href="research.html">Green AI</a>
+            <a href="security.html">Safety</a>
+          </div>
+          <div>
+            <h3>Company</h3>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="status.html">System status</a>
+            <a href="latest.html">Latest</a>
+          </div>
+          <div>
+            <h3>Legal</h3>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Use</a>
+            <a href="acceptable-use.html">Acceptable Use</a>
+            <a href="cookies.html">Cookie Policy</a>
+            <a href="security.html">Security</a>
+          </div>
+          <div>
+            <h3>Connect</h3>
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer">X</a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="bean.html">Bean</a>
+          </div>
+        </div>
+      </div>
 
-      <p>
-        © 2026 Signaturesi.
-      </p>
+      <div class="footer-bottom">
+        <p>© 2026 Signaturesi.</p>
+        <div class="footer-meta">
+          <span>Designed by Leo</span>
+          <a href="status.html">System status</a>
+          <button type="button" aria-label="Current language: English">English</button>
+        </div>
+      </div>
     </div>
   </footer>
 
+  <script src="/site.js" defer></script>
+  <script src="/premium-ui.js" defer></script>
   <script>
     document.addEventListener(
       "DOMContentLoaded",
@@ -335,6 +233,9 @@
           document.getElementById(
             "featuredPersonalityName"
           );
+
+        // Use the build-resolved image URL (Vite hashes assets/ files), so switching never points at a missing file.
+        personalities[0].image = image.getAttribute("src");
 
         const renderPersonality = () => {
           const personality =
@@ -406,6 +307,5 @@
       }
     );
   </script>
-  <script src="premium-ui.js" defer></script>
 </body>
 </html>

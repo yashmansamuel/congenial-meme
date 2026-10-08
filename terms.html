@@ -2,17 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-
-  <meta
-    name="description"
-    content="Read the terms governing access to Signaturesi, NEO, Bean and Bean ID."
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Read the terms governing access to Signaturesi, NEO, Bean and Bean ID.">
   <meta name="theme-color" content="#ffffff">
   <meta name="robots" content="index, follow">
 
@@ -20,2366 +11,645 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/favicon.png">
 
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-
-  <link rel="stylesheet" href="terms.css">
-  <link rel="stylesheet" href="premium-ui.css">
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* page-only additions; prefixed with "main" so they win over site.css (Vite emits site.css after this block) */
+    main .legal-hero { padding-bottom: 48px; }
+    main .legal-hero + .section { padding-top: 32px; }
+    main .legal-hero .back-link { display: flex; width: fit-content; }
+    main .legal-hero .eyebrow { display: block; }
+    main .legal-hero .lede { max-width: 720px; }
+    main .icon-dark { padding: 4px; border-radius: 6px; background: #111; }
+    main .legal-meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 24px; }
+    main .legal-meta strong { font-weight: 500; color: var(--text); }
+    main .legal-hero .note { max-width: 720px; margin-top: 28px; }
+    main .note > * + * { margin-top: 6px; }
+    main .note strong, main .item strong, main .label { display: block; }
+    main .note strong { font-weight: 600; }
+    main .note p, main .item p { color: var(--muted); font-size: 15px; }
+    main .label { font-size: 13px; font-weight: 500; color: var(--muted); }
+    main .toc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text); }
+    main .toc-toggle { display: none; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--muted); }
+    main .toc-toggle[aria-expanded="false"] span { display: inline-block; transform: rotate(-90deg); }
+    main .toc .active-toc-link { color: var(--text); font-weight: 500; }
+    main .legal-sec { scroll-margin-top: calc(var(--header-h) + 16px); }
+    main .prose > .legal-sec + .legal-sec { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--border); }
+    main .legal-sec > * + * { margin-top: 16px; }
+    main .prose .legal-sec h2 { margin-top: 0; }
+    main .prose .legal-sec > .eyebrow { margin-bottom: 0; }
+    main .prose .eyebrow .num { margin-right: 6px; }
+    main .items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    main .items-1 { grid-template-columns: 1fr; }
+    main .item { padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    main .item > * + * { margin-top: 6px; }
+    main .prose .item h3, main .prose .note h3, main .prose .box h3 { margin-top: 0; font-size: 16px; }
+    main .prose .item ul { margin-top: 8px; }
+    main .item img, main .box-head img, main .note img { width: 24px; height: 24px; }
+    main .box { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
+    main .box > * + * { margin-top: 16px; }
+    main .box-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    main .box-head > span:last-child:not(:first-child) { margin-left: auto; }
+    main .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    main .prose .table-wrap tr:last-child td { border-bottom: 0; }
+    main .controls .item { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    main .demo-toggle { flex: none; position: relative; width: 40px; height: 24px; padding: 0; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); transition: background .15s ease; }
+    main .demo-toggle span { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 1px solid var(--border); transition: transform .15s ease; }
+    main .demo-toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+    main .demo-toggle[aria-pressed="true"] span { transform: translateX(16px); border-color: var(--accent); }
+    main .prose .btn { text-decoration: none; }
+    main .prose .text-link { text-decoration: none; }
+    main .related .card h3 { margin-top: 0; }
+    @media (max-width: 960px) {
+      main .legal-layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+      main .toc { padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+      main .toc-toggle { display: inline-flex; align-items: center; justify-content: center; }
+      main .toc-navigation.toc-collapsed { display: none; }
+      main .toc-navigation { columns: 2; column-gap: 24px; }
+    }
+    @media (max-width: 720px) {
+      main .items { grid-template-columns: 1fr; }
+      main .toc-navigation { columns: 1; }
+      main .box { padding: 16px; }
+      main .table-wrap { border: 0; border-radius: 0; }
+      main .prose .table-wrap table, main .prose .table-wrap tbody, main .prose .table-wrap tr, main .prose .table-wrap td { display: block; }
+      main .prose .table-wrap thead { display: none; }
+      main .prose .table-wrap tr { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+      main .prose .table-wrap tr + tr { margin-top: 8px; }
+      main .prose .table-wrap td { padding: 2px 0; border: 0; }
+      main .prose .table-wrap td:first-child { font-weight: 600; color: var(--text); }
+      main .prose .table-wrap td[data-label]:not(:first-child)::before { content: attr(data-label) ": "; color: var(--muted); }
+      main .prose > .legal-sec + .legal-sec { margin-top: 40px; padding-top: 32px; }
+    }
+  </style>
 </head>
 
 <body>
-  <!-- NAVBAR -->
-  <header class="navbar" id="navbar">
-    <div class="nav-container">
-      <a
-        href="index.html"
-        class="brand"
-        aria-label="Signaturesi home"
-      >
-        <span class="brand-icon">
-          <img
-            src="assets/signaturesi.png"
-            alt=""
-            width="34"
-            height="34"
-            draggable="false"
-          >
-        </span>
-
-        <span class="brand-name">
-          Signaturesi
-        </span>
+  <header class="site-header" id="navbar">
+    <div class="container header-inner">
+      <a href="index.html" class="brand" aria-label="Signaturesi home">
+        <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+        <span>Signaturesi</span>
       </a>
 
-      <nav
-        class="nav-links"
-        aria-label="Primary navigation"
-      >
-        <a href="index.html#products" class="nav-link">
-          Products
-        </a>
+      <button type="button" class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
 
-        <a href="research.html" class="nav-link">
-          Research
-        </a>
-
-        <a href="latest.html" class="nav-link">
-          Latest
-        </a>
-
-        <a
-          href="signup.html?mode=login"
-          class="nav-signin"
-        >
-          Sign in
-        </a>
-
-        <a
-          href="signup.html"
-          class="button button-dark nav-cta"
-        >
-          Get started
-        </a>
+      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
+        <div class="nav-links">
+          <a href="index.html#products">Products</a>
+          <a href="research.html">Research</a>
+          <a href="latest.html">Latest</a>
+        </div>
+        <div class="nav-actions">
+          <a href="signup.html?mode=login" class="nav-signin">Sign in</a>
+          <a href="signup.html" class="btn btn-sm">Get started</a>
+        </div>
       </nav>
     </div>
   </header>
 
   <main>
-    <!-- HERO -->
-    <section class="terms-hero">
-      <div
-        class="hero-glow glow-one"
-        aria-hidden="true"
-      ></div>
-
-      <div
-        class="hero-glow glow-two"
-        aria-hidden="true"
-      ></div>
-
-      <div class="terms-hero-inner">
-        <a
-          href="index.html"
-          class="back-link"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M19 12H5"></path>
-            <path d="m11 18-6-6 6-6"></path>
-          </svg>
-
-          Signaturesi
-        </a>
-
-        <div class="hero-label-row">
-          <span class="hero-label">
-            Legal
-          </span>
-
-          <span class="hero-status">
-            Terms of Use
-          </span>
-        </div>
-
-        <h1>
-          Terms built
-          <span>for clear use.</span>
-        </h1>
-
-        <p class="hero-description">
-          These Terms explain the rules, responsibilities and
-          limitations that apply when you access Signaturesi,
-          NEO, Bean, Bean ID and related services.
-        </p>
-
-        <div class="policy-meta">
-          <div class="policy-meta-item">
-            <span>
-              Effective date
-            </span>
-
-            <strong>
-              July 24, 2026
-            </strong>
-          </div>
-
-          <div class="policy-meta-divider"></div>
-
-          <div class="policy-meta-item">
-            <span>
-              Version
-            </span>
-
-            <strong>
-              1.0 Draft
-            </strong>
-          </div>
-
-          <div class="policy-meta-divider"></div>
-
-          <div class="policy-meta-item">
-            <span>
-              Applies to
-            </span>
-
-            <strong>
-              NEO, Bean and Bean ID
-            </strong>
-          </div>
+    <section class="hero legal-hero">
+      <div class="container">
+        <a class="back-link" href="index.html"><span aria-hidden="true">←</span> Signaturesi</a>
+        <p class="eyebrow">Legal <span aria-hidden="true">·</span> Terms of Use</p>
+        <h1>Terms built <span>for clear use.</span></h1>
+        <p class="lede">These Terms explain the rules, responsibilities and limitations that apply when you access Signaturesi, NEO, Bean, Bean ID and related services.</p>
+        <p class="legal-meta"><span><span>Effective date</span> <strong>July 24, 2026</strong></span><span><span>Version</span> <strong>1.0 Draft</strong></span><span><span>Applies to</span> <strong>NEO, Bean and Bean ID</strong></span></p>
+        <div class="note">
+          <strong>Publication notice</strong>
+          <p>This page is a structured Terms of Use draft. Before public launch, confirm the legal entity, minimum user age, payment provider, refund rules, governing law and dispute process, then obtain professional legal review.</p>
         </div>
       </div>
     </section>
-
-    <!-- DRAFT NOTICE -->
-    <section class="legal-notice-section">
-      <div class="legal-notice">
-        <div class="notice-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 16v-4"></path>
-            <path d="M12 8h.01"></path>
-          </svg>
-        </div>
-
-        <div>
-          <strong>
-            Publication notice
-          </strong>
-
-          <p>
-            This page is a structured Terms of Use draft. Before
-            public launch, confirm the legal entity, minimum user age,
-            payment provider, refund rules, governing law and dispute
-            process, then obtain professional legal review.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- TERMS BODY -->
-    <section class="terms-section">
-      <div class="terms-layout">
-        <!-- TABLE OF CONTENTS -->
-        <aside
-          class="table-of-contents"
-          aria-label="Terms of Use table of contents"
-        >
-          <div class="toc-card">
-            <div class="toc-header">
-              <span>
-                On this page
-              </span>
-
-              <button
-                type="button"
-                class="toc-toggle"
-                id="tocToggle"
-                aria-expanded="true"
-                aria-controls="tocNavigation"
-                aria-label="Toggle table of contents"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="m6 9 6 6 6-6"></path>
-                </svg>
-              </button>
-            </div>
-
-            <nav
-              class="toc-navigation"
-              id="tocNavigation"
-            >
-              <a href="#agreement">
-                Agreement
-              </a>
-
-              <a href="#eligibility">
-                Eligibility
-              </a>
-
-              <a href="#bean-id">
-                Bean ID
-              </a>
-
-              <a href="#services">
-                Services
-              </a>
-
-              <a href="#neo">
-                NEO
-              </a>
-
-              <a href="#bean">
-                Bean
-              </a>
-
-              <a href="#user-content">
-                User content
-              </a>
-
-              <a href="#acceptable-use">
-                Acceptable use
-              </a>
-
-              <a href="#paid-services">
-                Paid services
-              </a>
-
-              <a href="#intellectual-property">
-                Intellectual property
-              </a>
-
-              <a href="#third-party-services">
-                Third-party services
-              </a>
-
-              <a href="#availability">
-                Availability
-              </a>
-
-              <a href="#termination">
-                Suspension and termination
-              </a>
-
-              <a href="#disclaimers">
-                Disclaimers
-              </a>
-
-              <a href="#liability">
-                Liability
-              </a>
-
-              <a href="#indemnity">
-                Indemnity
-              </a>
-
-              <a href="#governing-law">
-                Governing law
-              </a>
-
-              <a href="#changes">
-                Changes
-              </a>
-
-              <a href="#contact">
-                Contact
-              </a>
-            </nav>
+    <section class="section">
+      <div class="container legal-layout">
+        <aside class="toc" aria-label="Terms of Use table of contents">
+          <div class="toc-head">
+            <span>On this page</span>
+            <button aria-controls="tocNavigation" aria-expanded="true" aria-label="Toggle table of contents" class="toc-toggle" id="tocToggle" type="button"><span aria-hidden="true">▾</span></button>
           </div>
+          <nav class="toc-navigation" id="tocNavigation">
+            <a href="#agreement">Agreement</a>
+            <a href="#eligibility">Eligibility</a>
+            <a href="#bean-id">Bean ID</a>
+            <a href="#services">Services</a>
+            <a href="#neo">NEO</a>
+            <a href="#bean">Bean</a>
+            <a href="#user-content">User content</a>
+            <a href="#acceptable-use">Acceptable use</a>
+            <a href="#paid-services">Paid services</a>
+            <a href="#intellectual-property">Intellectual property</a>
+            <a href="#third-party-services">Third-party services</a>
+            <a href="#availability">Availability</a>
+            <a href="#termination">Suspension and termination</a>
+            <a href="#disclaimers">Disclaimers</a>
+            <a href="#liability">Liability</a>
+            <a href="#indemnity">Indemnity</a>
+            <a href="#governing-law">Governing law</a>
+            <a href="#changes">Changes</a>
+            <a href="#contact">Contact</a>
+          </nav>
         </aside>
-
-        <!-- MAIN CONTENT -->
-        <article class="terms-content">
-          <!-- AGREEMENT -->
-          <section
-            id="agreement"
-            class="terms-block opening-block"
-          >
-            <span class="section-number">
-              01
-            </span>
-
-            <div>
-              <span class="section-label">
-                Agreement to these Terms
-              </span>
-
-              <h2>
-                Using Signaturesi means accepting these rules.
-              </h2>
-
-              <p>
-                These Terms of Use govern your access to and use of
-                Signaturesi websites, applications, products and
-                services, including NEO, Bean and Bean ID.
-              </p>
-
-              <p>
-                By creating an account, accessing a service or
-                continuing to use Signaturesi, you agree to these
-                Terms and the policies incorporated into them,
-                including the Privacy Policy and Acceptable Use Policy.
-              </p>
-
-              <p>
-                If you do not agree to these Terms, you must not
-                access or use Signaturesi services.
-              </p>
-
-              <div class="placeholder-card">
-                <span>
-                  Required before launch
-                </span>
-
-                <strong>
-                  Replace “Signaturesi” with the complete legal name
-                  of the entity responsible for operating the services.
-                </strong>
-              </div>
+        <article class="prose">
+          <section class="legal-sec" id="agreement">
+            <p class="eyebrow"><span class="num">01</span>Agreement to these Terms</p>
+            <h2>Using Signaturesi means accepting these rules.</h2>
+            <p>These Terms of Use govern your access to and use of Signaturesi websites, applications, products and services, including NEO, Bean and Bean ID.</p>
+            <p>By creating an account, accessing a service or continuing to use Signaturesi, you agree to these Terms and the policies incorporated into them, including the Privacy Policy and Acceptable Use Policy.</p>
+            <p>If you do not agree to these Terms, you must not access or use Signaturesi services.</p>
+            <div class="note">
+              <span class="label">Required before launch</span>
+              <strong>Replace “Signaturesi” with the complete legal name of the entity responsible for operating the services.</strong>
             </div>
           </section>
-
-          <!-- ELIGIBILITY -->
-          <section
-            id="eligibility"
-            class="terms-block"
-          >
-            <span class="section-number">
-              02
-            </span>
-
-            <div>
-              <span class="section-label">
-                Eligibility
-              </span>
-
-              <h2>
-                You must be legally permitted to use the services.
-              </h2>
-
-              <p>
-                You may use Signaturesi only if you can legally enter
-                into a binding agreement and are not prohibited from
-                using the services under applicable law.
-              </p>
-
-              <p>
-                If you use Signaturesi for a company, organization or
-                other entity, you represent that you have authority
-                to accept these Terms on its behalf.
-              </p>
-
-              <div class="decision-card">
-                <span>
-                  Minimum age decision required
-                </span>
-
-                <strong>
-                  Confirm the minimum account age and any parental
-                  consent requirements before publishing these Terms.
-                </strong>
-              </div>
+          <section class="legal-sec" id="eligibility">
+            <p class="eyebrow"><span class="num">02</span>Eligibility</p>
+            <h2>You must be legally permitted to use the services.</h2>
+            <p>You may use Signaturesi only if you can legally enter into a binding agreement and are not prohibited from using the services under applicable law.</p>
+            <p>If you use Signaturesi for a company, organization or other entity, you represent that you have authority to accept these Terms on its behalf.</p>
+            <div class="note">
+              <span class="label">Minimum age decision required</span>
+              <strong>Confirm the minimum account age and any parental consent requirements before publishing these Terms.</strong>
             </div>
           </section>
-
-          <!-- BEAN ID -->
-          <section
-            id="bean-id"
-            class="terms-block"
-          >
-            <span class="section-number">
-              03
-            </span>
-
-            <div>
-              <span class="section-label">
-                Bean ID accounts
-              </span>
-
-              <h2>
-                Your Bean ID connects the Signaturesi ecosystem.
-              </h2>
-
-              <p>
-                You may need a Bean ID to access NEO, Bean or selected
-                Signaturesi features. You are responsible for providing
-                accurate account information and keeping it updated.
-              </p>
-
-              <div class="account-grid">
-                <article>
-                  <span class="account-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M4 21a8 8 0 0 1 16 0"></path>
-                    </svg>
-                  </span>
-
-                  <strong>
-                    Accurate identity
-                  </strong>
-
-                  <p>
-                    Do not impersonate another person or register
-                    misleading account information.
-                  </p>
-                </article>
-
-                <article>
-                  <span class="account-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <rect
-                        width="18"
-                        height="11"
-                        x="3"
-                        y="11"
-                        rx="2"
-                      ></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </span>
-
-                  <strong>
-                    Account security
-                  </strong>
-
-                  <p>
-                    Protect your password, recovery methods and
-                    authenticated devices.
-                  </p>
-                </article>
-
-                <article>
-                  <span class="account-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 3v18"></path>
-                      <path d="M3 12h18"></path>
-                    </svg>
-                  </span>
-
-                  <strong>
-                    One responsible user
-                  </strong>
-
-                  <p>
-                    Do not sell, transfer or share access to your
-                    personal account without permission.
-                  </p>
-                </article>
-
-                <article>
-                  <span class="account-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"></path>
-                      <path d="m9 12 2 2 4-4"></path>
-                    </svg>
-                  </span>
-
-                  <strong>
-                    Report misuse
-                  </strong>
-
-                  <p>
-                    Notify Signaturesi if you suspect unauthorized
-                    access or account compromise.
-                  </p>
-                </article>
+          <section class="legal-sec" id="bean-id">
+            <p class="eyebrow"><span class="num">03</span>Bean ID accounts</p>
+            <h2>Your Bean ID connects the Signaturesi ecosystem.</h2>
+            <p>You may need a Bean ID to access NEO, Bean or selected Signaturesi features. You are responsible for providing accurate account information and keeping it updated.</p>
+            <div class="items">
+              <div class="item">
+                <strong>Accurate identity</strong>
+                <p>Do not impersonate another person or register misleading account information.</p>
               </div>
-
-              <p>
-                You are responsible for activity performed through
-                your account unless applicable law provides otherwise
-                or the activity resulted from a security failure
-                controlled by Signaturesi.
-              </p>
-            </div>
-          </section>
-
-          <!-- SERVICES -->
-          <section
-            id="services"
-            class="terms-block"
-          >
-            <span class="section-number">
-              04
-            </span>
-
-            <div>
-              <span class="section-label">
-                Signaturesi services
-              </span>
-
-              <h2>
-                Products may evolve as development continues.
-              </h2>
-
-              <p>
-                Signaturesi provides an ecosystem of intelligence,
-                communication, identity and research-related services.
-                Features may be released gradually, tested in beta,
-                changed, restricted or discontinued.
-              </p>
-
-              <div class="service-grid">
-                <article class="service-card">
-                  <div class="service-brand">
-                    <span class="service-icon">
-                      <img
-                        src="assets/neo.png"
-                        alt=""
-                        width="28"
-                        height="28"
-                        loading="lazy"
-                        decoding="async"
-                        draggable="false"
-                      >
-                    </span>
-
-                    <div>
-                      <strong>
-                        NEO
-                      </strong>
-
-                      <span>
-                        AI workspace
-                      </span>
-                    </div>
-                  </div>
-
-                  <p>
-                    Artificial intelligence, writing, reasoning,
-                    research and organizational features.
-                  </p>
-                </article>
-
-                <article class="service-card dark-service-card">
-                  <div class="service-brand">
-                    <span class="service-icon dark-service-icon">
-                      <img
-                        src="assets/bean.png"
-                        alt=""
-                        width="28"
-                        height="28"
-                        loading="lazy"
-                        decoding="async"
-                        draggable="false"
-                      >
-                    </span>
-
-                    <div>
-                      <strong>
-                        Bean
-                      </strong>
-
-                      <span>
-                        Communication
-                      </span>
-                    </div>
-                  </div>
-
-                  <p>
-                    Messaging, presence, media sharing and supported
-                    voice or video communication.
-                  </p>
-                </article>
-
-                <article class="service-card">
-                  <div class="service-brand">
-                    <span class="service-icon">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                      >
-                        <circle cx="12" cy="8" r="4"></circle>
-                        <path d="M4 21a8 8 0 0 1 16 0"></path>
-                      </svg>
-                    </span>
-
-                    <div>
-                      <strong>
-                        Bean ID
-                      </strong>
-
-                      <span>
-                        Unified identity
-                      </span>
-                    </div>
-                  </div>
-
-                  <p>
-                    Account, authentication and identity features
-                    connecting Signaturesi products.
-                  </p>
-                </article>
+              <div class="item">
+                <strong>Account security</strong>
+                <p>Protect your password, recovery methods and authenticated devices.</p>
               </div>
-
-              <p>
-                Beta, preview or experimental features may be less
-                reliable than fully released services and may change
-                without preserving earlier behavior.
-              </p>
+              <div class="item">
+                <strong>One responsible user</strong>
+                <p>Do not sell, transfer or share access to your personal account without permission.</p>
+              </div>
+              <div class="item">
+                <strong>Report misuse</strong>
+                <p>Notify Signaturesi if you suspect unauthorized access or account compromise.</p>
+              </div>
             </div>
+            <p>You are responsible for activity performed through your account unless applicable law provides otherwise or the activity resulted from a security failure controlled by Signaturesi.</p>
           </section>
-
-          <!-- NEO -->
-          <section
-            id="neo"
-            class="terms-block"
-          >
-            <span class="section-number">
-              05
-            </span>
-
-            <div>
-              <span class="section-label">
-                NEO and AI-generated content
-              </span>
-
-              <h2>
-                AI output can be incomplete, inaccurate or inappropriate.
-              </h2>
-
-              <p>
-                NEO may generate text, suggestions, summaries, code,
-                plans or other content using artificial intelligence.
-                AI output is probabilistic and may contain errors,
-                outdated information, omissions or fabricated details.
-              </p>
-
-              <div class="ai-warning-card">
-                <div class="ai-warning-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 9v4"></path>
-                    <path d="M12 17h.01"></path>
-                    <path d="M10.3 3.7 2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.7 3.7a2 2 0 0 0-3.4 0Z"></path>
-                  </svg>
+          <section class="legal-sec" id="services">
+            <p class="eyebrow"><span class="num">04</span>Signaturesi services</p>
+            <h2>Products may evolve as development continues.</h2>
+            <p>Signaturesi provides an ecosystem of intelligence, communication, identity and research-related services. Features may be released gradually, tested in beta, changed, restricted or discontinued.</p>
+            <div class="items">
+              <div class="item">
+                <div class="box-head">
+                  <img alt="" decoding="async" height="24" loading="lazy" src="assets/neo.png" width="24"/>
+                  <strong>NEO</strong>
+                  <span class="muted small">AI workspace</span>
                 </div>
-
-                <div>
-                  <strong>
-                    Verify important information
-                  </strong>
-
-                  <p>
-                    Do not rely solely on NEO for decisions involving
-                    health, law, finance, safety, employment or other
-                    high-impact matters.
-                  </p>
+                <p>Artificial intelligence, writing, reasoning, research and organizational features.</p>
+              </div>
+              <div class="item">
+                <div class="box-head">
+                  <img alt="" class="icon-dark" decoding="async" height="24" loading="lazy" src="assets/bean.png" width="24"/>
+                  <strong>Bean</strong>
+                  <span class="muted small">Communication</span>
+                </div>
+                <p>Messaging, presence, media sharing and supported voice or video communication.</p>
+              </div>
+              <div class="item">
+                <div class="box-head">
+                  <strong>Bean ID</strong>
+                  <span class="muted small">Unified identity</span>
+                </div>
+                <p>Account, authentication and identity features connecting Signaturesi products.</p>
+              </div>
+            </div>
+            <p>Beta, preview or experimental features may be less reliable than fully released services and may change without preserving earlier behavior.</p>
+          </section>
+          <section class="legal-sec" id="neo">
+            <p class="eyebrow"><span class="num">05</span>NEO and AI-generated content</p>
+            <h2>AI output can be incomplete, inaccurate or inappropriate.</h2>
+            <p>NEO may generate text, suggestions, summaries, code, plans or other content using artificial intelligence. AI output is probabilistic and may contain errors, outdated information, omissions or fabricated details.</p>
+            <div class="note">
+              <strong>Verify important information</strong>
+              <p>Do not rely solely on NEO for decisions involving health, law, finance, safety, employment or other high-impact matters.</p>
+            </div>
+            <p>You remain responsible for reviewing output before using, publishing, executing or sharing it.</p>
+            <p>NEO is not a licensed medical professional, lawyer, financial adviser, therapist, engineer or emergency service. AI output does not create a professional relationship.</p>
+            <h3>Generated code and technical instructions</h3>
+            <p>You should test generated code, configurations, calculations and technical instructions in a safe environment before production use. Signaturesi does not guarantee that generated code will be secure, complete or compatible with your systems.</p>
+            <h3>Research and current information</h3>
+            <p>AI-generated responses may not reflect the most recent information. Where accuracy depends on current laws, prices, availability, security notices or public events, you should verify the information using reliable and current sources.</p>
+          </section>
+          <section class="legal-sec" id="bean">
+            <p class="eyebrow"><span class="num">06</span>Bean communication services</p>
+            <h2>You are responsible for what you communicate.</h2>
+            <p>Bean may allow users to send messages, voice notes, images, videos, documents and other content, and may support voice or video calls.</p>
+            <p>You must have the right to send or share content and must respect the privacy, intellectual property and legal rights of other people.</p>
+            <ul>
+              <li>Do not harass, threaten, stalk or intimidate others.</li>
+              <li>Do not distribute unlawful, abusive or exploitative content.</li>
+              <li>Do not send spam, deceptive promotions or mass unsolicited messages.</li>
+              <li>Do not record calls without consent where consent is legally required.</li>
+              <li>Do not use Bean to impersonate another person or organization.</li>
+              <li>Do not attempt to bypass safety, reporting or account restrictions.</li>
+            </ul>
+            <div class="note">
+              <span class="label">Encryption wording</span>
+              <strong>Bean should not be described as end-to-end encrypted until that protection is fully implemented and verified for messages, media, backups and calls.</strong>
+            </div>
+          </section>
+          <section class="legal-sec" id="user-content">
+            <p class="eyebrow"><span class="num">07</span>User content</p>
+            <h2>You retain responsibility for content you provide.</h2>
+            <p>“User Content” includes prompts, messages, files, images, videos, voice recordings, documents, profile information, feedback and other material submitted through Signaturesi.</p>
+            <div class="note">
+              <span class="label">Ownership principle</span>
+              <strong>As between you and Signaturesi, you retain ownership of User Content you already own.</strong>
+            </div>
+            <p>You grant Signaturesi a limited license to host, process, transmit, reproduce and display User Content only as reasonably necessary to provide, secure and improve the services, subject to the Privacy Policy and your available settings.</p>
+            <p>You represent that you have the rights and permissions needed to submit User Content and allow Signaturesi to process it for the service you request.</p>
+            <h3>Feedback</h3>
+            <p>If you provide suggestions or feedback, Signaturesi may use that feedback to improve products without owing compensation, provided that personal information is handled under the Privacy Policy.</p>
+          </section>
+          <section class="legal-sec" id="acceptable-use">
+            <p class="eyebrow"><span class="num">08</span>Acceptable use</p>
+            <h2>Do not use Signaturesi to harm people or systems.</h2>
+            <p>You must comply with applicable law and the Signaturesi Acceptable Use Policy. You must not use the services to:</p>
+            <div class="items">
+              <div class="item">
+                <span class="num">01</span>
+                <strong>Break the law</strong>
+                <p>Create, distribute or facilitate unlawful activity.</p>
+              </div>
+              <div class="item">
+                <span class="num">02</span>
+                <strong>Harm people</strong>
+                <p>Threaten, exploit, abuse, deceive or endanger others.</p>
+              </div>
+              <div class="item">
+                <span class="num">03</span>
+                <strong>Attack systems</strong>
+                <p>Deploy malware, steal credentials or disrupt infrastructure.</p>
+              </div>
+              <div class="item">
+                <span class="num">04</span>
+                <strong>Evade safeguards</strong>
+                <p>Bypass access controls, rate limits or product protections.</p>
+              </div>
+              <div class="item">
+                <span class="num">05</span>
+                <strong>Abuse identity</strong>
+                <p>Impersonate others or create deceptive automated accounts.</p>
+              </div>
+              <div class="item">
+                <span class="num">06</span>
+                <strong>Violate rights</strong>
+                <p>Infringe privacy, copyright, trademark or other rights.</p>
+              </div>
+            </div>
+            <p><a class="text-link" href="acceptable-use.html">Read the Acceptable Use Policy <span aria-hidden="true">→</span></a></p>
+          </section>
+          <section class="legal-sec" id="paid-services">
+            <p class="eyebrow"><span class="num">09</span>Paid services and subscriptions</p>
+            <h2>Paid plans require clear billing rules.</h2>
+            <p>Some Signaturesi features may require a paid subscription or one-time payment. Prices, billing intervals and included features will be shown before purchase.</p>
+            <div class="items">
+              <div class="item">
+                <span class="label">Billing</span>
+                <strong>Charges follow the selected plan</strong>
+                <p>Subscription fees may be charged in advance for each billing period.</p>
+              </div>
+              <div class="item">
+                <span class="label">Renewal</span>
+                <strong>Plans may renew automatically</strong>
+                <p>Auto-renewal must be clearly disclosed before the user confirms payment.</p>
+              </div>
+              <div class="item">
+                <span class="label">Cancellation</span>
+                <strong>Cancel future renewal</strong>
+                <p>Access may continue until the end of the current paid billing period.</p>
+              </div>
+              <div class="item">
+                <span class="label">Refunds</span>
+                <strong>Follow the published refund policy</strong>
+                <p>Refund eligibility may depend on applicable law and the payment provider.</p>
+              </div>
+            </div>
+            <p>Taxes, currency conversion charges and payment-provider fees may apply depending on your location and payment method.</p>
+            <div class="note">
+              <span class="label">Payment details required</span>
+              <strong>Confirm the payment provider, merchant of record, refund window, cancellation flow and supported currencies before launch.</strong>
+            </div>
+            <h3>Price changes</h3>
+            <p>Signaturesi may change prices or plan features. Existing subscribers should receive reasonable notice before a change affects a future billing period.</p>
+          </section>
+          <section class="legal-sec" id="intellectual-property">
+            <p class="eyebrow"><span class="num">10</span>Intellectual property</p>
+            <h2>Signaturesi products and branding remain protected.</h2>
+            <p>Signaturesi and its licensors retain all rights in the services, including software, interfaces, designs, branding, trademarks, documentation, research materials and other proprietary content, excluding User Content.</p>
+            <p>Subject to these Terms, Signaturesi grants you a limited, personal, revocable, non-exclusive and non-transferable right to access the services for their intended purpose.</p>
+            <p>Unless expressly permitted, you may not:</p>
+            <ul>
+              <li>Copy or redistribute substantial parts of a product.</li>
+              <li>Resell access or operate an unauthorized competing service.</li>
+              <li>Remove trademarks, copyright notices or attribution.</li>
+              <li>Reverse engineer protected systems except where law permits.</li>
+              <li>Use Signaturesi branding in a way that suggests endorsement.</li>
+            </ul>
+          </section>
+          <section class="legal-sec" id="third-party-services">
+            <p class="eyebrow"><span class="num">11</span>Third-party services</p>
+            <h2>Some features may rely on external providers.</h2>
+            <p>Signaturesi may integrate with external AI models, hosting services, databases, payment processors, communication infrastructure, analytics tools or other providers.</p>
+            <p>Your use of an external service may also be subject to that provider’s terms and privacy policy. Signaturesi is not responsible for third-party services that it does not control.</p>
+            <p>Signaturesi should identify important provider categories in its Privacy Policy and should avoid transmitting information unrelated to the requested function.</p>
+          </section>
+          <section class="legal-sec" id="availability">
+            <p class="eyebrow"><span class="num">12</span>Service availability</p>
+            <h2>Continuous availability is not guaranteed.</h2>
+            <p>Signaturesi may experience interruptions caused by maintenance, network failures, security incidents, provider outages, device limitations or product changes.</p>
+            <p>Unless Signaturesi publishes a separate service-level agreement, it does not guarantee uninterrupted access, a particular response time, permanent storage or error-free operation.</p>
+            <div class="note">
+              <span class="label">Operational transparency</span>
+              <strong>Significant known incidents should be communicated through a public system-status page where practical.</strong>
+              <a class="btn btn-sm btn-outline" href="status.html">System status</a>
+            </div>
+          </section>
+          <section class="legal-sec" id="termination">
+            <p class="eyebrow"><span class="num">13</span>Suspension and termination</p>
+            <h2>Access may be restricted when necessary.</h2>
+            <p>Signaturesi may limit, suspend or terminate access when reasonably necessary to:</p>
+            <ul>
+              <li>Enforce these Terms or the Acceptable Use Policy.</li>
+              <li>Prevent harm, fraud, abuse or security threats.</li>
+              <li>Comply with a valid legal obligation.</li>
+              <li>Address unpaid fees or payment disputes.</li>
+              <li>Protect users, infrastructure or third-party rights.</li>
+              <li>Discontinue a service or unsupported product version.</li>
+            </ul>
+            <p>Where appropriate, Signaturesi should provide notice and an opportunity to appeal. Immediate action may be taken when delay could create harm or legal risk.</p>
+            <h3>Closing your account</h3>
+            <p>You may stop using Signaturesi and request account deletion through available account controls or a verified support channel. Data handling after deletion is described in the Privacy Policy.</p>
+          </section>
+          <section class="legal-sec" id="disclaimers">
+            <p class="eyebrow"><span class="num">14</span>Disclaimers</p>
+            <h2>The services are provided without absolute guarantees.</h2>
+            <p>To the maximum extent permitted by applicable law, Signaturesi services are provided on an “as is” and “as available” basis.</p>
+            <p>Signaturesi does not guarantee that:</p>
+            <ul>
+              <li>The services will always be available or error-free.</li>
+              <li>AI output will be accurate, complete or suitable.</li>
+              <li>Stored information will remain available indefinitely.</li>
+              <li>Every security threat or harmful use will be prevented.</li>
+              <li>The services will meet every technical or business requirement.</li>
+            </ul>
+            <p>Some jurisdictions do not allow certain warranty exclusions, so parts of this section may not apply to every user.</p>
+          </section>
+          <section class="legal-sec" id="liability">
+            <p class="eyebrow"><span class="num">15</span>Limitation of liability</p>
+            <h2>Liability terms must remain reasonable and lawful.</h2>
+            <p>To the maximum extent permitted by applicable law, Signaturesi and its affiliates, officers, employees, contractors and service providers will not be liable for indirect, incidental, special, consequential, exemplary or punitive damages arising from use of the services.</p>
+            <p>This may include loss of profits, business opportunity, reputation, data or service availability.</p>
+            <p>Where liability cannot legally be excluded, the total liability arising from the services should be limited to an amount permitted by applicable law and stated clearly in the final legally reviewed Terms.</p>
+            <div class="note">
+              <span class="label">Legal review required</span>
+              <strong>Add the final monetary liability cap only after the operating entity, pricing model and governing law are confirmed.</strong>
+            </div>
+          </section>
+          <section class="legal-sec" id="indemnity">
+            <p class="eyebrow"><span class="num">16</span>Indemnity</p>
+            <h2>Organizations may be responsible for misuse they control.</h2>
+            <p>To the extent permitted by law, business and organizational users agree to defend and indemnify Signaturesi against claims arising from their unlawful use of the services, violation of these Terms, or infringement of another person’s rights.</p>
+            <p>Consumer users may have statutory rights that cannot be limited by this section.</p>
+          </section>
+          <section class="legal-sec" id="governing-law">
+            <p class="eyebrow"><span class="num">17</span>Governing law and disputes</p>
+            <h2>The legal jurisdiction is not final yet.</h2>
+            <p>These Terms must identify the law governing the agreement and the courts or dispute process that will handle legal claims.</p>
+            <p>The appropriate wording depends on the location and legal structure of the entity operating Signaturesi, the countries where services are offered and whether consumer-protection rules apply.</p>
+            <div class="note">
+              <span class="label">Do not publish a guessed jurisdiction</span>
+              <strong>Confirm the legal entity, country of registration, governing law, dispute venue and any arbitration process before launch.</strong>
+            </div>
+          </section>
+          <section class="legal-sec" id="changes">
+            <p class="eyebrow"><span class="num">18</span>Changes to services and Terms</p>
+            <h2>These Terms may change as Signaturesi develops.</h2>
+            <p>Signaturesi may update these Terms to reflect product, security, business or legal changes.</p>
+            <p>When a material change affects existing users, Signaturesi should provide reasonable notice through the website, account email or product interface.</p>
+            <p>The effective date and version number displayed at the top of this page should be updated whenever these Terms change.</p>
+            <p>Continued use after an updated version becomes effective may constitute acceptance where permitted by applicable law.</p>
+          </section>
+          <section class="legal-sec" id="general">
+            <p class="eyebrow"><span class="num">19</span>General terms</p>
+            <h2>Standard provisions for the agreement.</h2>
+            <div class="items">
+              <div class="item">
+                <strong>Entire agreement</strong>
+                <p>These Terms and incorporated policies form the agreement governing the services.</p>
+              </div>
+              <div class="item">
+                <strong>Severability</strong>
+                <p>If one provision is unenforceable, the remaining provisions should continue where legally possible.</p>
+              </div>
+              <div class="item">
+                <strong>No waiver</strong>
+                <p>A failure to enforce a provision does not permanently waive the right to enforce it later.</p>
+              </div>
+              <div class="item">
+                <strong>Assignment</strong>
+                <p>Users may not transfer this agreement without permission. Signaturesi may transfer it as part of a lawful business reorganization.</p>
+              </div>
+              <div class="item">
+                <strong>Headings</strong>
+                <p>Section headings are provided for readability and do not change the meaning of the Terms.</p>
+              </div>
+              <div class="item">
+                <strong>Electronic notices</strong>
+                <p>Notices may be delivered through email, account interfaces or public service announcements.</p>
+              </div>
+            </div>
+          </section>
+          <section class="legal-sec" id="contact">
+            <p class="eyebrow"><span class="num">20</span>Contact</p>
+            <h2>Questions about these Terms.</h2>
+            <p>Contact Signaturesi through a verified and actively monitored legal or support address.</p>
+            <div class="box">
+              <div class="box-head">
+                <img alt="" decoding="async" height="24" loading="lazy" src="assets/signaturesi.png" width="24"/>
+                <strong>Signaturesi Legal</strong>
+                <span class="muted small">Terms and legal requests</span>
+                <span class="badge">Draft contact</span>
+              </div>
+              <div class="items">
+                <div class="item">
+                  <span class="label">Email</span>
+                  <a href="mailto:legal@signaturesi.com">legal@signaturesi.com</a>
+                </div>
+                <div class="item">
+                  <span class="label">Legal entity</span>
+                  <strong>To be confirmed</strong>
+                </div>
+                <div class="item">
+                  <span class="label">Registered address</span>
+                  <strong>To be confirmed</strong>
+                </div>
+                <div class="item">
+                  <span class="label">Governing law</span>
+                  <strong>To be confirmed</strong>
                 </div>
               </div>
-
-              <p>
-                You remain responsible for reviewing output before
-                using, publishing, executing or sharing it.
-              </p>
-
-              <p>
-                NEO is not a licensed medical professional, lawyer,
-                financial adviser, therapist, engineer or emergency
-                service. AI output does not create a professional
-                relationship.
-              </p>
-
-              <h3 class="subheading">
-                Generated code and technical instructions
-              </h3>
-
-              <p>
-                You should test generated code, configurations,
-                calculations and technical instructions in a safe
-                environment before production use. Signaturesi does
-                not guarantee that generated code will be secure,
-                complete or compatible with your systems.
-              </p>
-
-              <h3 class="subheading">
-                Research and current information
-              </h3>
-
-              <p>
-                AI-generated responses may not reflect the most recent
-                information. Where accuracy depends on current laws,
-                prices, availability, security notices or public
-                events, you should verify the information using
-                reliable and current sources.
-              </p>
             </div>
-          </section>
-
-          <!-- BEAN -->
-          <section
-            id="bean"
-            class="terms-block"
-          >
-            <span class="section-number">
-              06
-            </span>
-
-            <div>
-              <span class="section-label">
-                Bean communication services
-              </span>
-
-              <h2>
-                You are responsible for what you communicate.
-              </h2>
-
-              <p>
-                Bean may allow users to send messages, voice notes,
-                images, videos, documents and other content, and may
-                support voice or video calls.
-              </p>
-
-              <p>
-                You must have the right to send or share content and
-                must respect the privacy, intellectual property and
-                legal rights of other people.
-              </p>
-
-              <ul class="terms-list">
-                <li>
-                  Do not harass, threaten, stalk or intimidate others.
-                </li>
-
-                <li>
-                  Do not distribute unlawful, abusive or exploitative content.
-                </li>
-
-                <li>
-                  Do not send spam, deceptive promotions or mass unsolicited messages.
-                </li>
-
-                <li>
-                  Do not record calls without consent where consent is legally required.
-                </li>
-
-                <li>
-                  Do not use Bean to impersonate another person or organization.
-                </li>
-
-                <li>
-                  Do not attempt to bypass safety, reporting or account restrictions.
-                </li>
-              </ul>
-
-              <div class="encryption-note">
-                <span>
-                  Encryption wording
-                </span>
-
-                <strong>
-                  Bean should not be described as end-to-end encrypted
-                  until that protection is fully implemented and verified
-                  for messages, media, backups and calls.
-                </strong>
-              </div>
-            </div>
-          </section>
-
-          <!-- USER CONTENT -->
-          <section
-            id="user-content"
-            class="terms-block"
-          >
-            <span class="section-number">
-              07
-            </span>
-
-            <div>
-              <span class="section-label">
-                User content
-              </span>
-
-              <h2>
-                You retain responsibility for content you provide.
-              </h2>
-
-              <p>
-                “User Content” includes prompts, messages, files,
-                images, videos, voice recordings, documents, profile
-                information, feedback and other material submitted
-                through Signaturesi.
-              </p>
-
-              <div class="ownership-card">
-                <span class="ownership-label">
-                  Ownership principle
-                </span>
-
-                <strong>
-                  As between you and Signaturesi, you retain ownership
-                  of User Content you already own.
-                </strong>
-              </div>
-
-              <p>
-                You grant Signaturesi a limited license to host,
-                process, transmit, reproduce and display User Content
-                only as reasonably necessary to provide, secure and
-                improve the services, subject to the Privacy Policy
-                and your available settings.
-              </p>
-
-              <p>
-                You represent that you have the rights and permissions
-                needed to submit User Content and allow Signaturesi
-                to process it for the service you request.
-              </p>
-
-              <h3 class="subheading">
-                Feedback
-              </h3>
-
-              <p>
-                If you provide suggestions or feedback, Signaturesi
-                may use that feedback to improve products without
-                owing compensation, provided that personal information
-                is handled under the Privacy Policy.
-              </p>
-            </div>
-          </section>
-
-          <!-- ACCEPTABLE USE -->
-          <section
-            id="acceptable-use"
-            class="terms-block"
-          >
-            <span class="section-number">
-              08
-            </span>
-
-            <div>
-              <span class="section-label">
-                Acceptable use
-              </span>
-
-              <h2>
-                Do not use Signaturesi to harm people or systems.
-              </h2>
-
-              <p>
-                You must comply with applicable law and the
-                Signaturesi Acceptable Use Policy. You must not use
-                the services to:
-              </p>
-
-              <div class="prohibited-grid">
-                <article>
-                  <span>
-                    01
-                  </span>
-
-                  <strong>
-                    Break the law
-                  </strong>
-
-                  <p>
-                    Create, distribute or facilitate unlawful activity.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    02
-                  </span>
-
-                  <strong>
-                    Harm people
-                  </strong>
-
-                  <p>
-                    Threaten, exploit, abuse, deceive or endanger others.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    03
-                  </span>
-
-                  <strong>
-                    Attack systems
-                  </strong>
-
-                  <p>
-                    Deploy malware, steal credentials or disrupt infrastructure.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    04
-                  </span>
-
-                  <strong>
-                    Evade safeguards
-                  </strong>
-
-                  <p>
-                    Bypass access controls, rate limits or product protections.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    05
-                  </span>
-
-                  <strong>
-                    Abuse identity
-                  </strong>
-
-                  <p>
-                    Impersonate others or create deceptive automated accounts.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    06
-                  </span>
-
-                  <strong>
-                    Violate rights
-                  </strong>
-
-                  <p>
-                    Infringe privacy, copyright, trademark or other rights.
-                  </p>
-                </article>
-              </div>
-
-              <a
-                href="acceptable-use.html"
-                class="inline-link"
-              >
-                Read the Acceptable Use Policy
-
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M5 12h14"></path>
-                  <path d="m13 6 6 6-6 6"></path>
-                </svg>
-              </a>
-            </div>
-          </section>
-
-          <!-- PAID SERVICES -->
-          <section
-            id="paid-services"
-            class="terms-block"
-          >
-            <span class="section-number">
-              09
-            </span>
-
-            <div>
-              <span class="section-label">
-                Paid services and subscriptions
-              </span>
-
-              <h2>
-                Paid plans require clear billing rules.
-              </h2>
-
-              <p>
-                Some Signaturesi features may require a paid
-                subscription or one-time payment. Prices, billing
-                intervals and included features will be shown before
-                purchase.
-              </p>
-
-              <div class="billing-grid">
-                <article>
-                  <span>
-                    Billing
-                  </span>
-
-                  <strong>
-                    Charges follow the selected plan
-                  </strong>
-
-                  <p>
-                    Subscription fees may be charged in advance for
-                    each billing period.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    Renewal
-                  </span>
-
-                  <strong>
-                    Plans may renew automatically
-                  </strong>
-
-                  <p>
-                    Auto-renewal must be clearly disclosed before
-                    the user confirms payment.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    Cancellation
-                  </span>
-
-                  <strong>
-                    Cancel future renewal
-                  </strong>
-
-                  <p>
-                    Access may continue until the end of the current
-                    paid billing period.
-                  </p>
-                </article>
-
-                <article>
-                  <span>
-                    Refunds
-                  </span>
-
-                  <strong>
-                    Follow the published refund policy
-                  </strong>
-
-                  <p>
-                    Refund eligibility may depend on applicable law
-                    and the payment provider.
-                  </p>
-                </article>
-              </div>
-
-              <p>
-                Taxes, currency conversion charges and payment-provider
-                fees may apply depending on your location and payment
-                method.
-              </p>
-
-              <div class="provider-decision-card">
-                <span>
-                  Payment details required
-                </span>
-
-                <strong>
-                  Confirm the payment provider, merchant of record,
-                  refund window, cancellation flow and supported
-                  currencies before launch.
-                </strong>
-              </div>
-
-              <h3 class="subheading">
-                Price changes
-              </h3>
-
-              <p>
-                Signaturesi may change prices or plan features.
-                Existing subscribers should receive reasonable notice
-                before a change affects a future billing period.
-              </p>
-            </div>
-          </section>
-
-          <!-- INTELLECTUAL PROPERTY -->
-          <section
-            id="intellectual-property"
-            class="terms-block"
-          >
-            <span class="section-number">
-              10
-            </span>
-
-            <div>
-              <span class="section-label">
-                Intellectual property
-              </span>
-
-              <h2>
-                Signaturesi products and branding remain protected.
-              </h2>
-
-              <p>
-                Signaturesi and its licensors retain all rights in
-                the services, including software, interfaces,
-                designs, branding, trademarks, documentation,
-                research materials and other proprietary content,
-                excluding User Content.
-              </p>
-
-              <p>
-                Subject to these Terms, Signaturesi grants you a
-                limited, personal, revocable, non-exclusive and
-                non-transferable right to access the services for
-                their intended purpose.
-              </p>
-
-              <p>
-                Unless expressly permitted, you may not:
-              </p>
-
-              <ul class="terms-list">
-                <li>
-                  Copy or redistribute substantial parts of a product.
-                </li>
-
-                <li>
-                  Resell access or operate an unauthorized competing service.
-                </li>
-
-                <li>
-                  Remove trademarks, copyright notices or attribution.
-                </li>
-
-                <li>
-                  Reverse engineer protected systems except where law permits.
-                </li>
-
-                <li>
-                  Use Signaturesi branding in a way that suggests endorsement.
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          <!-- THIRD PARTY -->
-          <section
-            id="third-party-services"
-            class="terms-block"
-          >
-            <span class="section-number">
-              11
-            </span>
-
-            <div>
-              <span class="section-label">
-                Third-party services
-              </span>
-
-              <h2>
-                Some features may rely on external providers.
-              </h2>
-
-              <p>
-                Signaturesi may integrate with external AI models,
-                hosting services, databases, payment processors,
-                communication infrastructure, analytics tools or
-                other providers.
-              </p>
-
-              <p>
-                Your use of an external service may also be subject
-                to that provider’s terms and privacy policy.
-                Signaturesi is not responsible for third-party
-                services that it does not control.
-              </p>
-
-              <p>
-                Signaturesi should identify important provider
-                categories in its Privacy Policy and should avoid
-                transmitting information unrelated to the requested
-                function.
-              </p>
-            </div>
-          </section>
-
-          <!-- AVAILABILITY -->
-          <section
-            id="availability"
-            class="terms-block"
-          >
-            <span class="section-number">
-              12
-            </span>
-
-            <div>
-              <span class="section-label">
-                Service availability
-              </span>
-
-              <h2>
-                Continuous availability is not guaranteed.
-              </h2>
-
-              <p>
-                Signaturesi may experience interruptions caused by
-                maintenance, network failures, security incidents,
-                provider outages, device limitations or product changes.
-              </p>
-
-              <p>
-                Unless Signaturesi publishes a separate service-level
-                agreement, it does not guarantee uninterrupted access,
-                a particular response time, permanent storage or
-                error-free operation.
-              </p>
-
-              <div class="availability-card">
-                <div>
-                  <span>
-                    Operational transparency
-                  </span>
-
-                  <strong>
-                    Significant known incidents should be communicated
-                    through a public system-status page where practical.
-                  </strong>
-                </div>
-
-                <a
-                  href="status.html"
-                  class="button button-soft"
-                >
-                  System status
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <!-- TERMINATION -->
-          <section
-            id="termination"
-            class="terms-block"
-          >
-            <span class="section-number">
-              13
-            </span>
-
-            <div>
-              <span class="section-label">
-                Suspension and termination
-              </span>
-
-              <h2>
-                Access may be restricted when necessary.
-              </h2>
-
-              <p>
-                Signaturesi may limit, suspend or terminate access
-                when reasonably necessary to:
-              </p>
-
-              <ul class="terms-list">
-                <li>
-                  Enforce these Terms or the Acceptable Use Policy.
-                </li>
-
-                <li>
-                  Prevent harm, fraud, abuse or security threats.
-                </li>
-
-                <li>
-                  Comply with a valid legal obligation.
-                </li>
-
-                <li>
-                  Address unpaid fees or payment disputes.
-                </li>
-
-                <li>
-                  Protect users, infrastructure or third-party rights.
-                </li>
-
-                <li>
-                  Discontinue a service or unsupported product version.
-                </li>
-              </ul>
-
-              <p>
-                Where appropriate, Signaturesi should provide notice
-                and an opportunity to appeal. Immediate action may be
-                taken when delay could create harm or legal risk.
-              </p>
-
-              <h3 class="subheading">
-                Closing your account
-              </h3>
-
-              <p>
-                You may stop using Signaturesi and request account
-                deletion through available account controls or a
-                verified support channel. Data handling after deletion
-                is described in the Privacy Policy.
-              </p>
-            </div>
-          </section>
-
-          <!-- DISCLAIMERS -->
-          <section
-            id="disclaimers"
-            class="terms-block"
-          >
-            <span class="section-number">
-              14
-            </span>
-
-            <div>
-              <span class="section-label">
-                Disclaimers
-              </span>
-
-              <h2>
-                The services are provided without absolute guarantees.
-              </h2>
-
-              <p>
-                To the maximum extent permitted by applicable law,
-                Signaturesi services are provided on an “as is” and
-                “as available” basis.
-              </p>
-
-              <p>
-                Signaturesi does not guarantee that:
-              </p>
-
-              <ul class="terms-list">
-                <li>
-                  The services will always be available or error-free.
-                </li>
-
-                <li>
-                  AI output will be accurate, complete or suitable.
-                </li>
-
-                <li>
-                  Stored information will remain available indefinitely.
-                </li>
-
-                <li>
-                  Every security threat or harmful use will be prevented.
-                </li>
-
-                <li>
-                  The services will meet every technical or business requirement.
-                </li>
-              </ul>
-
-              <p>
-                Some jurisdictions do not allow certain warranty
-                exclusions, so parts of this section may not apply
-                to every user.
-              </p>
-            </div>
-          </section>
-
-          <!-- LIABILITY -->
-          <section
-            id="liability"
-            class="terms-block"
-          >
-            <span class="section-number">
-              15
-            </span>
-
-            <div>
-              <span class="section-label">
-                Limitation of liability
-              </span>
-
-              <h2>
-                Liability terms must remain reasonable and lawful.
-              </h2>
-
-              <p>
-                To the maximum extent permitted by applicable law,
-                Signaturesi and its affiliates, officers, employees,
-                contractors and service providers will not be liable
-                for indirect, incidental, special, consequential,
-                exemplary or punitive damages arising from use of
-                the services.
-              </p>
-
-              <p>
-                This may include loss of profits, business opportunity,
-                reputation, data or service availability.
-              </p>
-
-              <p>
-                Where liability cannot legally be excluded, the total
-                liability arising from the services should be limited
-                to an amount permitted by applicable law and stated
-                clearly in the final legally reviewed Terms.
-              </p>
-
-              <div class="placeholder-card">
-                <span>
-                  Legal review required
-                </span>
-
-                <strong>
-                  Add the final monetary liability cap only after the
-                  operating entity, pricing model and governing law
-                  are confirmed.
-                </strong>
-              </div>
-            </div>
-          </section>
-
-          <!-- INDEMNITY -->
-          <section
-            id="indemnity"
-            class="terms-block"
-          >
-            <span class="section-number">
-              16
-            </span>
-
-            <div>
-              <span class="section-label">
-                Indemnity
-              </span>
-
-              <h2>
-                Organizations may be responsible for misuse they control.
-              </h2>
-
-              <p>
-                To the extent permitted by law, business and
-                organizational users agree to defend and indemnify
-                Signaturesi against claims arising from their unlawful
-                use of the services, violation of these Terms, or
-                infringement of another person’s rights.
-              </p>
-
-              <p>
-                Consumer users may have statutory rights that cannot
-                be limited by this section.
-              </p>
-            </div>
-          </section>
-
-          <!-- GOVERNING LAW -->
-          <section
-            id="governing-law"
-            class="terms-block"
-          >
-            <span class="section-number">
-              17
-            </span>
-
-            <div>
-              <span class="section-label">
-                Governing law and disputes
-              </span>
-
-              <h2>
-                The legal jurisdiction is not final yet.
-              </h2>
-
-              <p>
-                These Terms must identify the law governing the
-                agreement and the courts or dispute process that
-                will handle legal claims.
-              </p>
-
-              <p>
-                The appropriate wording depends on the location and
-                legal structure of the entity operating Signaturesi,
-                the countries where services are offered and whether
-                consumer-protection rules apply.
-              </p>
-
-              <div class="jurisdiction-card">
-                <span>
-                  Do not publish a guessed jurisdiction
-                </span>
-
-                <strong>
-                  Confirm the legal entity, country of registration,
-                  governing law, dispute venue and any arbitration
-                  process before launch.
-                </strong>
-              </div>
-            </div>
-          </section>
-
-          <!-- CHANGES -->
-          <section
-            id="changes"
-            class="terms-block"
-          >
-            <span class="section-number">
-              18
-            </span>
-
-            <div>
-              <span class="section-label">
-                Changes to services and Terms
-              </span>
-
-              <h2>
-                These Terms may change as Signaturesi develops.
-              </h2>
-
-              <p>
-                Signaturesi may update these Terms to reflect product,
-                security, business or legal changes.
-              </p>
-
-              <p>
-                When a material change affects existing users,
-                Signaturesi should provide reasonable notice through
-                the website, account email or product interface.
-              </p>
-
-              <p>
-                The effective date and version number displayed at
-                the top of this page should be updated whenever these
-                Terms change.
-              </p>
-
-              <p>
-                Continued use after an updated version becomes
-                effective may constitute acceptance where permitted
-                by applicable law.
-              </p>
-            </div>
-          </section>
-
-          <!-- GENERAL -->
-          <section
-            id="general"
-            class="terms-block"
-          >
-            <span class="section-number">
-              19
-            </span>
-
-            <div>
-              <span class="section-label">
-                General terms
-              </span>
-
-              <h2>
-                Standard provisions for the agreement.
-              </h2>
-
-              <div class="general-list">
-                <article>
-                  <strong>
-                    Entire agreement
-                  </strong>
-
-                  <p>
-                    These Terms and incorporated policies form the
-                    agreement governing the services.
-                  </p>
-                </article>
-
-                <article>
-                  <strong>
-                    Severability
-                  </strong>
-
-                  <p>
-                    If one provision is unenforceable, the remaining
-                    provisions should continue where legally possible.
-                  </p>
-                </article>
-
-                <article>
-                  <strong>
-                    No waiver
-                  </strong>
-
-                  <p>
-                    A failure to enforce a provision does not
-                    permanently waive the right to enforce it later.
-                  </p>
-                </article>
-
-                <article>
-                  <strong>
-                    Assignment
-                  </strong>
-
-                  <p>
-                    Users may not transfer this agreement without
-                    permission. Signaturesi may transfer it as part
-                    of a lawful business reorganization.
-                  </p>
-                </article>
-
-                <article>
-                  <strong>
-                    Headings
-                  </strong>
-
-                  <p>
-                    Section headings are provided for readability and
-                    do not change the meaning of the Terms.
-                  </p>
-                </article>
-
-                <article>
-                  <strong>
-                    Electronic notices
-                  </strong>
-
-                  <p>
-                    Notices may be delivered through email, account
-                    interfaces or public service announcements.
-                  </p>
-                </article>
-              </div>
-            </div>
-          </section>
-
-          <!-- CONTACT -->
-          <section
-            id="contact"
-            class="terms-block contact-block"
-          >
-            <span class="section-number">
-              20
-            </span>
-
-            <div>
-              <span class="section-label">
-                Contact
-              </span>
-
-              <h2>
-                Questions about these Terms.
-              </h2>
-
-              <p>
-                Contact Signaturesi through a verified and actively
-                monitored legal or support address.
-              </p>
-
-              <div class="contact-card">
-                <div class="contact-card-header">
-                  <div class="contact-brand">
-                    <img
-                      src="assets/signaturesi.png"
-                      alt=""
-                      width="36"
-                      height="36"
-                      loading="lazy"
-                      decoding="async"
-                      draggable="false"
-                    >
-
-                    <div>
-                      <strong>
-                        Signaturesi Legal
-                      </strong>
-
-                      <span>
-                        Terms and legal requests
-                      </span>
-                    </div>
-                  </div>
-
-                  <span class="draft-badge">
-                    Draft contact
-                  </span>
-                </div>
-
-                <div class="contact-details">
-                  <article>
-                    <span>
-                      Email
-                    </span>
-
-                    <a href="mailto:legal@signaturesi.com">
-                      legal@signaturesi.com
-                    </a>
-                  </article>
-
-                  <article>
-                    <span>
-                      Legal entity
-                    </span>
-
-                    <strong>
-                      To be confirmed
-                    </strong>
-                  </article>
-
-                  <article>
-                    <span>
-                      Registered address
-                    </span>
-
-                    <strong>
-                      To be confirmed
-                    </strong>
-                  </article>
-
-                  <article>
-                    <span>
-                      Governing law
-                    </span>
-
-                    <strong>
-                      To be confirmed
-                    </strong>
-                  </article>
-                </div>
-              </div>
-
-              <p class="legal-review-note">
-                This page is a structured website draft and is not
-                a substitute for professional legal advice.
-              </p>
-            </div>
+            <p class="small muted">This page is a structured website draft and is not a substitute for professional legal advice.</p>
           </section>
         </article>
       </div>
     </section>
-
-    <!-- RELATED LEGAL -->
-    <section class="related-legal-section">
-      <div class="related-legal-inner">
-        <header class="related-legal-header">
-          <div>
-            <span class="section-label">
-              Legal and trust
-            </span>
-
-            <h2>
-              More information about Signaturesi.
-            </h2>
-          </div>
+    <section class="section related">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <span class="eyebrow">Legal and trust</span>
+          <h2>More information about Signaturesi.</h2>
         </header>
-
-        <div class="related-legal-grid">
-          <a
-            href="privacy.html"
-            class="related-legal-card privacy-related-card"
-          >
-            <span class="related-card-number">
-              01
-            </span>
-
-            <div>
-              <span class="related-card-type">
-                Legal
-              </span>
-
-              <h3>
-                Privacy Policy
-              </h3>
-
-              <p>
-                How information may be collected, used and protected.
-              </p>
-            </div>
-
-            <span class="related-arrow">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
-            </span>
-          </a>
-
-          <a
-            href="security.html"
-            class="related-legal-card security-related-card"
-          >
-            <span class="related-card-number">
-              02
-            </span>
-
-            <div>
-              <span class="related-card-type">
-                Trust
-              </span>
-
-              <h3>
-                Security
-              </h3>
-
-              <p>
-                Product safeguards, reporting and security principles.
-              </p>
-            </div>
-
-            <span class="related-arrow">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
-            </span>
-          </a>
-
-          <a
-            href="acceptable-use.html"
-            class="related-legal-card use-related-card"
-          >
-            <span class="related-card-number">
-              03
-            </span>
-
-            <div>
-              <span class="related-card-type">
-                Policy
-              </span>
-
-              <h3>
-                Acceptable Use
-              </h3>
-
-              <p>
-                Rules designed to prevent harmful and abusive use.
-              </p>
-            </div>
-
-            <span class="related-arrow">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
-            </span>
-          </a>
+        <div class="grid grid-3">
+          <a class="card" data-reveal="" href="privacy.html"><div class="card-meta"><span class="num">01</span><span class="badge">Legal</span></div><h3>Privacy Policy</h3><p>How information may be collected, used and protected.</p></a>
+          <a class="card" data-reveal="" href="security.html"><div class="card-meta"><span class="num">02</span><span class="badge">Trust</span></div><h3>Security</h3><p>Product safeguards, reporting and security principles.</p></a>
+          <a class="card" data-reveal="" href="acceptable-use.html"><div class="card-meta"><span class="num">03</span><span class="badge">Policy</span></div><h3>Acceptable Use</h3><p>Rules designed to prevent harmful and abusive use.</p></a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-main">
-      <div class="footer-brand-column">
-        <a
-          href="index.html"
-          class="footer-brand"
-        >
-          <img
-            src="assets/signaturesi.png"
-            alt=""
-            width="36"
-            height="36"
-            draggable="false"
-          >
-
-          <span>
-            Signaturesi
-          </span>
-        </a>
-
-        <p>
-          A focused ecosystem for intelligence, communication
-          and mobile-first AI research.
-        </p>
-
-        <div class="footer-socials">
-          <a
-            href="https://instagram.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Instagram"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect
-                width="18"
-                height="18"
-                x="3"
-                y="3"
-                rx="5"
-              ></rect>
-
-              <circle
-                cx="12"
-                cy="12"
-                r="4"
-              ></circle>
-
-              <circle
-                cx="17.5"
-                cy="6.5"
-                r="1"
-                fill="currentColor"
-                stroke="none"
-              ></circle>
-            </svg>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+            <span>Signaturesi</span>
           </a>
+          <p>A focused ecosystem for intelligence, communication and mobile-first AI research.</p>
+          <div class="footer-socials">
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+            </a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 20 20"></path><path d="M20 4 4 20"></path></svg>
+            </a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path><path d="m10 9 5 3-5 3Z"></path></svg>
+            </a>
+            <a href="bean.html" aria-label="Bean">
+              <img src="assets/bean.png" alt="" width="18" height="18" loading="lazy" decoding="async" draggable="false">
+            </a>
+          </div>
+        </div>
 
-          <a
-            href="https://x.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M4 4 20 20"></path>
-              <path d="M20 4 4 20"></path>
-            </svg>
-          </a>
-
-          <a
-            href="https://youtube.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="YouTube"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path>
-              <path d="m10 9 5 3-5 3Z"></path>
-            </svg>
-          </a>
-
-          <a
-            href="bean.html"
-            aria-label="Bean"
-          >
-            <img
-              src="assets/bean.png"
-              alt=""
-              width="18"
-              height="18"
-              loading="lazy"
-              decoding="async"
-              draggable="false"
-            >
-          </a>
+        <div class="footer-cols">
+          <div>
+            <h3>Products</h3>
+            <a href="https://neyo.signaturesi.com/">NEO</a>
+            <a href="bean.html">Bean</a>
+            <a href="signup.html">Bean ID</a>
+            <a href="latest.html">Personalities</a>
+          </div>
+          <div>
+            <h3>Research</h3>
+            <a href="research.html">Research library</a>
+            <a href="research-article.html">NEO L1 report</a>
+            <a href="research.html">Green AI</a>
+            <a href="security.html">Safety</a>
+          </div>
+          <div>
+            <h3>Company</h3>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="status.html">System status</a>
+            <a href="latest.html">Latest</a>
+          </div>
+          <div>
+            <h3>Legal</h3>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html" aria-current="page">Terms of Use</a>
+            <a href="acceptable-use.html">Acceptable Use</a>
+            <a href="cookies.html">Cookie Policy</a>
+            <a href="security.html">Security</a>
+          </div>
+          <div>
+            <h3>Connect</h3>
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer">X</a>
+            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="bean.html">Bean</a>
+          </div>
         </div>
       </div>
 
-      <div class="footer-column">
-        <h3>
-          Products
-        </h3>
-
-        <a href="neo.html">
-          NEO
-        </a>
-
-        <a href="bean.html">
-          Bean
-        </a>
-
-        <a href="signup.html">
-          Bean ID
-        </a>
-
-        <a href="latest.html">
-          Personalities
-        </a>
-      </div>
-
-      <div class="footer-column">
-        <h3>
-          Research
-        </h3>
-
-        <a href="research.html">
-          Research library
-        </a>
-
-        <a href="research-article.html">
-          NEO L1 report
-        </a>
-
-        <a href="research.html">
-          Green AI
-        </a>
-
-        <a href="security.html">
-          Safety
-        </a>
-      </div>
-
-      <div class="footer-column">
-        <h3>
-          Company
-        </h3>
-
-        <a href="about.html">
-          About
-        </a>
-
-        <a href="contact.html">
-          Contact
-        </a>
-
-        <a href="status.html">
-          System status
-        </a>
-
-        <a href="latest.html">
-          Latest
-        </a>
-      </div>
-
-      <div class="footer-column">
-        <h3>
-          Legal
-        </h3>
-
-        <a href="privacy.html">
-          Privacy Policy
-        </a>
-
-        <a
-          href="terms.html"
-          aria-current="page"
-        >
-          Terms of Use
-        </a>
-
-        <a href="acceptable-use.html">
-          Acceptable Use
-        </a>
-
-        <a href="cookies.html">
-          Cookie Policy
-        </a>
-
-        <a href="security.html">
-          Security
-        </a>
-      </div>
-
-      <div class="footer-column">
-        <h3>
-          Connect
-        </h3>
-
-        <a
-          href="https://instagram.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Instagram
-        </a>
-
-        <a
-          href="https://x.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          X
-        </a>
-
-        <a
-          href="https://youtube.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          YouTube
-        </a>
-
-        <a href="bean.html">
-          Bean
-        </a>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>
-        © 2026 Signaturesi
-      </p>
-
-      <div class="footer-meta">
-        <span>
-          Designed by Leo
-        </span>
-
-        <a href="status.html">
-          System status
-        </a>
-
-        <button
-          type="button"
-          aria-label="Current language: English"
-        >
-          English
-        </button>
+      <div class="footer-bottom">
+        <p>© 2026 Signaturesi</p>
+        <div class="footer-meta">
+          <span>Designed by Leo</span>
+          <a href="status.html">System status</a>
+          <button type="button" aria-label="Current language: English">English</button>
+        </div>
       </div>
     </div>
   </footer>
 
   <script>
+    // Table of contents: collapse toggle (small screens) and active-section highlighting.
+    // Cookie preference demo toggles. Header behaviour lives in /site.js.
     document.addEventListener("DOMContentLoaded", () => {
-      const navbar =
-        document.getElementById("navbar");
-
-      const tocToggle =
-        document.getElementById("tocToggle");
-
-      const tocNavigation =
-        document.getElementById("tocNavigation");
-
-      let scrollFrame = null;
-
-      const updateNavbar = () => {
-        navbar.classList.toggle(
-          "is-scrolled",
-          window.scrollY > 12
-        );
-
-        scrollFrame = null;
-      };
-
-      window.addEventListener(
-        "scroll",
-        () => {
-          if (scrollFrame) {
-            return;
-          }
-
-          scrollFrame =
-            window.requestAnimationFrame(
-              updateNavbar
-            );
-        },
-        {
-          passive: true
-        }
-      );
-
-      updateNavbar();
+      const tocToggle = document.getElementById("tocToggle");
+      const tocNavigation = document.getElementById("tocNavigation");
 
       if (tocToggle && tocNavigation) {
-        tocToggle.addEventListener(
-          "click",
-          () => {
-            const isExpanded =
-              tocToggle.getAttribute(
-                "aria-expanded"
-              ) === "true";
-
-            tocToggle.setAttribute(
-              "aria-expanded",
-              String(!isExpanded)
-            );
-
-            tocNavigation.classList.toggle(
-              "toc-collapsed",
-              isExpanded
-            );
-          }
-        );
-      }
-
-      const tocLinks =
-        document.querySelectorAll(
-          ".toc-navigation a"
-        );
-
-      const sections =
-        [...tocLinks]
-          .map(link => {
-            const selector =
-              link.getAttribute("href");
-
-            return document.querySelector(
-              selector
-            );
-          })
-          .filter(Boolean);
-
-      if ("IntersectionObserver" in window) {
-        const observer =
-          new IntersectionObserver(
-            entries => {
-              entries.forEach(entry => {
-                if (!entry.isIntersecting) {
-                  return;
-                }
-
-                tocLinks.forEach(link => {
-                  link.classList.toggle(
-                    "active-toc-link",
-                    link.getAttribute("href") ===
-                    `#${entry.target.id}`
-                  );
-                });
-              });
-            },
-            {
-              rootMargin:
-                "-22% 0px -68% 0px",
-
-              threshold: 0
-            }
-          );
-
-        sections.forEach(section => {
-          observer.observe(section);
+        // Start collapsed on small screens, where the contents list sits above the policy text.
+        if (window.matchMedia("(max-width: 960px)").matches) {
+          tocToggle.setAttribute("aria-expanded", "false");
+          tocNavigation.classList.add("toc-collapsed");
+        }
+        tocToggle.addEventListener("click", () => {
+          const isExpanded = tocToggle.getAttribute("aria-expanded") === "true";
+          tocToggle.setAttribute("aria-expanded", String(!isExpanded));
+          tocNavigation.classList.toggle("toc-collapsed", isExpanded);
         });
       }
 
-      tocLinks.forEach(link => {
-        link.addEventListener(
-          "click",
-          () => {
-            if (
-              window.matchMedia(
-                "(max-width: 860px)"
-              ).matches
-            ) {
-              tocToggle.setAttribute(
-                "aria-expanded",
-                "false"
-              );
-
-              tocNavigation.classList.add(
-                "toc-collapsed"
-              );
-            }
-          }
-        );
+      document.querySelectorAll("[data-cookie-toggle]").forEach(toggle => {
+        toggle.addEventListener("click", () => {
+          const isActive = toggle.getAttribute("aria-pressed") === "true";
+          toggle.setAttribute("aria-pressed", String(!isActive));
+        });
       });
+
+      const tocLinks = document.querySelectorAll(".toc-navigation a");
+      const sections = [...tocLinks]
+        .map(link => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            tocLinks.forEach(link => {
+              link.classList.toggle("active-toc-link", link.getAttribute("href") === `#${entry.target.id}`);
+            });
+          });
+        }, { rootMargin: "-22% 0px -68% 0px", threshold: 0 });
+        sections.forEach(section => observer.observe(section));
+      }
     });
   </script>
-  <script src="premium-ui.js" defer></script>
+  <script src="/site.js" defer></script>
+  <script src="/premium-ui.js" defer></script>
 </body>
 </html>

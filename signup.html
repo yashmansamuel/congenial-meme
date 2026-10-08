@@ -2,1698 +2,375 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-
-  <meta
-    name="description"
-    content="Create your secure Bean ID and access NEO."
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Create your secure Bean ID and access NEO.">
   <meta name="theme-color" content="#ffffff">
 
   <title>Bean ID — Signaturesi</title>
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="site.css">
   <style>
-    :root {
-      color-scheme: light;
-
-      --bg-main: #ffffff;
-      --bg-soft: #f7f7f8;
-      --bg-hover: #eeeeef;
-      --surface: #ffffff;
-
-      --text-primary: #0d0d0d;
-      --text-secondary: #6e6e73;
-      --text-tertiary: #929299;
-
-      --border: #e5e5e8;
-
-      --accent: #111113;
-      --accent-text: #ffffff;
-
-      --danger: #dc2626;
-      --success: #16865c;
-      --checking: #6e6e73;
-
-      --radius-small: 8px;
-      --radius-medium: 12px;
-      --radius-large: 18px;
-
-      --shadow-card:
-        0 24px 70px rgba(0, 0, 0, 0.07),
-        0 2px 10px rgba(0, 0, 0, 0.025);
-    }
-
+    /* signup page-only rules on top of /site.css (see DESIGN-SIMPLE.md).
+       Class hooks used by the auth script are styled here: .step-panel.active, .login-form.active,
+       .step-dot.active/.completed, .strength-bar.active, .availability.{checking,success,error},
+       .message-box.show.{error,success}, .primary-button.loading, .password-toggle.is-visible,
+       .session-overlay.hidden, body.dark-mode. */
     body.dark-mode {
       color-scheme: dark;
-
-      --bg-main: #171717;
-      --bg-soft: #202020;
-      --bg-hover: #2a2a2a;
-      --surface: #1d1d1d;
-
-      --text-primary: #f2f2f2;
-      --text-secondary: #a0a0a6;
-      --text-tertiary: #727278;
-
-      --border: #303033;
-
-      --accent: #f2f2f2;
-      --accent-text: #151515;
-
-      --shadow-card:
-        0 24px 70px rgba(0, 0, 0, 0.3),
-        0 2px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      overflow-x: hidden;
-
-      color: var(--text-primary);
-      background: var(--bg-main);
-    }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    button:focus-visible,
-    a:focus-visible {
-      outline: 2px solid #3b82f6;
-      outline-offset: 2px;
-    }
-
-    .auth-shell {
-      min-height: 100vh;
-
-      display: grid;
-      grid-template-rows: 58px 1fr;
-    }
-
-    .topbar {
-      min-height: 58px;
-
-      padding:
-        max(8px, env(safe-area-inset-top))
-        max(18px, env(safe-area-inset-right))
-        8px
-        max(18px, env(safe-area-inset-left));
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-main);
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-
-      color: var(--text-primary);
-      text-decoration: none;
-    }
-
-    .brand-mark {
-      width: 30px;
-      height: 30px;
-
-      position: relative;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      border: 1px solid var(--border);
-      border-radius: 10px;
-
-      background: var(--bg-soft);
-    }
-
-    .brand-mark::before {
-      content: "";
-
-      width: 10px;
-      height: 10px;
-
-      border: 2px solid var(--text-primary);
-      border-radius: 50%;
-    }
-
-    .brand-mark::after {
-      content: "";
-
-      position: absolute;
-      right: 5px;
-      bottom: 5px;
-
-      width: 5px;
-      height: 5px;
-
-      border-radius: 50%;
-      background: var(--text-primary);
-    }
-
-    .brand-copy strong {
-      display: block;
-
-      font-size: 14px;
-      font-weight: 650;
-      line-height: 1.2;
-      letter-spacing: -0.15px;
-    }
-
-    .brand-copy small {
-      display: block;
-
-      margin-top: 1px;
-
-      color: var(--text-secondary);
-      font-size: 10px;
-      line-height: 1.2;
-    }
-
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mode-link {
-      min-height: 34px;
-      padding: 0 12px;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      color: var(--text-secondary);
-      background: transparent;
-      border: 0;
-      border-radius: var(--radius-small);
-
-      font-size: 12.5px;
-      font-weight: 600;
-
-      cursor: pointer;
-    }
-
-    .mode-link:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
-    }
-
-    .theme-button {
-      width: 34px;
-      height: 34px;
-      padding: 0;
-
-      position: relative;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      color: var(--text-secondary);
-      background: transparent;
-      border: 0;
-      border-radius: 50%;
-
-      cursor: pointer;
-    }
-
-    .theme-button:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
-    }
-
-    .theme-button svg {
-      position: absolute;
-
-      width: 18px;
-      height: 18px;
-
-      transition:
-        opacity 180ms ease,
-        transform 180ms ease;
-    }
-
-    .theme-button .icon-sun {
-      opacity: 1;
-      transform: rotate(0deg);
-    }
-
-    .theme-button .icon-moon {
-      opacity: 0;
-      transform: rotate(90deg);
-    }
-
-    body.dark-mode .theme-button .icon-sun {
-      opacity: 0;
-      transform: rotate(-90deg);
-    }
-
-    body.dark-mode .theme-button .icon-moon {
-      opacity: 1;
-      transform: rotate(0deg);
-    }
-
-    .auth-main {
-      min-height: 0;
-
-      display: grid;
-      grid-template-columns: minmax(280px, 0.95fr) minmax(390px, 1.05fr);
-      align-items: center;
-
-      width: min(1080px, 100%);
-      margin: 0 auto;
-
-      padding:
-        34px
-        max(24px, env(safe-area-inset-right))
-        max(34px, env(safe-area-inset-bottom))
-        max(24px, env(safe-area-inset-left));
-    }
-
-    .intro-panel {
-      max-width: 440px;
-      padding-right: 48px;
-    }
-
-    .intro-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-
-      margin-bottom: 18px;
-
-      color: var(--text-secondary);
-
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .intro-label-dot {
-      width: 7px;
-      height: 7px;
-
-      border-radius: 50%;
-      background: var(--success);
-    }
-
-    .intro-title {
-      max-width: 420px;
-
-      font-size: clamp(36px, 5vw, 58px);
-      font-weight: 700;
-      line-height: 0.98;
-      letter-spacing: -0.06em;
-    }
-
-    .intro-description {
-      max-width: 400px;
-
-      margin-top: 22px;
-
-      color: var(--text-secondary);
-
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .identity-preview {
-      width: fit-content;
-
-      margin-top: 28px;
-      padding: 9px 12px;
-
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-
-      color: var(--text-primary);
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .identity-preview span:last-child {
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .auth-area {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .auth-card {
-      width: min(390px, 100%);
-
-      padding: 22px;
-
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-large);
-
-      box-shadow: var(--shadow-card);
-    }
-
-    .card-topline {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      margin-bottom: 18px;
-    }
-
-    .card-eyebrow {
-      color: var(--text-secondary);
-
-      font-size: 11px;
-      font-weight: 650;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-
-    .step-indicator {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .step-dot {
-      width: 18px;
-      height: 4px;
-
-      border-radius: 10px;
-      background: var(--border);
-
-      transition:
-        width 180ms ease,
-        background 180ms ease;
-    }
-
-    .step-dot.active {
-      width: 28px;
-      background: var(--text-primary);
-    }
-
-    .step-dot.completed {
-      background: var(--text-secondary);
-    }
-
-    .auth-title {
-      font-size: 23px;
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: -0.035em;
-    }
-
-    .auth-subtitle {
-      margin-top: 7px;
-
-      color: var(--text-secondary);
-
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .step-panel {
-      display: none;
-      margin-top: 20px;
-    }
-
-    .step-panel.active {
-      display: block;
-      animation: stepEnter 180ms ease;
-    }
-
-    @keyframes stepEnter {
-      from {
-        opacity: 0;
-        transform: translateX(8px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    .field-group {
-      margin-bottom: 14px;
-    }
-
-    .field-label {
-      display: block;
-
-      margin-bottom: 7px;
-
-      color: var(--text-primary);
-
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .bean-id-field {
-      display: flex;
-      align-items: stretch;
-
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-medium);
-
-      transition:
-        border-color 150ms ease,
-        box-shadow 150ms ease,
-        background 150ms ease;
-    }
-
-    .bean-id-field:focus-within {
-      border-color: var(--text-primary);
-      box-shadow: 0 0 0 3px rgba(13, 13, 13, 0.08);
-      background: var(--surface);
-    }
-
-    body.dark-mode .bean-id-field:focus-within {
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-
-    .bean-id-input,
-    .bean-id-input:focus,
-    .bean-id-input:focus-visible,
-    .bean-id-input:active {
-      min-width: 0;
-      min-height: 44px;
-      flex: 1;
-
-      padding: 10px 4px 10px 13px;
-
-      color: var(--text-primary);
-      background: transparent;
-
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-
-      font-size: 14px;
-
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    .bean-id-input::placeholder,
-    .auth-input::placeholder {
-      color: var(--text-tertiary);
-    }
-
-    .bean-id-input:-webkit-autofill,
-    .bean-id-input:-webkit-autofill:focus {
-      -webkit-box-shadow: 0 0 0 1000px var(--bg-soft) inset !important;
-      -webkit-text-fill-color: var(--text-primary) !important;
-      caret-color: var(--text-primary);
-    }
-
-    .bean-suffix {
-      min-height: 44px;
-
-      padding: 0 13px 0 7px;
-
-      display: flex;
-      align-items: center;
-
-      color: var(--text-secondary);
-
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .field-note {
-      margin: 6px 2px 0;
-
-      color: var(--text-tertiary);
-
-      font-size: 10.5px;
-      line-height: 1.4;
-    }
-
-    .availability {
-      min-height: 18px;
-
-      margin: 8px 2px 0;
-
-      display: flex;
-      align-items: center;
-      gap: 7px;
-
-      color: var(--text-secondary);
-
-      font-size: 11px;
-      line-height: 1.4;
-    }
-
-    .availability:empty {
-      display: none;
-    }
-
-    .availability.success {
-      color: var(--success);
-    }
-
-    .availability.error {
-      color: var(--danger);
-    }
-
-    .availability.checking {
-      color: var(--checking);
-    }
-
-    .availability-dot {
-      width: 6px;
-      height: 6px;
-
-      flex: 0 0 auto;
-
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .availability.checking .availability-dot {
-      animation: pulse 900ms ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%,
-      100% {
-        opacity: 0.35;
-        transform: scale(0.9);
-      }
-
-      50% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .auth-input {
-      width: 100%;
-      min-height: 44px;
-
-      padding: 10px 42px 10px 13px;
-
-      color: var(--text-primary);
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-medium);
-
-      outline: none;
-
-      font-size: 14px;
-
-      transition:
-        border-color 150ms ease,
-        box-shadow 150ms ease,
-        background 150ms ease;
-    }
-
-    .auth-input:focus {
-      border-color: var(--text-primary);
-      box-shadow: 0 0 0 3px rgba(13, 13, 13, 0.08);
-      background: var(--surface);
-    }
-
-    body.dark-mode .auth-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-
-    .auth-input.no-icon {
-      padding-right: 13px;
-    }
-
-    .password-toggle {
-      position: absolute;
-      top: 50%;
-      right: 7px;
-
-      width: 31px;
-      height: 31px;
-      padding: 0;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      transform: translateY(-50%);
-
-      color: var(--text-secondary);
-      background: transparent;
-      border: 0;
-      border-radius: 8px;
-
-      cursor: pointer;
-    }
-
-    .password-toggle:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
-    }
-
-    .password-toggle svg {
-      position: absolute;
-
-      width: 17px;
-      height: 17px;
-
-      transition: opacity 150ms ease;
-    }
-
-    .password-toggle .eye-off {
-      opacity: 0;
-    }
-
-    .password-toggle.is-visible .eye {
-      opacity: 0;
-    }
-
-    .password-toggle.is-visible .eye-off {
-      opacity: 1;
-    }
-
-    .password-strength {
-      margin-top: 8px;
-
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
-
-    .strength-bar {
-      height: 3px;
-
-      border-radius: 10px;
-      background: var(--border);
-    }
-
-    .strength-bar.active {
-      background: var(--text-primary);
-    }
-
-    .review-box {
-      padding: 15px;
-
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-medium);
-    }
-
-    .review-label {
-      color: var(--text-secondary);
-
-      font-size: 10px;
-      font-weight: 650;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    .review-id {
-      margin-top: 6px;
-
-      color: var(--text-primary);
-
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      word-break: break-word;
-    }
-
-    .review-copy {
-      margin-top: 8px;
-
-      color: var(--text-secondary);
-
-      font-size: 11.5px;
-      line-height: 1.5;
-    }
-
-    .login-form {
-      display: none;
-      margin-top: 20px;
-    }
-
-    .login-form.active {
-      display: block;
-      animation: stepEnter 180ms ease;
-    }
-
-    .message-box {
-      display: none;
-
-      margin-top: 13px;
-      padding: 9px 11px;
-
-      border-radius: 9px;
-
-      font-size: 11.5px;
-      line-height: 1.45;
-    }
-
-    .message-box.show {
-      display: block;
-    }
-
-    .message-box.error {
-      color: var(--danger);
-      background: rgba(220, 38, 38, 0.07);
-      border: 1px solid rgba(220, 38, 38, 0.15);
-    }
-
-    .message-box.success {
-      color: var(--success);
-      background: rgba(22, 134, 92, 0.08);
-      border: 1px solid rgba(22, 134, 92, 0.16);
-    }
-
-    .card-actions {
-      margin-top: 16px;
-
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .primary-button,
-    .secondary-button {
-      min-height: 42px;
-      padding: 0 15px;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-
-      border-radius: 11px;
-
-      font-size: 13px;
-      font-weight: 650;
-
-      cursor: pointer;
-    }
-
-    .primary-button {
-      flex: 1;
-
-      color: var(--accent-text);
-      background: var(--accent);
-      border: 1px solid var(--accent);
-    }
-
-    .primary-button:hover:not(:disabled) {
-      opacity: 0.88;
-    }
-
-    .primary-button:active:not(:disabled) {
-      transform: scale(0.985);
-    }
-
-    .primary-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .primary-button svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .secondary-button {
-      color: var(--text-secondary);
-      background: transparent;
-      border: 1px solid transparent;
-    }
-
-    .secondary-button:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
-    }
-
-    .button-spinner {
-      width: 15px;
-      height: 15px;
-
-      display: none;
-
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: currentColor;
-      border-radius: 50%;
-
-      animation: spin 700ms linear infinite;
-    }
-
-    body.dark-mode .button-spinner {
-      border-color: rgba(0, 0, 0, 0.25);
-      border-top-color: currentColor;
-    }
-
-    .primary-button.loading .button-spinner {
-      display: block;
-    }
-
-    .primary-button.loading .button-icon {
-      display: none;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .auth-footer {
-      margin-top: 14px;
-
-      color: var(--text-tertiary);
-
-      font-size: 10px;
-      line-height: 1.45;
-      text-align: center;
-    }
-
-    .auth-footer button {
-      padding: 0;
-
-      color: var(--text-secondary);
-      background: transparent;
-      border: 0;
-
-      font-size: inherit;
-      font-weight: 600;
-
-      cursor: pointer;
-    }
-
-    .auth-footer button:hover {
-      color: var(--text-primary);
-      text-decoration: underline;
-    }
-
-    .session-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      background: var(--bg-main);
-    }
-
-    .session-overlay.hidden {
-      display: none;
-    }
-
-    .session-spinner {
-      width: 22px;
-      height: 22px;
-
-      border: 2px solid var(--border);
-      border-top-color: var(--text-primary);
-      border-radius: 50%;
-
-      animation: spin 700ms linear infinite;
-    }
-
-    @media (max-width: 760px) {
-      .auth-main {
-        grid-template-columns: 1fr;
-        align-items: start;
-
-        padding-top: 28px;
-      }
-
-      .intro-panel {
-        max-width: 390px;
-        padding-right: 0;
-        margin: 0 auto 24px;
-      }
-
-      .intro-label {
-        margin-bottom: 12px;
-      }
-
-      .intro-title {
-        font-size: 32px;
-        line-height: 1.04;
-      }
-
-      .intro-description {
-        margin-top: 12px;
-        font-size: 13px;
-      }
-
-      .identity-preview {
-        display: none;
-      }
-
-      .auth-area {
-        justify-content: center;
-      }
-
-      .auth-card {
-        width: min(390px, 100%);
-        padding: 19px;
-        border-radius: 16px;
-      }
+      --bg: #161616; --text: #f2f2f2; --muted: #a0a0a6; --border: #303033; --panel: #1f1f1f;
+      --accent: #f2f2f2; --accent-text: #151515;
+    }
+    body.dark-mode .site-header { background: var(--bg); }
+    body.dark-mode ::selection { background: #f2f2f2; color: #111; }
+
+    /* Header */
+    .auth-brand-copy { display: flex; flex-direction: column; line-height: 1.2; }
+    .auth-brand-copy small { font-size: 12px; font-weight: 400; color: var(--muted); }
+    .auth-top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .mode-link { min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: transparent; font-size: 14px; font-weight: 500; white-space: nowrap; }
+    .mode-link:hover { border-color: var(--text); }
+    .mode-link:disabled { opacity: .5; cursor: not-allowed; }
+    .theme-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text); }
+    .theme-button:hover { border-color: var(--text); }
+    .theme-button svg { width: 16px; height: 16px; }
+    .theme-button .icon-moon, body.dark-mode .theme-button .icon-sun { display: none; }
+    body.dark-mode .theme-button .icon-moon { display: block; }
+
+    /* Layout */
+    main.auth-main { padding: 72px 0 96px; }
+    main .auth-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 64px; align-items: center; }
+    main .identity-preview { display: inline-flex; flex-direction: column; gap: 2px; margin-top: 28px; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    main .identity-preview span:first-child { font-weight: 600; }
+    main .identity-preview span:last-child { font-size: 13px; color: var(--muted); }
+
+    /* Card */
+    main .auth-card { padding: 32px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+    main .card-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    main .card-eyebrow { font-size: 13px; font-weight: 500; color: var(--muted); }
+    main .step-indicator { display: flex; gap: 6px; }
+    main .step-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--border); transition: width .2s ease, background .2s ease; }
+    main .step-dot.completed { background: var(--muted); }
+    main .step-dot.active { width: 18px; background: var(--text); }
+    main .auth-title { font-size: 24px; }
+    main .auth-subtitle { margin-top: 6px; color: var(--muted); font-size: 15px; }
+    main #signupForm, main .login-form { margin-top: 24px; }
+    main .step-panel { display: none; }
+    main .step-panel.active { display: block; }
+    main .login-form { display: none; }
+    main .login-form.active { display: block; }
+
+    /* Fields */
+    main .field-group + .field-group { margin-top: 18px; }
+    main .field-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+    main .bean-id-field, main .auth-input { display: flex; align-items: center; width: 100%; min-height: 46px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); transition: border-color .15s ease; }
+    main .bean-id-field:focus-within, main .auth-input:focus { border-color: var(--text); }
+    main .bean-id-input, main .auth-input { font: inherit; font-size: 16px; color: var(--text); }
+    main .bean-id-input { flex: 1; min-width: 0; height: 44px; padding: 0 0 0 14px; border: 0; outline: 0; background: none; }
+    main .bean-suffix { padding: 0 14px 0 4px; color: var(--muted); }
+    main .auth-input { padding: 0 44px 0 14px; outline: 0; }
+    main .auth-input.no-icon { padding-right: 14px; }
+    main .input-wrapper { position: relative; }
+    main .password-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); }
+    main .password-toggle:hover { color: var(--text); }
+    main .password-toggle svg { width: 18px; height: 18px; }
+    main .password-toggle .eye-off, main .password-toggle.is-visible .eye { display: none; }
+    main .password-toggle.is-visible .eye-off { display: block; }
+    main .field-note { margin-top: 8px; font-size: 13px; color: var(--muted); }
+    main .availability { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+    main .availability:empty { display: none; }
+    main .availability.success { color: #16865c; }
+    main .availability.error { color: #dc2626; }
+    main .availability-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+    main .password-strength { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 10px; }
+    main .strength-bar { height: 3px; border-radius: 999px; background: var(--border); }
+    main .strength-bar.active { background: var(--text); }
+    main .message-box { display: none; margin-top: 14px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 14px; }
+    main .message-box.show { display: block; }
+    main .message-box.error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+    main .message-box.success { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    body.dark-mode main .message-box.error { color: #fca5a5; background: #2a1515; border-color: #4a2020; }
+    body.dark-mode main .message-box.success { color: #86efac; background: #132a1c; border-color: #1f4a2e; }
+
+    /* Review */
+    main .review-box { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    main .review-label { font-size: 13px; color: var(--muted); }
+    main .review-id { margin-top: 4px; font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+    main .review-copy { margin-top: 8px; font-size: 14px; color: var(--muted); }
+
+    /* Buttons */
+    main .card-actions { display: flex; gap: 10px; margin-top: 24px; }
+    main .card-actions .btn { flex: 1; }
+    main .card-actions .secondary-button { flex: 0 0 auto; }
+    main .btn:disabled { opacity: .4; cursor: not-allowed; }
+    main .button-spinner { display: none; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 999px; animation: auth-spin .7s linear infinite; }
+    main .primary-button.loading .button-spinner { display: inline-block; }
+    main .primary-button.loading .button-icon { display: none; }
+    main .auth-footer { margin-top: 20px; font-size: 13px; color: var(--muted); text-align: center; }
+    main .auth-footer button { padding: 0; border: 0; background: none; color: var(--text); font-size: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+    /* Session check overlay */
+    .session-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: opacity .2s ease, visibility .2s ease; }
+    .session-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .session-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--text); border-radius: 999px; animation: auth-spin .7s linear infinite; }
+    @keyframes auth-spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 860px) {
+      main.auth-main { padding: 40px 0 72px; }
+      main .auth-grid { grid-template-columns: 1fr; gap: 32px; }
+      main .identity-preview { margin-top: 20px; }
     }
-
-    @media (max-width: 460px) {
-      .auth-shell {
-        grid-template-rows: 54px 1fr;
-      }
-
-      .topbar {
-        min-height: 54px;
-        padding-left: 14px;
-        padding-right: 14px;
-      }
-
-      .brand-copy small {
-        display: none;
-      }
-
-      .mode-link {
-        padding: 0 8px;
-      }
-
-      .auth-main {
-        padding:
-          24px
-          14px
-          max(24px, env(safe-area-inset-bottom));
-      }
-
-      .intro-panel {
-        margin-bottom: 20px;
-      }
-
-      .intro-title {
-        font-size: 28px;
-      }
-
-      .intro-description {
-        max-width: 320px;
-      }
-
-      .auth-card {
-        padding: 17px;
-      }
+    @media (max-width: 720px) {
+      main .auth-card { padding: 24px 20px; }
     }
-
-    @media (max-height: 700px) and (min-width: 761px) {
-      .auth-main {
-        padding-top: 20px;
-        padding-bottom: 20px;
-      }
-
-      .intro-title {
-        font-size: 44px;
-      }
-
-      .intro-description {
-        margin-top: 15px;
-      }
-
-      .identity-preview {
-        margin-top: 18px;
-      }
+    @media (max-width: 420px) {
+      .topbar .header-inner { gap: 12px; }
+      .topbar .brand { gap: 8px; }
+      .mode-link { padding: 0 12px; font-size: 13px; }
     }
-
     @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
+      main .button-spinner, .session-spinner { animation-duration: 1.6s; }
     }
-  
-/* Inline premium consistency layer */
-/* Signaturesi Phase 1 — premium consistency layer */
-:root {
-  --selection-bg: rgba(17, 17, 19, 0.9);
-  --selection-text: #fff;
-  --premium-ease: cubic-bezier(.2,.8,.2,1);
-}
-
-::selection { background: var(--selection-bg); color: var(--selection-text); }
-::-moz-selection { background: var(--selection-bg); color: var(--selection-text); }
-
-html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
-
-.footer {
-  position: relative;
-  overflow: hidden;
-}
-.footer::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
-  pointer-events: none;
-}
-.footer-main, .footer-bottom { position: relative; z-index: 1; }
-.footer-column a, .footer-meta a { text-underline-offset: 4px; }
-
-.footer-language-trigger {
-  min-height: 38px;
-  padding: 0 14px !important;
-  display: inline-flex !important;
-  align-items: center;
-  gap: 9px !important;
-  color: rgba(255,255,255,.86) !important;
-  background: rgba(255,255,255,.07) !important;
-  border: 1px solid rgba(255,255,255,.1) !important;
-  border-radius: 999px !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-  transition: transform .22s var(--premium-ease), background .22s ease, border-color .22s ease !important;
-}
-.footer-language-trigger:hover {
-  transform: translateY(-1px);
-  background: rgba(255,255,255,.11) !important;
-  border-color: rgba(255,255,255,.16) !important;
-}
-.footer-language-trigger svg { width: 15px; height: 15px; flex: 0 0 auto; }
-.footer-language-trigger .language-region { color: rgba(255,255,255,.46); font-weight: 500; }
-
-.language-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: grid;
-  place-items: end;
-  padding: 24px;
-  background: rgba(244,244,246,.54);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .22s ease, visibility .22s ease;
-}
-.language-overlay.is-open { opacity: 1; visibility: visible; }
-.language-dialog {
-  width: min(398px, calc(100vw - 32px));
-  max-height: min(714px, calc(100vh - 48px));
-  display: grid;
-  grid-template-rows: auto minmax(0,1fr) auto;
-  background: rgba(246,246,247,.92);
-  border: 1px solid rgba(17,17,19,.08);
-  border-radius: 20px;
-  box-shadow: 0 28px 90px rgba(17,17,19,.18), 0 2px 8px rgba(17,17,19,.06);
-  overflow: hidden;
-  transform: translateY(14px) scale(.985);
-  transition: transform .26s var(--premium-ease);
-}
-.language-overlay.is-open .language-dialog { transform: translateY(0) scale(1); }
-.language-dialog-header {
-  min-height: 74px;
-  padding: 0 18px 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(17,17,19,.08);
-}
-.language-dialog-title { font-size: 16px; font-weight: 650; letter-spacing: -.02em; }
-.language-close {
-  width: 40px; height: 40px; display: grid; place-items: center;
-  border: 0; border-radius: 50%; background: rgba(17,17,19,.045); cursor: pointer;
-  transition: background .2s ease, transform .2s ease;
-}
-.language-close:hover { background: rgba(17,17,19,.08); transform: rotate(2deg); }
-.language-close svg { width: 18px; height: 18px; }
-.language-list { overflow: auto; padding: 8px; scrollbar-width: thin; scrollbar-color: rgba(17,17,19,.35) transparent; }
-.language-option {
-  width: 100%; min-height: 62px; padding: 10px 14px 10px 16px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  border: 0; border-radius: 13px; background: transparent; text-align: left; cursor: pointer;
-  transition: background .18s ease;
-}
-.language-option:hover { background: rgba(17,17,19,.045); }
-.language-option strong { display: block; font-size: 15px; font-weight: 590; letter-spacing: -.015em; }
-.language-option small { display: block; margin-top: 3px; color: rgba(17,17,19,.56); font-size: 12px; }
-.language-check {
-  width: 36px; height: 36px; flex: 0 0 auto; display: grid; place-items: center;
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(17,17,19,.06);
-  opacity: 0;
-}
-.language-option[aria-checked="true"] .language-check { opacity: 1; }
-.language-check svg { width: 18px; height: 18px; }
-.language-search-wrap { padding: 10px 0 0; background: transparent; }
-.language-search {
-  min-height: 56px; display: flex; align-items: center; gap: 12px;
-  padding: 0 18px; background: rgba(17,17,19,.05); border: 1px solid rgba(17,17,19,.035); border-radius: 999px;
-}
-.language-search svg { width: 17px; height: 17px; color: rgba(17,17,19,.7); }
-.language-search input { width: 100%; border: 0; outline: 0; background: transparent; font: inherit; color: #111113; }
-.language-search input::placeholder { color: rgba(17,17,19,.48); }
-body.language-modal-open { overflow: hidden; }
-
-@media (max-width: 760px) {
-  .language-overlay { padding: 12px; place-items: end center; }
-  .language-dialog { width: 100%; max-height: min(78vh, 680px); border-radius: 22px; }
-  .footer-language-trigger .language-region { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .language-overlay, .language-dialog, .footer-language-trigger { transition: none !important; }
-}
-
   </style>
-  <link rel="stylesheet" href="premium-ui.css">
 </head>
-
 <body>
   <div class="session-overlay" id="sessionOverlay">
     <div class="session-spinner" aria-label="Checking session"></div>
   </div>
 
   <div class="auth-shell">
-    <header class="topbar">
-      <a href="index.html" class="brand" aria-label="Signaturesi home">
-        <span class="brand-mark"></span>
+    <header class="site-header topbar">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="Signaturesi home">
+          <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+          <span class="auth-brand-copy">
+            <strong>Signaturesi</strong>
+            <small>Bean Identity</small>
+          </span>
+        </a>
 
-        <span class="brand-copy">
-          <strong>Signaturesi</strong>
-          <small>Bean Identity</small>
-        </span>
-      </a>
+        <div class="auth-top-actions topbar-actions">
+          <button type="button" class="mode-link" id="topModeButton">Log in</button>
 
-      <div class="topbar-actions">
-        <button
-          type="button"
-          class="mode-link"
-          id="topModeButton"
-        >
-          Log in
-        </button>
-
-        <button
-          type="button"
-          class="theme-button"
-          id="themeButton"
-          aria-label="Use dark mode"
-        >
-          <svg
-            class="icon-sun"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2"></path>
-            <path d="M12 20v2"></path>
-            <path d="m4.93 4.93 1.42 1.42"></path>
-            <path d="m17.66 17.66 1.41 1.41"></path>
-            <path d="M2 12h2"></path>
-            <path d="M20 12h2"></path>
-            <path d="m6.34 17.66-1.41 1.41"></path>
-            <path d="m19.07 4.93-1.41 1.41"></path>
-          </svg>
-
-          <svg
-            class="icon-moon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </button>
+          <button type="button" class="theme-button" id="themeButton" aria-label="Use dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path><path d="M12 20v2"></path>
+              <path d="m4.93 4.93 1.42 1.42"></path><path d="m17.66 17.66 1.41 1.41"></path>
+              <path d="M2 12h2"></path><path d="M20 12h2"></path>
+              <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 
     <main class="auth-main">
-      <section class="intro-panel">
-        <div class="intro-label">
-          <span class="intro-label-dot"></span>
-          Signaturesi private identity
-        </div>
-
-        <h1 class="intro-title">
-          One identity across your ecosystem.
-        </h1>
-
-        <p class="intro-description">
-          Create your Bean ID once and use it across NEO,
-          Bean and future Signaturesi products.
-        </p>
-
-        <div class="identity-preview">
-          <span>yourname@bean</span>
-          <span>Private ecosystem ID</span>
-        </div>
-      </section>
-
-      <section class="auth-area">
-        <div class="auth-card">
-          <div class="card-topline">
-            <span class="card-eyebrow" id="cardEyebrow">
-              Create Bean ID
-            </span>
-
-            <div
-              class="step-indicator"
-              id="stepIndicator"
-              aria-label="Signup progress"
-            >
-              <span class="step-dot active"></span>
-              <span class="step-dot"></span>
-              <span class="step-dot"></span>
-            </div>
+      <div class="container auth-grid">
+        <section class="intro-panel">
+          <span class="eyebrow">Signaturesi private identity</span>
+          <h1 class="intro-title">One identity across your ecosystem.</h1>
+          <p class="lede mt-16 intro-description">Create your Bean ID once and use it across NEO, Bean and future Signaturesi products.</p>
+          <div class="identity-preview">
+            <span>yourname@bean</span>
+            <span>Private ecosystem ID</span>
           </div>
+        </section>
 
-          <h2 class="auth-title" id="authTitle">
-            Choose your identity
-          </h2>
+        <section class="auth-area">
+          <div class="auth-card">
+            <div class="card-topline">
+              <span class="card-eyebrow" id="cardEyebrow">Create Bean ID</span>
 
-          <p class="auth-subtitle" id="authSubtitle">
-            Your Bean ID will be used across Signaturesi.
-          </p>
+              <div class="step-indicator" id="stepIndicator" aria-label="Signup progress">
+                <span class="step-dot active"></span>
+                <span class="step-dot"></span>
+                <span class="step-dot"></span>
+              </div>
+            </div>
 
-          <form id="signupForm" novalidate autocomplete="on">
-            <section class="step-panel active" data-step="1">
-              <div class="field-group">
-                <label class="field-label" for="signupUsername">
-                  Bean ID
-                </label>
+            <h2 class="auth-title" id="authTitle">Choose your identity</h2>
+            <p class="auth-subtitle" id="authSubtitle">Your Bean ID will be used across Signaturesi.</p>
 
-                <div class="bean-id-field">
-                  <input
-                    type="text"
-                    class="bean-id-input"
-                    id="signupUsername"
-                    name="bean_id"
-                    placeholder="username"
-                    minlength="3"
-                    maxlength="20"
-                    autocomplete="one-time-code"
-                    autocapitalize="none"
-                    inputmode="text"
-                    spellcheck="false"
-                    required
-                  >
+            <form id="signupForm" novalidate autocomplete="on">
+              <section class="step-panel active" data-step="1">
+                <div class="field-group">
+                  <label class="field-label" for="signupUsername">Bean ID</label>
 
-                  <span class="bean-suffix">@bean</span>
+                  <div class="bean-id-field">
+                    <input
+                      type="text"
+                      class="bean-id-input"
+                      id="signupUsername"
+                      name="bean_id"
+                      placeholder="username"
+                      minlength="3"
+                      maxlength="20"
+                      autocomplete="one-time-code"
+                      autocapitalize="none"
+                      inputmode="text"
+                      spellcheck="false"
+                      required
+                    >
+                    <span class="bean-suffix">@bean</span>
+                  </div>
+
+                  <div class="availability" id="usernameAvailability" aria-live="polite"></div>
+
+                  <p class="field-note">3–20 lowercase letters, numbers or underscores.</p>
+
+                  <div class="message-box" id="signupMessage" role="alert" aria-live="polite"></div>
                 </div>
 
-                <div
-                  class="availability"
-                  id="usernameAvailability"
-                  aria-live="polite"
-                ></div>
+                <div class="card-actions">
+                  <button type="button" class="btn primary-button" id="stepOneNext" disabled>
+                    Continue <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
 
-                <p class="field-note">
-                  3–20 lowercase letters, numbers or underscores.
-                </p>
+              <section class="step-panel" data-step="2">
+                <div class="field-group">
+                  <label class="field-label" for="signupPassword">Password</label>
 
-                <div
-                  class="message-box"
-                  id="signupMessage"
-                  role="alert"
-                  aria-live="polite"
-                ></div>
-              </div>
+                  <div class="input-wrapper">
+                    <input
+                      type="password"
+                      class="auth-input"
+                      id="signupPassword"
+                      name="password"
+                      placeholder="Create a secure password"
+                      minlength="8"
+                      maxlength="100"
+                      autocomplete="new-password"
+                      required
+                    >
+                    <button type="button" class="password-toggle" id="signupPasswordToggle" aria-label="Show password">
+                      <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path><path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path></svg>
+                    </button>
+                  </div>
 
-              <div class="card-actions">
-                <button
-                  type="button"
-                  class="primary-button"
-                  id="stepOneNext"
-                  disabled
-                >
-                  Continue
+                  <div class="password-strength" id="passwordStrength">
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                  </div>
+                </div>
 
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.9"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="m13 6 6 6-6 6"></path>
-                  </svg>
-                </button>
-              </div>
-            </section>
-
-            <section class="step-panel" data-step="2">
-              <div class="field-group">
-                <label class="field-label" for="signupPassword">
-                  Password
-                </label>
-
-                <div class="input-wrapper">
+                <div class="field-group">
+                  <label class="field-label" for="confirmPassword">Confirm password</label>
                   <input
                     type="password"
-                    class="auth-input"
-                    id="signupPassword"
-                    name="password"
-                    placeholder="Create a secure password"
+                    class="auth-input no-icon"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Enter password again"
                     minlength="8"
                     maxlength="100"
                     autocomplete="new-password"
                     required
                   >
-
-                  <button
-                    type="button"
-                    class="password-toggle"
-                    id="signupPasswordToggle"
-                    aria-label="Show password"
-                  >
-                    <svg
-                      class="eye"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-
-                    <svg
-                      class="eye-off"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="m3 3 18 18"></path>
-                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
-                      <path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path>
-                      <path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path>
-                    </svg>
-                  </button>
                 </div>
 
-                <div
-                  class="password-strength"
-                  id="passwordStrength"
-                >
-                  <span class="strength-bar"></span>
-                  <span class="strength-bar"></span>
-                  <span class="strength-bar"></span>
-                  <span class="strength-bar"></span>
+                <div class="card-actions">
+                  <button type="button" class="btn btn-outline secondary-button" id="stepTwoBack">Back</button>
+                  <button type="button" class="btn primary-button" id="stepTwoNext">
+                    Review ID <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="step-panel" data-step="3">
+                <div class="review-box">
+                  <div class="review-label">Your new Bean ID</div>
+                  <div class="review-id" id="reviewBeanId">username@bean</div>
+                  <p class="review-copy">This identity will connect your NEO and Bean ecosystem account.</p>
+                </div>
+
+                <div class="card-actions">
+                  <button type="button" class="btn btn-outline secondary-button" id="stepThreeBack">Back</button>
+                  <button type="submit" class="btn primary-button" id="signupSubmitButton">
+                    <span class="button-spinner"></span>
+                    <span>Create Bean ID</span>
+                    <span class="button-icon" aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+            </form>
+
+            <form id="loginForm" class="login-form" novalidate autocomplete="on">
+              <div class="field-group">
+                <label class="field-label" for="loginUsername">Bean ID</label>
+                <div class="bean-id-field">
+                  <input
+                    type="text"
+                    class="bean-id-input"
+                    id="loginUsername"
+                    name="username"
+                    placeholder="username"
+                    minlength="3"
+                    maxlength="20"
+                    autocomplete="username"
+                    autocapitalize="none"
+                    inputmode="text"
+                    spellcheck="false"
+                    required
+                  >
+                  <span class="bean-suffix">@bean</span>
                 </div>
               </div>
 
               <div class="field-group">
-                <label class="field-label" for="confirmPassword">
-                  Confirm password
-                </label>
-
-                <input
-                  type="password"
-                  class="auth-input no-icon"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  placeholder="Enter password again"
-                  minlength="8"
-                  maxlength="100"
-                  autocomplete="new-password"
-                  required
-                >
-              </div>
-
-              <div class="card-actions">
-                <button
-                  type="button"
-                  class="secondary-button"
-                  id="stepTwoBack"
-                >
-                  Back
-                </button>
-
-                <button
-                  type="button"
-                  class="primary-button"
-                  id="stepTwoNext"
-                >
-                  Review ID
-
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.9"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                <label class="field-label" for="loginPassword">Password</label>
+                <div class="input-wrapper">
+                  <input
+                    type="password"
+                    class="auth-input"
+                    id="loginPassword"
+                    name="password"
+                    placeholder="Enter your password"
+                    minlength="8"
+                    maxlength="100"
+                    autocomplete="current-password"
+                    required
                   >
-                    <path d="M5 12h14"></path>
-                    <path d="m13 6 6 6-6 6"></path>
-                  </svg>
-                </button>
-              </div>
-            </section>
-
-            <section class="step-panel" data-step="3">
-              <div class="review-box">
-                <div class="review-label">Your new Bean ID</div>
-
-                <div class="review-id" id="reviewBeanId">
-                  username@bean
+                  <button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Show password">
+                    <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path><path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path></svg>
+                  </button>
                 </div>
-
-                <p class="review-copy">
-                  This identity will connect your NEO and
-                  Bean ecosystem account.
-                </p>
               </div>
+
+              <div class="message-box" id="loginMessage" role="alert" aria-live="polite"></div>
 
               <div class="card-actions">
-                <button
-                  type="button"
-                  class="secondary-button"
-                  id="stepThreeBack"
-                >
-                  Back
-                </button>
-
-                <button
-                  type="submit"
-                  class="primary-button"
-                  id="signupSubmitButton"
-                >
+                <button type="submit" class="btn primary-button" id="loginSubmitButton">
                   <span class="button-spinner"></span>
-
-                  <svg
-                    class="button-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.9"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="m13 6 6 6-6 6"></path>
-                  </svg>
-
-                  <span>Create Bean ID</span>
+                  <span>Enter NEO</span>
+                  <span class="button-icon" aria-hidden="true">→</span>
                 </button>
               </div>
-            </section>
-          </form>
+            </form>
 
-          <form
-            id="loginForm"
-            class="login-form"
-            novalidate
-            autocomplete="on"
-          >
-            <div class="field-group">
-              <label class="field-label" for="loginUsername">
-                Bean ID
-              </label>
-
-              <div class="bean-id-field">
-                <input
-                  type="text"
-                  class="bean-id-input"
-                  id="loginUsername"
-                  name="username"
-                  placeholder="username"
-                  minlength="3"
-                  maxlength="20"
-                  autocomplete="username"
-                  autocapitalize="none"
-                  inputmode="text"
-                  spellcheck="false"
-                  required
-                >
-
-                <span class="bean-suffix">@bean</span>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label" for="loginPassword">
-                Password
-              </label>
-
-              <div class="input-wrapper">
-                <input
-                  type="password"
-                  class="auth-input"
-                  id="loginPassword"
-                  name="password"
-                  placeholder="Enter your password"
-                  minlength="8"
-                  maxlength="100"
-                  autocomplete="current-password"
-                  required
-                >
-
-                <button
-                  type="button"
-                  class="password-toggle"
-                  id="loginPasswordToggle"
-                  aria-label="Show password"
-                >
-                  <svg
-                    class="eye"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-
-                  <svg
-                    class="eye-off"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m3 3 18 18"></path>
-                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
-                    <path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path>
-                    <path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div
-              class="message-box"
-              id="loginMessage"
-              role="alert"
-              aria-live="polite"
-            ></div>
-
-            <div class="card-actions">
-              <button
-                type="submit"
-                class="primary-button"
-                id="loginSubmitButton"
-              >
-                <span class="button-spinner"></span>
-
-                <svg
-                  class="button-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.9"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M5 12h14"></path>
-                  <path d="m13 6 6 6-6 6"></path>
-                </svg>
-
-                <span>Enter NEO</span>
-              </button>
-            </div>
-          </form>
-
-          <p class="auth-footer">
-            By continuing, you accept Signaturesi
-            <button type="button">Terms</button>
-            and
-            <button type="button">Privacy</button>.
-          </p>
-        </div>
-      </section>
+            <p class="auth-footer">
+              By continuing, you accept Signaturesi
+              <button type="button">Terms</button>
+              and
+              <button type="button">Privacy</button>.
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -2644,125 +1321,7 @@ body.language-modal-open { overflow: hidden; }
       );
     })();
   </script>
-  <script id="premium-ui-inline">
-(() => {
-  const languages = [
-    ['English', 'United States', 'en-US'],
-    ['English', 'United Kingdom', 'en-GB'],
-    ['اردو', 'Urdu', 'ur-PK'],
-    ['العربية', 'Arabic', 'ar'],
-    ['বাংলা', 'Bengali', 'bn'],
-    ['中文', 'Chinese', 'zh'],
-    ['Čeština', 'Czech', 'cs'],
-    ['Dansk', 'Danish', 'da'],
-    ['Nederlands', 'Dutch', 'nl'],
-    ['Eesti', 'Estonian', 'et'],
-    ['Filipino', 'Filipino', 'fil'],
-    ['Suomi', 'Finnish', 'fi'],
-    ['Français', 'Canada', 'fr-CA'],
-    ['Français', 'France', 'fr-FR'],
-    ['Deutsch', 'German', 'de'],
-    ['Ελληνικά', 'Greek', 'el'],
-    ['हिन्दी', 'Hindi', 'hi'],
-    ['Bahasa Indonesia', 'Indonesian', 'id'],
-    ['Italiano', 'Italian', 'it'],
-    ['日本語', 'Japanese', 'ja'],
-    ['한국어', 'Korean', 'ko'],
-    ['Norsk', 'Norwegian', 'no'],
-    ['Polski', 'Polish', 'pl'],
-    ['Português', 'Brazil', 'pt-BR'],
-    ['Português', 'Portugal', 'pt-PT'],
-    ['Română', 'Romanian', 'ro'],
-    ['Русский', 'Russian', 'ru'],
-    ['Español', 'Spain', 'es-ES'],
-    ['Español', 'Latin America', 'es-419'],
-    ['Svenska', 'Swedish', 'sv'],
-    ['Türkçe', 'Turkish', 'tr']
-  ];
-
-  const globe = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>';
-  const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
-  const close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>';
-  const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>';
-
-  const init = () => {
-    const trigger = document.querySelector('.footer-meta button[aria-label*="language" i]');
-    if (!trigger || trigger.dataset.premiumReady) return;
-
-    const stored = localStorage.getItem('signaturesi-language') || 'en-US';
-    const current = languages.find((item) => item[2] === stored) || languages[0];
-    trigger.dataset.premiumReady = 'true';
-    trigger.classList.add('footer-language-trigger');
-    trigger.innerHTML = `${globe}<span class="language-name">${current[0]}</span><span class="language-region">${current[1]}</span>`;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'language-overlay';
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = `
-      <section class="language-dialog" role="dialog" aria-modal="true" aria-labelledby="language-title">
-        <header class="language-dialog-header">
-          <h2 id="language-title" class="language-dialog-title">Select language</h2>
-          <button class="language-close" type="button" aria-label="Close language selector">${close}</button>
-        </header>
-        <div class="language-list" role="radiogroup" aria-label="Languages"></div>
-        <div class="language-search-wrap">
-          <label class="language-search">${searchIcon}<input type="search" aria-label="Search languages" placeholder="Search"></label>
-        </div>
-      </section>`;
-    document.body.appendChild(overlay);
-
-    const list = overlay.querySelector('.language-list');
-    const input = overlay.querySelector('input');
-    const closeButton = overlay.querySelector('.language-close');
-
-    const render = (query = '') => {
-      const normalized = query.trim().toLowerCase();
-      list.innerHTML = '';
-      languages
-        .filter(([name, region]) => `${name} ${region}`.toLowerCase().includes(normalized))
-        .forEach(([name, region, code]) => {
-          const option = document.createElement('button');
-          option.type = 'button';
-          option.className = 'language-option';
-          option.setAttribute('role', 'radio');
-          option.setAttribute('aria-checked', String(code === (localStorage.getItem('signaturesi-language') || stored)));
-          option.innerHTML = `<span><strong>${name}${region && name !== region ? ` <span style="color:rgba(17,17,19,.48);font-weight:520">${region}</span>` : ''}</strong><small>${name}${region ? ` · ${region}` : ''}</small></span><span class="language-check">${check}</span>`;
-          option.addEventListener('click', () => {
-            localStorage.setItem('signaturesi-language', code);
-            document.documentElement.lang = code;
-            trigger.innerHTML = `${globe}<span class="language-name">${name}</span><span class="language-region">${region}</span>`;
-            render(input.value);
-            closeDialog();
-          });
-          list.appendChild(option);
-        });
-    };
-
-    const openDialog = () => {
-      overlay.classList.add('is-open');
-      overlay.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('language-modal-open');
-      window.setTimeout(() => input.focus(), 80);
-    };
-    const closeDialog = () => {
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('language-modal-open');
-      trigger.focus();
-    };
-
-    trigger.addEventListener('click', openDialog);
-    closeButton.addEventListener('click', closeDialog);
-    overlay.addEventListener('click', (event) => { if (event.target === overlay) closeDialog(); });
-    input.addEventListener('input', () => render(input.value));
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && overlay.classList.contains('is-open')) closeDialog(); });
-    render();
-  };
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-
-  </script>
+  <script src="/site.js" defer></script>
+  <script src="/premium-ui.js" defer></script>
 </body>
 </html>
