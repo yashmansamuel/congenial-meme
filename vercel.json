@@ -46,10 +46,23 @@
     {
       "source": "/bean",
       "destination": "/bean.html"
-    },
+    }
+  ],
+  "redirects": [
     {
       "source": "/neo",
-      "destination": "/neo.html"
+      "destination": "https://neyo.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/neo.html",
+      "destination": "https://neyo.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/neo/:path*",
+      "destination": "https://neyo.signaturesi.com/:path*",
+      "permanent": false
     }
   ]
 }
