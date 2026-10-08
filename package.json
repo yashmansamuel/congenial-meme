@@ -12,7 +12,7 @@
     "check": "node --check api/auth.js && node --check api/chat.js && node --check api/history.js && node --check api/checkout.js && node --check api/notifications.js && node --check neo.js"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.48.1",
