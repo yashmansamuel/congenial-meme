@@ -1,518 +1,391 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Learn about Signaturesi security principles, account protection, product safeguards, vulnerability reporting and current security limitations.">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="robots" content="index, follow">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Security — Signaturesi</title>
+    <meta name="description" content="Learn about Signaturesi security principles, account protection, product safeguards, vulnerability reporting and current security limitations." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://signaturesi.com/security" />
+    <link rel="icon" type="image/png" href="assets/signaturesi.png" />
+    <link rel="apple-touch-icon" href="assets/signaturesi.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Signaturesi" />
+    <meta property="og:url" content="https://signaturesi.com/security" />
+    <meta property="og:title" content="Security — Signaturesi" />
+    <meta property="og:description" content="Learn about Signaturesi security principles, account protection, product safeguards, vulnerability reporting and current security limitations." />
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
 
-  <title>Security — Signaturesi</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png">
-  <link rel="apple-touch-icon" href="assets/favicon.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="site.css">
-  <style>
-    /* page-only additions; prefixed with "main" so they win over site.css (Vite emits site.css after this block) */
-    main .mb-16 { margin-bottom: 16px; }
-    main .hero { padding-bottom: 32px; }
-    main .hero .note { max-width: 720px; }
-    main .prose p.muted { color: var(--muted); }
-    main .note > * + * { margin-top: 8px; }
-    main .note strong { display: block; font-weight: 600; }
-    main .note p { color: var(--muted); }
-    main .note-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    main .note-label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); }
-    main .prose .legal-block + .legal-block { margin-top: 56px; }
-    main .prose .legal-block > * + * { margin-top: 16px; }
-    main .prose .legal-block > h2 { margin-top: 0; }
-    main .prose .legal-block > h3 { margin-top: 28px; }
-    main .prose .sec-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
-    main .prose .steps { padding-left: 0; list-style: none; }
-    main .prose .steps li + li { margin-top: 0; }
-    main .prose .steps > li { padding: 14px 0; }
-    main .prose .steps .num { flex: 0 0 120px; padding-top: 2px; }
-    main .prose .steps strong { font-weight: 600; color: var(--text); }
-    main .prose .steps p { color: var(--muted); }
-    main .box { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
-    main .box > * + * { margin-top: 12px; }
-    main .box .steps { border-top: 0; }
-    main .box .steps > li:last-child { border-bottom: 0; padding-bottom: 0; }
-    main .prose .box a.btn { text-decoration: none; }
-    main .prose .grid { gap: 16px; }
-    main .prose .box ul { margin-top: 12px; }
-    main .prose .box h3 { margin-top: 8px; }
-    main .table-wrap { overflow-x: auto; }
-    main .table-wrap table { min-width: 0; }
-    main .toc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text); }
-    main .toc-toggle { display: none; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; align-items: center; justify-content: center; }
-    main .toc-toggle span { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .15s ease; }
-    main .toc-toggle[aria-expanded="true"] span { transform: translateY(2px) rotate(-135deg); }
-    main .toc a.is-active { color: var(--text); font-weight: 500; }
-    main .card-foot { justify-content: flex-end; }
-    @media (max-width: 960px) {
-      main .legal-layout { grid-template-columns: minmax(0, 1fr); }
-      main .toc { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); }
-      main .toc-head { margin-bottom: 0; }
-      main .toc-toggle { display: inline-flex; }
-      main .toc-nav { margin-top: 8px; }
-      main .toc-nav.is-collapsed { display: none; }
-    }
-    @media (max-width: 720px) {
-      main .prose .steps > li { flex-direction: column; gap: 4px; }
-      main .prose .steps .num { flex: none; }
-      main .prose table { font-size: 13px; }
-      main .prose th, main .prose td { padding: 8px 6px; hyphens: auto; }
-    }
-  </style>
-</head>
-
-<body>
-  <header class="site-header" id="navbar">
-    <div class="container header-inner">
-      <a href="index.html" class="brand" aria-label="Signaturesi home">
-        <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
-        <span>Signaturesi</span>
-      </a>
-
-      <button type="button" class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">
-        <span aria-hidden="true"></span><span aria-hidden="true"></span>
-      </button>
-
-      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
-        <div class="nav-links">
-          <a href="index.html#products">Products</a>
-          <a href="research.html">Research</a>
-          <a href="latest.html">Latest</a>
-        </div>
-        <div class="nav-actions">
-          <a href="signup.html?mode=login" class="nav-signin">Sign in</a>
-          <a href="signup.html" class="btn btn-sm">Get started</a>
-        </div>
-      </nav>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="container">
-        <a href="index.html" class="back-link"><span aria-hidden="true">←</span> Signaturesi</a>
-        <div class="tags mb-16"><span class="badge">Trust</span><span class="badge">Security</span></div>
-        <h1>Security without <span>empty promises.</span></h1>
-        <p class="lede">Signaturesi is being designed around controlled access, account isolation, responsible data handling and clear disclosure of current security limitations.</p>
-        <p class="legal-meta mt-24">Updated <strong>July 24, 2026</strong> <span aria-hidden="true">·</span> Version <strong>1.0 Draft</strong> <span aria-hidden="true">·</span> Scope <strong>NEO, Bean and Bean ID</strong></p>
-        <div class="note mt-24">
-          <div class="note-head"><span class="note-label">Current security position</span><span class="badge">Development</span></div>
-          <strong>Signaturesi is in active development.</strong>
-          <p>Some safeguards described on this page are product requirements rather than verified production claims. Final wording must match the deployed architecture, completed testing and independent security review.</p>
-        </div>
-      </div>
-    </section>
-    <section class="section">
-      <div class="container legal-layout">
-        <aside class="toc" aria-label="Security page table of contents">
-          <div class="toc-head">
-            <span>On this page</span>
-            <button type="button" class="toc-toggle" id="tocToggle" aria-expanded="true" aria-controls="tocNavigation" aria-label="Toggle table of contents"><span aria-hidden="true"></span></button>
-          </div>
-          <nav class="toc-nav" id="tocNavigation">
-            <a href="#overview">Overview</a>
-            <a href="#principles">Principles</a>
-            <a href="#bean-id">Bean ID</a>
-            <a href="#neo">NEO security</a>
-            <a href="#bean">Bean security</a>
-            <a href="#encryption">Encryption status</a>
-            <a href="#infrastructure">Infrastructure</a>
-            <a href="#access">Access control</a>
-            <a href="#data">Data protection</a>
-            <a href="#monitoring">Monitoring</a>
-            <a href="#incidents">Incident response</a>
-            <a href="#vulnerabilities">Vulnerability reporting</a>
-            <a href="#limitations">Current limitations</a>
-            <a href="#roadmap">Security roadmap</a>
-            <a href="#users">User responsibilities</a>
-            <a href="#contact">Contact</a>
-          </nav>
-        </aside>
-        <article class="prose">
-          <section id="overview" class="legal-block">
-            <h2><span class="sec-label">01 · Overview</span>Security should be designed into the product.</h2>
-            <p>Signaturesi is building connected services for intelligence, communication and unified identity. These services may process account information, conversations, messages, files and personal settings.</p>
-            <p>Security therefore cannot be treated as a visual feature or marketing label. It requires secure authentication, strict access rules, careful data handling, reliable monitoring and a documented response process.</p>
-            <div class="note">
-              <span class="note-label">Core position</span>
-              <strong>We will describe a protection as implemented only after it has been built, tested and verified.</strong>
-            </div>
-          </section>
-          <section id="principles" class="legal-block">
-            <h2><span class="sec-label">02 · Security principles</span>Six principles guide Signaturesi security.</h2>
-            <ol class="steps">
-              <li><div><strong>Minimum access</strong><p>Systems and people should receive only the access required for a defined purpose.</p></div></li>
-              <li><div><strong>Secure defaults</strong><p>New accounts and features should begin with conservative access and privacy settings.</p></div></li>
-              <li><div><strong>User isolation</strong><p>One user must not be able to access another user’s private account or application data.</p></div></li>
-              <li><div><strong>Continuous visibility</strong><p>Important authentication, access and system events should be logged and monitored.</p></div></li>
-              <li><div><strong>Limited exposure</strong><p>External providers should receive only the information necessary for a requested function.</p></div></li>
-              <li><div><strong>Recovery readiness</strong><p>Security failures should trigger containment, investigation, recovery and user communication.</p></div></li>
-            </ol>
-          </section>
-          <section id="bean-id" class="legal-block">
-            <h2><span class="sec-label">03 · Bean ID security</span>One identity requires strong account protection.</h2>
-            <p>Bean ID connects access across Signaturesi products. A compromised Bean ID could affect NEO, Bean and related account data, making authentication security a critical requirement.</p>
-            <div class="box">
-              <div class="card-meta">
-                <span class="card-title"><span>Bean ID</span> <span class="muted">Unified identity</span></span>
-                <span class="badge">Required controls</span>
-              </div>
-              <ol class="steps">
-                <li><div><strong>Password protection</strong><p>Passwords should be stored using a trusted password-hashing system, never as readable text.</p></div></li>
-                <li><div><strong>Session management</strong><p>Sessions should expire, rotate appropriately and support revocation after suspicious activity.</p></div></li>
-                <li><div><strong>Rate limiting</strong><p>Login, signup and recovery endpoints should resist automated guessing and abusive requests.</p></div></li>
-                <li><div><strong>Account recovery</strong><p>Recovery should verify account ownership without exposing secrets or enabling easy takeover.</p></div></li>
-                <li><div><strong>Device visibility</strong><p>Users should be able to review and remove active authenticated devices or sessions.</p></div></li>
-                <li><div><strong>Security notifications</strong><p>Important login, recovery and account-change events should generate clear alerts.</p></div></li>
-              </ol>
-            </div>
-            <h3>Multi-factor authentication</h3>
-            <p>Multi-factor authentication is a recommended production requirement. It should not be described as available until the complete enrollment, recovery and backup-code flows have been implemented.</p>
-          </section>
-          <section id="neo" class="legal-block">
-            <h2><span class="sec-label">04 · NEO security</span>AI systems need isolation between users, memories and tools.</h2>
-            <p>NEO may process prompts, generated responses, uploaded files, project information and personal memory. Security controls must prevent unauthorized users, tools and services from accessing unrelated information.</p>
-            <div class="box">
-              <div class="card-meta">
-                <span class="card-title"><img src="assets/neo.png" alt=""><span>NEO</span> <span class="muted">AI workspace</span></span>
-                <span class="badge">Security model</span>
-              </div>
-              <ol class="steps">
-                <li><span class="num">Layer 01</span><div><strong>Account boundary</strong><p>Every conversation, file and memory item should be associated with the correct user.</p></div></li>
-                <li><span class="num">Layer 02</span><div><strong>Retrieval boundary</strong><p>Memory retrieval should search only information the current account is authorized to access.</p></div></li>
-                <li><span class="num">Layer 03</span><div><strong>Tool boundary</strong><p>Connected tools should receive only the minimum information needed for the current task.</p></div></li>
-                <li><span class="num">Layer 04</span><div><strong>Action confirmation</strong><p>Sensitive external actions should require explicit user confirmation.</p></div></li>
-              </ol>
-            </div>
-            <h3>Prompt injection and untrusted content</h3>
-            <p>Uploaded files, websites and retrieved content may contain instructions intended to manipulate an AI system. NEO should treat external content as untrusted data and should not automatically allow it to override system permissions or user intent.</p>
-            <h3>Memory integrity</h3>
-            <p>Durable memory should not be created silently from every conversation. Users should be able to inspect, correct and delete saved memory, and sensitive data should be excluded or restricted by default.</p>
-          </section>
-          <section id="bean" class="legal-block">
-            <h2><span class="sec-label">05 · Bean security</span>Communication security covers more than message content.</h2>
-            <p>Bean may process message content, attachments, presence information, delivery records and call connection data. Each part requires its own access, retention and security controls.</p>
-            <div class="box">
-              <div class="card-meta">
-                <span class="card-title"><img src="assets/bean.png" alt=""><span>Bean</span> <span class="muted">Communication</span></span>
-                <span class="badge">Security areas</span>
-              </div>
-              <ol class="steps">
-                <li><div><strong>Messages</strong><p>Delivery and storage access should be limited to authorized conversation participants.</p></div></li>
-                <li><div><strong>Media</strong><p>Files should use private storage paths, access checks and controlled download links.</p></div></li>
-                <li><div><strong>Presence</strong><p>Online and last-active information should follow user-selected privacy settings.</p></div></li>
-                <li><div><strong>Calls</strong><p>Signaling, permissions and connection metadata should be protected from unauthorized access.</p></div></li>
-              </ol>
-            </div>
-            <h3>Abuse prevention</h3>
-            <p>Bean should include controls for blocking, reporting, spam reduction, suspicious account detection and rate limiting without exposing private conversations more broadly than necessary.</p>
-          </section>
-          <section id="encryption" class="legal-block">
-            <h2><span class="sec-label">06 · Encryption status</span>Encryption claims must match the real implementation.</h2>
-            <p>Signaturesi intends to protect data during supported network transmission and to use appropriate storage protections through its infrastructure providers.</p>
-            <ol class="steps">
-              <li><span class="num">Intended</span><div><strong>Encryption in transit</strong><p>Supported production traffic should use secure HTTPS or equivalent encrypted transport.</p></div></li>
-              <li><span class="num">Provider dependent</span><div><strong>Encryption at rest</strong><p>Database, storage and backup protection depends on the final infrastructure configuration.</p></div></li>
-              <li><span class="num">Not verified</span><div><strong>End-to-end encryption</strong><p>Bean must not claim end-to-end encryption until message, media, backup and call protection has been fully implemented and independently reviewed.</p></div></li>
-            </ol>
-            <div class="note">
-              <span class="note-label">Approved wording during development</span>
-              <strong>Bean is being designed with privacy, account isolation and controlled access as core product requirements.</strong>
-            </div>
-          </section>
-          <section id="infrastructure" class="legal-block">
-            <h2><span class="sec-label">07 · Infrastructure security</span>Configuration matters as much as provider selection.</h2>
-            <p>Signaturesi may rely on external hosting, database, network, communication and AI providers. Using a reputable provider does not automatically make an application secure.</p>
-            <ol class="steps">
-              <li><span class="num">Database</span><div><strong>Row-level authorization</strong><p>Database policies should prevent cross-account reads, writes and unauthorized administrative access.</p></div></li>
-              <li><span class="num">API</span><div><strong>Server-side validation</strong><p>Sensitive authorization must not rely only on checks performed in browser JavaScript.</p></div></li>
-              <li><span class="num">Storage</span><div><strong>Private file access</strong><p>User files should not be exposed through permanent public URLs unless explicitly intended.</p></div></li>
-              <li><span class="num">Secrets</span><div><strong>Protected credentials</strong><p>API keys, private tokens and service credentials must not be embedded in public frontend files.</p></div></li>
-              <li><span class="num">Network</span><div><strong>Traffic protection</strong><p>Rate limiting, abuse detection and secure transport should protect public endpoints.</p></div></li>
-              <li><span class="num">Backups</span><div><strong>Tested recovery</strong><p>Backups should follow defined retention, access and restoration procedures.</p></div></li>
-            </ol>
-            <div class="note">
-              <strong>Never expose private service keys</strong>
-              <p>Secret API keys, database service-role keys and administrative credentials must remain in secure server-side environments.</p>
-            </div>
-          </section>
-          <section id="access" class="legal-block">
-            <h2><span class="sec-label">08 · Access control</span>Every sensitive request must be authorized.</h2>
-            <p>Authentication confirms who is making a request. Authorization determines what that person is allowed to access. Signaturesi requires both.</p>
-            <ol class="steps">
-              <li><span class="num">Step 01</span><div><strong>Authenticate</strong><p>Verify the account and active session.</p></div></li>
-              <li><span class="num">Step 02</span><div><strong>Validate</strong><p>Confirm request structure and permitted values.</p></div></li>
-              <li><span class="num">Step 03</span><div><strong>Authorize</strong><p>Confirm the account owns or may access the resource.</p></div></li>
-              <li><span class="num">Step 04</span><div><strong>Record</strong><p>Log important events for security investigation.</p></div></li>
-            </ol>
-            <p>Hidden buttons, inaccessible interface elements or private-looking URLs are not security controls. Authorization must be enforced by the backend.</p>
-          </section>
-          <section id="data" class="legal-block">
-            <h2><span class="sec-label">09 · Data protection</span>Collect less, retain less and expose less.</h2>
-            <p>Reducing unnecessary data can reduce security risk. Signaturesi should limit collection and retention to what is required for product functionality, security and legal obligations.</p>
-            <ol class="steps">
-              <li><span class="num">Collection</span><div><strong>Gather only required data</strong><p>Do not request device permissions or personal information without a clear feature requirement.</p></div></li>
-              <li><span class="num">Separation</span><div><strong>Keep account data isolated</strong><p>User-owned information should remain separated through database and storage access rules.</p></div></li>
-              <li><span class="num">Retention</span><div><strong>Define deletion periods</strong><p>Temporary files, logs and deleted account data should follow documented retention schedules.</p></div></li>
-              <li><span class="num">Exposure</span><div><strong>Limit provider access</strong><p>External providers should receive only the data needed for a requested operation.</p></div></li>
-            </ol>
-          </section>
-          <section id="monitoring" class="legal-block">
-            <h2><span class="sec-label">10 · Logging and monitoring</span>Security events need useful visibility.</h2>
-            <p>Signaturesi should record security-relevant events without placing private message or conversation content unnecessarily into logs.</p>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Event</th><th>Why it matters</th><th>Recommended response</th></tr></thead>
-                <tbody>
-                  <tr><td>Repeated failed login</td><td>Possible credential guessing</td><td>Rate limit and review</td></tr>
-                  <tr><td>New recovery request</td><td>Possible account takeover attempt</td><td>Notify account owner</td></tr>
-                  <tr><td>Unusual data access</td><td>Possible authorization failure</td><td>Block and investigate</td></tr>
-                  <tr><td>Elevated error rate</td><td>Possible outage or attack</td><td>Trigger operational alert</td></tr>
-                  <tr><td>Administrative action</td><td>High-impact internal access</td><td>Record actor and reason</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <p>Logs should themselves have restricted access and defined retention periods.</p>
-          </section>
-          <section id="incidents" class="legal-block">
-            <h2><span class="sec-label">11 · Incident response</span>Security incidents require a defined process.</h2>
-            <p>A security incident may include unauthorized access, leaked credentials, data exposure, malware, service abuse or a critical provider failure.</p>
-            <ol class="steps">
-              <li><span class="num">01</span><div><strong>Detect</strong><p>Identify suspicious activity through reports, alerts or system monitoring.</p></div></li>
-              <li><span class="num">02</span><div><strong>Contain</strong><p>Revoke access, disable compromised credentials or isolate affected components.</p></div></li>
-              <li><span class="num">03</span><div><strong>Investigate</strong><p>Determine affected systems, data, accounts and the likely cause.</p></div></li>
-              <li><span class="num">04</span><div><strong>Recover</strong><p>Restore safe operation and verify that the vulnerability has been addressed.</p></div></li>
-              <li><span class="num">05</span><div><strong>Communicate</strong><p>Notify affected users or authorities when appropriate or legally required.</p></div></li>
-              <li><span class="num">06</span><div><strong>Improve</strong><p>Document the incident and prevent recurrence through technical and process changes.</p></div></li>
-            </ol>
-            <p><a href="status.html" class="text-link">View system status <span aria-hidden="true">→</span></a></p>
-          </section>
-          <section id="vulnerabilities" class="legal-block">
-            <h2><span class="sec-label">12 · Vulnerability reporting</span>Responsible security research is welcome.</h2>
-            <p>Security researchers who believe they have discovered a vulnerability should report it privately and allow reasonable time for investigation and remediation.</p>
-            <div class="grid grid-2">
-              <div class="box">
-                <span class="note-label">Include</span>
-                <ul>
-                  <li>A clear description of the vulnerability.</li>
-                  <li>The affected page, endpoint or product.</li>
-                  <li>Reproduction steps or a safe proof of concept.</li>
-                  <li>The possible security impact.</li>
-                  <li>A contact method for follow-up.</li>
-                </ul>
-              </div>
-              <div class="box">
-                <span class="note-label">Do not</span>
-                <ul>
-                  <li>Access or download other users’ private data.</li>
-                  <li>Disrupt production services or availability.</li>
-                  <li>Use social engineering against users or staff.</li>
-                  <li>Deploy malware or destructive payloads.</li>
-                  <li>Publicly disclose an unresolved vulnerability.</li>
-                </ul>
-              </div>
-            </div>
-            <div class="box">
-              <span class="note-label">Security report</span>
-              <h3>Report a vulnerability privately.</h3>
-              <p>Replace this address with a verified and actively monitored security inbox before launch.</p>
-              <p><a href="mailto:security@signaturesi.com" class="btn">security@signaturesi.com</a></p>
-            </div>
-            <p>Signaturesi should publish a complete responsible disclosure policy before inviting external testing or offering a bug-bounty program.</p>
-          </section>
-          <section id="limitations" class="legal-block">
-            <h2><span class="sec-label">13 · Current limitations</span>Security work remains incomplete.</h2>
-            <p>Until development and independent review are complete, Signaturesi should clearly identify unresolved security areas rather than hiding them behind broad claims.</p>
-            <ol class="steps">
-              <li><span class="num">Unverified</span><div><strong>End-to-end encryption</strong><p>Full protection across messages, media, backups and calls has not been publicly verified.</p></div></li>
-              <li><span class="num">Pending</span><div><strong>Independent penetration test</strong><p>No completed external security assessment is claimed on this page.</p></div></li>
-              <li><span class="num">Pending</span><div><strong>Multi-factor authentication</strong><p>Availability depends on the final production account implementation.</p></div></li>
-              <li><span class="num">Pending</span><div><strong>Formal security certifications</strong><p>Signaturesi does not currently claim formal security compliance certification.</p></div></li>
-              <li><span class="num">Required</span><div><strong>Incident response testing</strong><p>Recovery and notification procedures should be tested before production launch.</p></div></li>
-            </ol>
-          </section>
-          <section id="roadmap" class="legal-block">
-            <h2><span class="sec-label">14 · Security roadmap</span>The next security work should be measurable.</h2>
-            <ol class="steps">
-              <li><span class="num">Phase 01</span><div><strong>Authentication hardening</strong><p>Secure login, session expiry, recovery, rate limiting and device management.</p></div></li>
-              <li><span class="num">Phase 02</span><div><strong>Database isolation review</strong><p>Test row-level policies, storage permissions and backend authorization.</p></div></li>
-              <li><span class="num">Phase 03</span><div><strong>Messaging security review</strong><p>Review message delivery, media access, call signaling and metadata handling.</p></div></li>
-              <li><span class="num">Phase 04</span><div><strong>External penetration testing</strong><p>Engage qualified independent reviewers before making stronger public security claims.</p></div></li>
-              <li><span class="num">Phase 05</span><div><strong>Incident-response exercise</strong><p>Test detection, containment, recovery and user communication procedures.</p></div></li>
-            </ol>
-          </section>
-          <section id="users" class="legal-block">
-            <h2><span class="sec-label">15 · User security responsibilities</span>Account security also depends on user behavior.</h2>
-            <p>Users should take reasonable steps to protect their Signaturesi accounts and devices.</p>
-            <ul>
-              <li>Use a strong password that is not reused on another service.</li>
-              <li>Keep account recovery methods accurate and protected.</li>
-              <li>Do not share passwords, login codes or recovery links.</li>
-              <li>Sign out from devices you no longer control.</li>
-              <li>Review unexpected login or account-change notifications.</li>
-              <li>Keep browsers, operating systems and devices updated.</li>
-              <li>Report suspected account compromise immediately.</li>
-            </ul>
-            <p>Signaturesi will never need a user’s password through an ordinary support message.</p>
-          </section>
-          <section id="contact" class="legal-block">
-            <h2><span class="sec-label">16 · Security contact</span>Contact the Signaturesi security team.</h2>
-            <p>Use a private and verified channel for vulnerability reports, account-security concerns or suspected incidents.</p>
-            <div class="box">
-              <div class="card-meta">
-                <span class="card-title"><img src="assets/signaturesi.png" alt=""><span>Signaturesi Security</span> <span class="muted">Vulnerabilities and incidents</span></span>
-                <span class="badge">Draft contact</span>
-              </div>
-              <ol class="steps">
-                <li><span class="num">Security email</span><div><a href="mailto:security@signaturesi.com">security@signaturesi.com</a></div></li>
-                <li><span class="num">General support</span><div><a href="mailto:support@signaturesi.com">support@signaturesi.com</a></div></li>
-                <li><span class="num">Status page</span><div><a href="status.html">System status</a></div></li>
-                <li><span class="num">Response target</span><div><strong>To be confirmed</strong></div></li>
-              </ol>
-            </div>
-            <p class="small muted">These email addresses must be created, secured and actively monitored before this page is published.</p>
-          </section>
-        </article>
-      </div>
-    </section>
-    <section class="section section-alt">
-      <div class="container">
-        <header class="section-head" data-reveal>
-          <span class="eyebrow">Legal and trust</span>
-          <h2>Continue reviewing Signaturesi policies.</h2>
-        </header>
-        <div class="grid grid-3">
-          <a href="privacy.html" class="card" data-reveal>
-            <div class="card-meta"><span class="num">01</span><span class="badge">Legal</span></div>
-            <h3>Privacy Policy</h3>
-            <p>How Signaturesi may collect, use, retain and protect information.</p>
-            <span class="card-foot"><span></span><span aria-hidden="true">→</span></span>
-          </a>
-          <a href="terms.html" class="card" data-reveal>
-            <div class="card-meta"><span class="num">02</span><span class="badge">Legal</span></div>
-            <h3>Terms of Use</h3>
-            <p>Rules and responsibilities for accessing Signaturesi.</p>
-            <span class="card-foot"><span></span><span aria-hidden="true">→</span></span>
-          </a>
-          <a href="acceptable-use.html" class="card" data-reveal>
-            <div class="card-meta"><span class="num">03</span><span class="badge">Policy</span></div>
-            <h3>Acceptable Use</h3>
-            <p>Product rules designed to prevent harmful and abusive use.</p>
-            <span class="card-foot"><span></span><span aria-hidden="true">→</span></span>
-          </a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-about">
-          <a href="index.html" class="brand">
-            <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+    <header class="nav">
+      <div class="wrap">
+        <div class="nav__in">
+          <a class="brand" href="/" aria-label="Signaturesi home">
+            <img src="assets/signaturesi.png" alt="" width="26" height="26" />
             <span>Signaturesi</span>
           </a>
-          <p>A focused ecosystem for intelligence, communication and mobile-first AI research.</p>
-          <div class="footer-socials">
-            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
-            </a>
-            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 20 20"></path><path d="M20 4 4 20"></path></svg>
-            </a>
-            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path><path d="m10 9 5 3-5 3Z"></path></svg>
-            </a>
-            <a href="bean.html" aria-label="Bean">
-              <img src="assets/bean.png" alt="" width="18" height="18" loading="lazy" decoding="async" draggable="false">
-            </a>
+          <nav class="nav__links" aria-label="Primary">
+            <a href="/#products">Products</a>
+            <a href="https://neyo.signaturesi.com/">NEYO</a>
+            <a href="https://bean.signaturesi.com/">Bean</a>
+            <a href="https://uasset.signaturesi.com/">UAsset</a>
+            <a href="/research">Research</a>
+          </nav>
+          <div class="nav__right">
+            <a class="nav__signin" href="/signup?mode=login">Sign in</a>
+            <a class="btn btn--primary btn--sm" href="/signup">Get started</a>
+            <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 7h14M3 13h14" /></svg>
+            </button>
           </div>
         </div>
+        <nav class="nav__menu" id="menu" aria-label="Mobile" hidden>
+          <ul>
+            <li><a href="/#products">Products</a></li>
+            <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+            <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+            <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+            <li><a href="/research">Research</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
 
-        <div class="footer-cols">
-          <div>
-            <h3>Products</h3>
-            <a href="https://neyo.signaturesi.com/">NEO</a>
-            <a href="bean.html">Bean</a>
-            <a href="signup.html">Bean ID</a>
-            <a href="latest.html">Personalities</a>
+    <main id="main">
+      <header class="doc-head">
+        <div class="wrap">
+          <div class="inner">
+            <p class="label">Legal</p>
+            <h1>Security</h1>
+            <p class="lead">Signaturesi is being designed around controlled access, account isolation, responsible data handling and clear disclosure of current security limitations.</p>
+            <p class="doc-meta"><span>Updated <b>July 24, 2026</b></span><span>Version <b>1.0 Draft</b></span><span>Scope <b>NEO, Bean and Bean ID</b></span></p>
+            <div class="note">
+<div class="note-head"><span class="note-label">Current security position</span><span class="badge">Development</span></div>
+<strong>Signaturesi is in active development.</strong>
+<p>Some safeguards described on this page are product requirements rather than verified production claims. Final wording must match the deployed architecture, completed testing and independent security review.</p>
+</div>
           </div>
-          <div>
-            <h3>Research</h3>
-            <a href="research.html">Research library</a>
-            <a href="research-article.html">NEO L1 report</a>
-            <a href="research.html">Green AI</a>
-            <a href="security.html">Safety</a>
+        </div>
+      </header>
+
+      <div class="doc">
+        <div class="wrap">
+        <aside class="toc" aria-label="On this page">
+          <div class="toc__in">
+            <details open>
+              <summary>On this page</summary>
+              <ol>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#principles">Principles</a></li>
+                <li><a href="#bean-id">Bean ID</a></li>
+                <li><a href="#neo">NEO security</a></li>
+                <li><a href="#bean">Bean security</a></li>
+                <li><a href="#encryption">Encryption status</a></li>
+                <li><a href="#infrastructure">Infrastructure</a></li>
+                <li><a href="#access">Access control</a></li>
+                <li><a href="#data">Data protection</a></li>
+                <li><a href="#monitoring">Monitoring</a></li>
+                <li><a href="#incidents">Incident response</a></li>
+                <li><a href="#vulnerabilities">Vulnerability reporting</a></li>
+                <li><a href="#limitations">Current limitations</a></li>
+                <li><a href="#roadmap">Security roadmap</a></li>
+                <li><a href="#users">User responsibilities</a></li>
+                <li><a href="#contact">Contact</a></li>
+              </ol>
+            </details>
           </div>
-          <div>
-            <h3>Company</h3>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
-            <a href="status.html">System status</a>
-            <a href="latest.html">Latest</a>
-          </div>
-          <div>
-            <h3>Legal</h3>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms of Use</a>
-            <a href="acceptable-use.html">Acceptable Use</a>
-            <a href="cookies.html">Cookie Policy</a>
-            <a href="security.html">Security</a>
-          </div>
-          <div>
-            <h3>Connect</h3>
-            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="https://x.com/" target="_blank" rel="noopener noreferrer">X</a>
-            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>
-            <a href="bean.html">Bean</a>
-          </div>
+        </aside>
+        <article class="prose doc-body">
+<section id="overview">
+<p class="eyebrow">01 · Overview</p><h2>Security should be designed into the product.</h2>
+<p>Signaturesi is building connected services for intelligence, communication and unified identity. These services may process account information, conversations, messages, files and personal settings.</p>
+<p>Security therefore cannot be treated as a visual feature or marketing label. It requires secure authentication, strict access rules, careful data handling, reliable monitoring and a documented response process.</p>
+<div class="note">
+<span class="note-label">Core position</span>
+<strong>We will describe a protection as implemented only after it has been built, tested and verified.</strong>
+</div>
+</section>
+<section id="principles">
+<p class="eyebrow">02 · Security principles</p><h2>Six principles guide Signaturesi security.</h2>
+<ol class="steps">
+<li><div><strong>Minimum access</strong><p>Systems and people should receive only the access required for a defined purpose.</p></div></li>
+<li><div><strong>Secure defaults</strong><p>New accounts and features should begin with conservative access and privacy settings.</p></div></li>
+<li><div><strong>User isolation</strong><p>One user must not be able to access another user’s private account or application data.</p></div></li>
+<li><div><strong>Continuous visibility</strong><p>Important authentication, access and system events should be logged and monitored.</p></div></li>
+<li><div><strong>Limited exposure</strong><p>External providers should receive only the information necessary for a requested function.</p></div></li>
+<li><div><strong>Recovery readiness</strong><p>Security failures should trigger containment, investigation, recovery and user communication.</p></div></li>
+</ol>
+</section>
+<section id="bean-id">
+<p class="eyebrow">03 · Bean ID security</p><h2>One identity requires strong account protection.</h2>
+<p>Bean ID connects access across Signaturesi products. A compromised Bean ID could affect NEO, Bean and related account data, making authentication security a critical requirement.</p>
+<div class="box">
+<div class="card-meta">
+<span class="card-title"><span>Bean ID</span> <span class="muted">Unified identity</span></span>
+<span class="badge">Required controls</span>
+</div>
+<ol class="steps">
+<li><div><strong>Password protection</strong><p>Passwords should be stored using a trusted password-hashing system, never as readable text.</p></div></li>
+<li><div><strong>Session management</strong><p>Sessions should expire, rotate appropriately and support revocation after suspicious activity.</p></div></li>
+<li><div><strong>Rate limiting</strong><p>Login, signup and recovery endpoints should resist automated guessing and abusive requests.</p></div></li>
+<li><div><strong>Account recovery</strong><p>Recovery should verify account ownership without exposing secrets or enabling easy takeover.</p></div></li>
+<li><div><strong>Device visibility</strong><p>Users should be able to review and remove active authenticated devices or sessions.</p></div></li>
+<li><div><strong>Security notifications</strong><p>Important login, recovery and account-change events should generate clear alerts.</p></div></li>
+</ol>
+</div>
+<h3>Multi-factor authentication</h3>
+<p>Multi-factor authentication is a recommended production requirement. It should not be described as available until the complete enrollment, recovery and backup-code flows have been implemented.</p>
+</section>
+<section id="neo">
+<p class="eyebrow">04 · NEO security</p><h2>AI systems need isolation between users, memories and tools.</h2>
+<p>NEO may process prompts, generated responses, uploaded files, project information and personal memory. Security controls must prevent unauthorized users, tools and services from accessing unrelated information.</p>
+<div class="box">
+<div class="card-meta">
+<span class="card-title"><img alt="" src="assets/neo.png"/><span>NEO</span> <span class="muted">AI workspace</span></span>
+<span class="badge">Security model</span>
+</div>
+<ol class="steps">
+<li><span class="num">Layer 01</span><div><strong>Account boundary</strong><p>Every conversation, file and memory item should be associated with the correct user.</p></div></li>
+<li><span class="num">Layer 02</span><div><strong>Retrieval boundary</strong><p>Memory retrieval should search only information the current account is authorized to access.</p></div></li>
+<li><span class="num">Layer 03</span><div><strong>Tool boundary</strong><p>Connected tools should receive only the minimum information needed for the current task.</p></div></li>
+<li><span class="num">Layer 04</span><div><strong>Action confirmation</strong><p>Sensitive external actions should require explicit user confirmation.</p></div></li>
+</ol>
+</div>
+<h3>Prompt injection and untrusted content</h3>
+<p>Uploaded files, websites and retrieved content may contain instructions intended to manipulate an AI system. NEO should treat external content as untrusted data and should not automatically allow it to override system permissions or user intent.</p>
+<h3>Memory integrity</h3>
+<p>Durable memory should not be created silently from every conversation. Users should be able to inspect, correct and delete saved memory, and sensitive data should be excluded or restricted by default.</p>
+</section>
+<section id="bean">
+<p class="eyebrow">05 · Bean security</p><h2>Communication security covers more than message content.</h2>
+<p>Bean may process message content, attachments, presence information, delivery records and call connection data. Each part requires its own access, retention and security controls.</p>
+<div class="box">
+<div class="card-meta">
+<span class="card-title"><img alt="" src="assets/bean.png"/><span>Bean</span> <span class="muted">Communication</span></span>
+<span class="badge">Security areas</span>
+</div>
+<ol class="steps">
+<li><div><strong>Messages</strong><p>Delivery and storage access should be limited to authorized conversation participants.</p></div></li>
+<li><div><strong>Media</strong><p>Files should use private storage paths, access checks and controlled download links.</p></div></li>
+<li><div><strong>Presence</strong><p>Online and last-active information should follow user-selected privacy settings.</p></div></li>
+<li><div><strong>Calls</strong><p>Signaling, permissions and connection metadata should be protected from unauthorized access.</p></div></li>
+</ol>
+</div>
+<h3>Abuse prevention</h3>
+<p>Bean should include controls for blocking, reporting, spam reduction, suspicious account detection and rate limiting without exposing private conversations more broadly than necessary.</p>
+</section>
+<section id="encryption">
+<p class="eyebrow">06 · Encryption status</p><h2>Encryption claims must match the real implementation.</h2>
+<p>Signaturesi intends to protect data during supported network transmission and to use appropriate storage protections through its infrastructure providers.</p>
+<ol class="steps">
+<li><span class="num">Intended</span><div><strong>Encryption in transit</strong><p>Supported production traffic should use secure HTTPS or equivalent encrypted transport.</p></div></li>
+<li><span class="num">Provider dependent</span><div><strong>Encryption at rest</strong><p>Database, storage and backup protection depends on the final infrastructure configuration.</p></div></li>
+<li><span class="num">Not verified</span><div><strong>End-to-end encryption</strong><p>Bean must not claim end-to-end encryption until message, media, backup and call protection has been fully implemented and independently reviewed.</p></div></li>
+</ol>
+<div class="note">
+<span class="note-label">Approved wording during development</span>
+<strong>Bean is being designed with privacy, account isolation and controlled access as core product requirements.</strong>
+</div>
+</section>
+<section id="infrastructure">
+<p class="eyebrow">07 · Infrastructure security</p><h2>Configuration matters as much as provider selection.</h2>
+<p>Signaturesi may rely on external hosting, database, network, communication and AI providers. Using a reputable provider does not automatically make an application secure.</p>
+<ol class="steps">
+<li><span class="num">Database</span><div><strong>Row-level authorization</strong><p>Database policies should prevent cross-account reads, writes and unauthorized administrative access.</p></div></li>
+<li><span class="num">API</span><div><strong>Server-side validation</strong><p>Sensitive authorization must not rely only on checks performed in browser JavaScript.</p></div></li>
+<li><span class="num">Storage</span><div><strong>Private file access</strong><p>User files should not be exposed through permanent public URLs unless explicitly intended.</p></div></li>
+<li><span class="num">Secrets</span><div><strong>Protected credentials</strong><p>API keys, private tokens and service credentials must not be embedded in public frontend files.</p></div></li>
+<li><span class="num">Network</span><div><strong>Traffic protection</strong><p>Rate limiting, abuse detection and secure transport should protect public endpoints.</p></div></li>
+<li><span class="num">Backups</span><div><strong>Tested recovery</strong><p>Backups should follow defined retention, access and restoration procedures.</p></div></li>
+</ol>
+<div class="note">
+<strong>Never expose private service keys</strong>
+<p>Secret API keys, database service-role keys and administrative credentials must remain in secure server-side environments.</p>
+</div>
+</section>
+<section id="access">
+<p class="eyebrow">08 · Access control</p><h2>Every sensitive request must be authorized.</h2>
+<p>Authentication confirms who is making a request. Authorization determines what that person is allowed to access. Signaturesi requires both.</p>
+<ol class="steps">
+<li><span class="num">Step 01</span><div><strong>Authenticate</strong><p>Verify the account and active session.</p></div></li>
+<li><span class="num">Step 02</span><div><strong>Validate</strong><p>Confirm request structure and permitted values.</p></div></li>
+<li><span class="num">Step 03</span><div><strong>Authorize</strong><p>Confirm the account owns or may access the resource.</p></div></li>
+<li><span class="num">Step 04</span><div><strong>Record</strong><p>Log important events for security investigation.</p></div></li>
+</ol>
+<p>Hidden buttons, inaccessible interface elements or private-looking URLs are not security controls. Authorization must be enforced by the backend.</p>
+</section>
+<section id="data">
+<p class="eyebrow">09 · Data protection</p><h2>Collect less, retain less and expose less.</h2>
+<p>Reducing unnecessary data can reduce security risk. Signaturesi should limit collection and retention to what is required for product functionality, security and legal obligations.</p>
+<ol class="steps">
+<li><span class="num">Collection</span><div><strong>Gather only required data</strong><p>Do not request device permissions or personal information without a clear feature requirement.</p></div></li>
+<li><span class="num">Separation</span><div><strong>Keep account data isolated</strong><p>User-owned information should remain separated through database and storage access rules.</p></div></li>
+<li><span class="num">Retention</span><div><strong>Define deletion periods</strong><p>Temporary files, logs and deleted account data should follow documented retention schedules.</p></div></li>
+<li><span class="num">Exposure</span><div><strong>Limit provider access</strong><p>External providers should receive only the data needed for a requested operation.</p></div></li>
+</ol>
+</section>
+<section id="monitoring">
+<p class="eyebrow">10 · Logging and monitoring</p><h2>Security events need useful visibility.</h2>
+<p>Signaturesi should record security-relevant events without placing private message or conversation content unnecessarily into logs.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Event</th><th>Why it matters</th><th>Recommended response</th></tr></thead>
+<tbody>
+<tr><td>Repeated failed login</td><td>Possible credential guessing</td><td>Rate limit and review</td></tr>
+<tr><td>New recovery request</td><td>Possible account takeover attempt</td><td>Notify account owner</td></tr>
+<tr><td>Unusual data access</td><td>Possible authorization failure</td><td>Block and investigate</td></tr>
+<tr><td>Elevated error rate</td><td>Possible outage or attack</td><td>Trigger operational alert</td></tr>
+<tr><td>Administrative action</td><td>High-impact internal access</td><td>Record actor and reason</td></tr>
+</tbody>
+</table>
+</div>
+<p>Logs should themselves have restricted access and defined retention periods.</p>
+</section>
+<section id="incidents">
+<p class="eyebrow">11 · Incident response</p><h2>Security incidents require a defined process.</h2>
+<p>A security incident may include unauthorized access, leaked credentials, data exposure, malware, service abuse or a critical provider failure.</p>
+<ol class="steps">
+<li><span class="num">01</span><div><strong>Detect</strong><p>Identify suspicious activity through reports, alerts or system monitoring.</p></div></li>
+<li><span class="num">02</span><div><strong>Contain</strong><p>Revoke access, disable compromised credentials or isolate affected components.</p></div></li>
+<li><span class="num">03</span><div><strong>Investigate</strong><p>Determine affected systems, data, accounts and the likely cause.</p></div></li>
+<li><span class="num">04</span><div><strong>Recover</strong><p>Restore safe operation and verify that the vulnerability has been addressed.</p></div></li>
+<li><span class="num">05</span><div><strong>Communicate</strong><p>Notify affected users or authorities when appropriate or legally required.</p></div></li>
+<li><span class="num">06</span><div><strong>Improve</strong><p>Document the incident and prevent recurrence through technical and process changes.</p></div></li>
+</ol>
+<p><a class="text-link" href="/">View system status <span aria-hidden="true">→</span></a></p>
+</section>
+<section id="vulnerabilities">
+<p class="eyebrow">12 · Vulnerability reporting</p><h2>Responsible security research is welcome.</h2>
+<p>Security researchers who believe they have discovered a vulnerability should report it privately and allow reasonable time for investigation and remediation.</p>
+<div class="grid grid-2">
+<div class="box">
+<span class="note-label">Include</span>
+<ul>
+<li>A clear description of the vulnerability.</li>
+<li>The affected page, endpoint or product.</li>
+<li>Reproduction steps or a safe proof of concept.</li>
+<li>The possible security impact.</li>
+<li>A contact method for follow-up.</li>
+</ul>
+</div>
+<div class="box">
+<span class="note-label">Do not</span>
+<ul>
+<li>Access or download other users’ private data.</li>
+<li>Disrupt production services or availability.</li>
+<li>Use social engineering against users or staff.</li>
+<li>Deploy malware or destructive payloads.</li>
+<li>Publicly disclose an unresolved vulnerability.</li>
+</ul>
+</div>
+</div>
+<div class="box">
+<span class="note-label">Security report</span>
+<h3>Report a vulnerability privately.</h3>
+<p>Replace this address with a verified and actively monitored security inbox before launch.</p>
+<p><a class="btn btn--primary" href="mailto:security@signaturesi.com">security@signaturesi.com</a></p>
+</div>
+<p>Signaturesi should publish a complete responsible disclosure policy before inviting external testing or offering a bug-bounty program.</p>
+</section>
+<section id="limitations">
+<p class="eyebrow">13 · Current limitations</p><h2>Security work remains incomplete.</h2>
+<p>Until development and independent review are complete, Signaturesi should clearly identify unresolved security areas rather than hiding them behind broad claims.</p>
+<ol class="steps">
+<li><span class="num">Unverified</span><div><strong>End-to-end encryption</strong><p>Full protection across messages, media, backups and calls has not been publicly verified.</p></div></li>
+<li><span class="num">Pending</span><div><strong>Independent penetration test</strong><p>No completed external security assessment is claimed on this page.</p></div></li>
+<li><span class="num">Pending</span><div><strong>Multi-factor authentication</strong><p>Availability depends on the final production account implementation.</p></div></li>
+<li><span class="num">Pending</span><div><strong>Formal security certifications</strong><p>Signaturesi does not currently claim formal security compliance certification.</p></div></li>
+<li><span class="num">Required</span><div><strong>Incident response testing</strong><p>Recovery and notification procedures should be tested before production launch.</p></div></li>
+</ol>
+</section>
+<section id="roadmap">
+<p class="eyebrow">14 · Security roadmap</p><h2>The next security work should be measurable.</h2>
+<ol class="steps">
+<li><span class="num">Phase 01</span><div><strong>Authentication hardening</strong><p>Secure login, session expiry, recovery, rate limiting and device management.</p></div></li>
+<li><span class="num">Phase 02</span><div><strong>Database isolation review</strong><p>Test row-level policies, storage permissions and backend authorization.</p></div></li>
+<li><span class="num">Phase 03</span><div><strong>Messaging security review</strong><p>Review message delivery, media access, call signaling and metadata handling.</p></div></li>
+<li><span class="num">Phase 04</span><div><strong>External penetration testing</strong><p>Engage qualified independent reviewers before making stronger public security claims.</p></div></li>
+<li><span class="num">Phase 05</span><div><strong>Incident-response exercise</strong><p>Test detection, containment, recovery and user communication procedures.</p></div></li>
+</ol>
+</section>
+<section id="users">
+<p class="eyebrow">15 · User security responsibilities</p><h2>Account security also depends on user behavior.</h2>
+<p>Users should take reasonable steps to protect their Signaturesi accounts and devices.</p>
+<ul>
+<li>Use a strong password that is not reused on another service.</li>
+<li>Keep account recovery methods accurate and protected.</li>
+<li>Do not share passwords, login codes or recovery links.</li>
+<li>Sign out from devices you no longer control.</li>
+<li>Review unexpected login or account-change notifications.</li>
+<li>Keep browsers, operating systems and devices updated.</li>
+<li>Report suspected account compromise immediately.</li>
+</ul>
+<p>Signaturesi will never need a user’s password through an ordinary support message.</p>
+</section>
+<section id="contact">
+<p class="eyebrow">16 · Security contact</p><h2>Contact the Signaturesi security team.</h2>
+<p>Use a private and verified channel for vulnerability reports, account-security concerns or suspected incidents.</p>
+<div class="box">
+<div class="card-meta">
+<span class="card-title"><img alt="" src="assets/signaturesi.png"/><span>Signaturesi Security</span> <span class="muted">Vulnerabilities and incidents</span></span>
+<span class="badge">Draft contact</span>
+</div>
+<ol class="steps">
+<li><span class="num">Security email</span><div><a href="mailto:security@signaturesi.com">security@signaturesi.com</a></div></li>
+<li><span class="num">General support</span><div><a href="mailto:support@signaturesi.com">support@signaturesi.com</a></div></li>
+<li><span class="num">Status page</span><div><a href="/">System status</a></div></li>
+<li><span class="num">Response target</span><div><strong>To be confirmed</strong></div></li>
+</ol>
+</div>
+<p class="small muted">These email addresses must be created, secured and actively monitored before this page is published.</p>
+</section>
+</article>
         </div>
       </div>
+    </main>
 
-      <div class="footer-bottom">
-        <p>© 2026 Signaturesi</p>
-        <div class="footer-meta">
-          <span>Designed by Leo</span>
-          <a href="status.html">System status</a>
-          <button type="button" aria-label="Current language: English">English</button>
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="brand" href="/" aria-label="Signaturesi home">
+              <img src="assets/signaturesi.png" alt="" width="26" height="26" loading="lazy" />
+              <span>Signaturesi</span>
+            </a>
+          </div>
+          <nav aria-labelledby="f-products">
+            <h2 id="f-products">Products</h2>
+            <ul>
+              <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+              <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+              <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+              <li><a href="/signup">Bean ID</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-company">
+            <h2 id="f-company">Company</h2>
+            <ul>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/research">Research</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-legal">
+            <h2 id="f-legal">Legal</h2>
+            <ul>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/acceptable-use">Acceptable Use</a></li>
+              <li><a href="/cookies">Cookies</a></li>
+              <li><a href="/security" aria-current="page">Security</a></li>
+            </ul>
+          </nav>
         </div>
+        <p class="foot__bottom">© 2026 Signaturesi</p>
       </div>
-    </div>
-  </footer>
-
-  <script src="/site.js" defer></script>
-  <script src="/premium-ui.js" defer></script>
-  <script>
-    // "On this page": collapse toggle on small screens + highlight the current section
-    (() => {
-      const toggle = document.getElementById('tocToggle');
-      const nav = document.getElementById('tocNavigation');
-      if (!toggle || !nav) return;
-      const small = window.matchMedia('(max-width: 960px)');
-      const setOpen = (open) => { toggle.setAttribute('aria-expanded', String(open)); nav.classList.toggle('is-collapsed', !open); };
-      toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
-      const links = [...nav.querySelectorAll('a')];
-      links.forEach((a) => a.addEventListener('click', () => { if (small.matches) setOpen(false); }));
-      if (!('IntersectionObserver' in window)) return;
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          links.forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === '#' + e.target.id));
-        });
-      }, { rootMargin: '-20% 0px -70% 0px' });
-      links.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) io.observe(s); });
-    })();
-  </script>
-</body>
+    </footer>
+    <script type="module" src="ui.js"></script>
+  </body>
 </html>

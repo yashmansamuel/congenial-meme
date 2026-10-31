@@ -19,71 +19,11 @@
     <meta name="twitter:title" content="Signaturesi — NEYO, Bean &amp; UAsset" />
     <meta name="twitter:description" content="One Bean ID for NEYO AI, Bean private messaging and UAsset motion icons." />
     <meta name="twitter:image" content="assets/signaturesi.png" />
+    <link rel="stylesheet" href="ui.css" />
     <style>
-      :root {
-        --bg: #ffffff;
-        --fg: #0a0a0a;
-        --muted: #636363;
-        --line: #e6e6e6;
-        --soft: #fafafa;
-        --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        --max: 1120px;
-        --pad: 20px;
-        --r: 12px;
-        --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-      }
-      @media (prefers-color-scheme: dark) {
-        :root { --bg: #0a0a0a; --fg: #f5f5f5; --muted: #a3a3a3; --line: #262626; --soft: #111111; }
-      }
-      @media (min-width: 768px) { :root { --pad: 32px; } }
-      *, *::before, *::after { box-sizing: border-box; }
-      html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
-      body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
-      img, svg { display: block; }
-      a { color: inherit; text-decoration: none; }
-      h1, h2, h3, p, ul { margin: 0; }
-      ul { padding: 0; list-style: none; }
-      :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 6px; }
-      .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); }
-      .skip { position: absolute; left: -9999px; top: 8px; z-index: 100; background: var(--fg); color: var(--bg); padding: 0 14px; min-height: 44px; display: inline-flex; align-items: center; border-radius: 8px; }
-      .skip:focus { left: 8px; }
-
-      /* buttons */
-      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); font: 500 15px/1 var(--font); transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease), opacity 0.15s var(--ease); }
-      .btn:hover { border-color: var(--muted); }
-      .btn--primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-      .btn--primary:hover { opacity: 0.86; border-color: var(--fg); }
-      .btn--sm { min-height: 44px; padding: 0 14px; font-size: 14px; white-space: nowrap; }
-      @media (min-width: 860px) { .btn--sm { min-height: 36px; } }
-      .tlink { font-weight: 500; border-bottom: 1px solid var(--line); transition: border-color 0.15s var(--ease); }
-      .tlink:hover { border-color: var(--fg); }
-
-      /* nav */
-      .nav { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--line); }
-      .nav__in { display: flex; align-items: center; gap: 24px; height: 60px; }
-      .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; min-height: 44px; }
-      .brand img { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; }
-      .nav__links { display: none; gap: 4px; }
-      .nav__links a, .nav__signin { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 14px; color: var(--muted); transition: color 0.15s var(--ease); }
-      .nav__links a:hover, .nav__signin:hover { color: var(--fg); }
-      .nav__right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
-      .nav__toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-width: 44px; flex-shrink: 0; height: 44px; background: none; border: 0; color: var(--fg); cursor: pointer; border-radius: 8px; }
-      .nav__menu { border-top: 1px solid var(--line); padding: 8px 0 16px; }
-      .nav__menu[hidden] { display: none; }
-      .nav__menu a { display: flex; align-items: center; min-height: 44px; font-size: 15px; border-bottom: 1px solid var(--line); }
-      .nav__menu li:last-child a { border-bottom: 0; }
-      @media (min-width: 860px) {
-        .nav__links { display: flex; }
-        .nav__toggle, .nav__menu { display: none !important; }
-      }
-
-      /* sections */
+      /* homepage only; shared tokens, nav, footer and buttons live in ui.css (prefixed with "main" where ui.css has the same selector) */
       section { padding: 72px 0; }
       @media (min-width: 768px) { section { padding: 112px 0; } }
-      .rule { border-top: 1px solid var(--line); }
-      .label { font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
-      .h2 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.08; letter-spacing: -0.035em; font-weight: 600; }
-      .lead { color: var(--muted); font-size: 17px; max-width: 34em; }
 
       /* hero */
       .hero { padding-top: 88px; text-align: center; }
@@ -95,23 +35,14 @@
       .id-pill b { color: var(--fg); font-weight: 500; }
 
       /* products */
-      .sec-head { margin-bottom: 48px; }
-      .sec-head .h2 { margin-top: 12px; }
-      .grid3 { display: grid; gap: 16px; }
-      @media (min-width: 900px) { .grid3 { grid-template-columns: repeat(3, 1fr); } }
-      .card { display: flex; flex-direction: column; padding: 28px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); transition: border-color 0.2s var(--ease); }
-      .card:hover { border-color: var(--muted); }
-      .card__top { display: flex; align-items: center; justify-content: space-between; }
-      .card__icon { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); object-fit: cover; }
-      .card__icon--svg { display: grid; place-items: center; }
-      .tag { font-size: 12px; font-weight: 500; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
-      .tag--live { color: var(--fg); }
-      .tag--live::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #16a34a; vertical-align: 1px; }
-      .card h3 { margin-top: 24px; font-size: 22px; letter-spacing: -0.02em; font-weight: 600; }
-      .card__line { margin-top: 6px; color: var(--muted); }
-      .card ul { margin: 24px 0 28px; border-top: 1px solid var(--line); }
-      .card li { padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
-      .card .btn { margin-top: auto; align-self: flex-start; }
+      main .sec-head { margin-bottom: 48px; }
+      main .card { padding: 28px; }
+      main .card__icon--svg { display: grid; place-items: center; }
+      main .card h3 { margin-top: 24px; font-size: 22px; letter-spacing: -0.02em; }
+      main .card .card__line { margin-top: 6px; color: var(--muted); font-size: 16px; }
+      main .card ul { margin: 24px 0 28px; border-top: 1px solid var(--line); }
+      main .card li { padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
+      main .card .btn { margin-top: auto; align-self: flex-start; }
       .ua-shape { transform-origin: 12px 12px; transition: transform 0.5s var(--ease); }
       .card:hover .ua-shape, .card:focus-within .ua-shape { transform: rotate(45deg) scale(0.9); }
       .ua-dot { transition: transform 0.5s var(--ease); transform-origin: 12px 12px; }
@@ -138,7 +69,7 @@
       .why p { margin-top: 8px; color: var(--muted); font-size: 15px; }
 
       /* research */
-      .research { padding: 28px 0; }
+      main .research { padding: 28px 0; }
       .research__in { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; font-size: 15px; }
       .research__in p { color: var(--muted); margin-right: auto; }
       .research__in p b { color: var(--fg); font-weight: 600; }
@@ -148,22 +79,6 @@
       .final { text-align: center; }
       .final .h2 { font-size: clamp(32px, 5vw, 56px); }
       .final .btn { margin-top: 32px; }
-
-      /* footer */
-      .foot { border-top: 1px solid var(--line); padding: 56px 0 32px; font-size: 14px; color: var(--muted); }
-      .foot__grid { display: grid; gap: 36px; grid-template-columns: repeat(2, 1fr); }
-      .foot__brand { grid-column: 1 / -1; }
-      @media (min-width: 768px) { .foot__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } .foot__brand { grid-column: auto; } }
-      .foot .brand { color: var(--fg); }
-      .foot h2 { font-size: 13px; font-weight: 500; color: var(--fg); margin-bottom: 8px; }
-      .foot li a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; transition: color 0.15s var(--ease); }
-      .foot li a:hover { color: var(--fg); }
-      .foot__bottom { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 13px; }
-
-      @media (prefers-reduced-motion: reduce) {
-        html { scroll-behavior: auto; }
-        *, *::before, *::after { transition: none !important; animation: none !important; }
-      }
     </style>
   </head>
   <body>
@@ -172,7 +87,7 @@
     <header class="nav">
       <div class="wrap">
         <div class="nav__in">
-          <a class="brand" href="https://signaturesi.com/" aria-label="Signaturesi home">
+          <a class="brand" href="/" aria-label="Signaturesi home">
             <img src="assets/signaturesi.png" alt="" width="26" height="26" />
             <span>Signaturesi</span>
           </a>
@@ -181,11 +96,11 @@
             <a href="https://neyo.signaturesi.com/">NEYO</a>
             <a href="https://bean.signaturesi.com/">Bean</a>
             <a href="https://uasset.signaturesi.com/">UAsset</a>
-            <a href="https://signaturesi.com/research.html">Research</a>
+            <a href="/research">Research</a>
           </nav>
           <div class="nav__right">
-            <a class="nav__signin" href="https://signaturesi.com/signup.html?mode=login">Sign in</a>
-            <a class="btn btn--primary btn--sm" href="https://signaturesi.com/signup.html">Get started</a>
+            <a class="nav__signin" href="/signup?mode=login">Sign in</a>
+            <a class="btn btn--primary btn--sm" href="/signup">Get started</a>
             <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 7h14M3 13h14" /></svg>
             </button>
@@ -197,11 +112,12 @@
             <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
             <li><a href="https://bean.signaturesi.com/">Bean</a></li>
             <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
-            <li><a href="https://signaturesi.com/research.html">Research</a></li>
+            <li><a href="/research">Research</a></li>
           </ul>
         </nav>
       </div>
     </header>
+
 
     <main id="main">
       <section class="hero">
@@ -210,7 +126,7 @@
           <h1>Three tools. One identity.</h1>
           <p class="lead">Think with NEYO. Talk on Bean. Build with UAsset. All connected through one Bean ID.</p>
           <div class="hero__cta">
-            <a class="btn btn--primary" href="https://signaturesi.com/signup.html">Create Bean ID</a>
+            <a class="btn btn--primary" href="/signup">Create Bean ID</a>
             <a class="btn" href="#products">Explore products</a>
           </div>
           <p class="id-pill"><b>yourname@bean</b> · one account for everything</p>
@@ -281,7 +197,7 @@
             <p class="label">Bean ID</p>
             <h2 class="h2" id="id-h" style="margin-top: 12px">One Bean ID. Every product.</h2>
             <p class="lead">Create it once and use it across NEYO, Bean and UAsset. Your plans and settings follow your account.</p>
-            <a class="btn btn--primary" href="https://signaturesi.com/signup.html">Create your Bean ID →</a>
+            <a class="btn btn--primary" href="/signup">Create your Bean ID →</a>
           </div>
           <div class="diagram" role="img" aria-label="yourname@bean connects to NEYO, Bean and UAsset">
             <span class="diagram__pill">yourname@bean</span>
@@ -323,15 +239,15 @@
       <section class="rule research" aria-label="Research">
         <div class="wrap research__in">
           <p><b>Signaturesi Research</b> — building intelligence that requires less.</p>
-          <a class="tlink" href="https://signaturesi.com/research-article.html">Read the NEO L1 report →</a>
-          <a class="tlink" href="https://signaturesi.com/research.html">Research library →</a>
+          <a class="tlink" href="/research-article">Read the NEO L1 report →</a>
+          <a class="tlink" href="/research">Research library →</a>
         </div>
       </section>
 
       <section class="rule final" aria-labelledby="final-h">
         <div class="wrap">
           <h2 class="h2" id="final-h">Start with one identity.</h2>
-          <a class="btn btn--primary" href="https://signaturesi.com/signup.html">Create Bean ID</a>
+          <a class="btn btn--primary" href="/signup">Create Bean ID</a>
         </div>
       </section>
     </main>
@@ -340,7 +256,7 @@
       <div class="wrap">
         <div class="foot__grid">
           <div class="foot__brand">
-            <a class="brand" href="https://signaturesi.com/" aria-label="Signaturesi home">
+            <a class="brand" href="/" aria-label="Signaturesi home">
               <img src="assets/signaturesi.png" alt="" width="26" height="26" loading="lazy" />
               <span>Signaturesi</span>
             </a>
@@ -351,26 +267,25 @@
               <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
               <li><a href="https://bean.signaturesi.com/">Bean</a></li>
               <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
-              <li><a href="https://signaturesi.com/signup.html">Bean ID</a></li>
+              <li><a href="/signup">Bean ID</a></li>
             </ul>
           </nav>
           <nav aria-labelledby="f-company">
             <h2 id="f-company">Company</h2>
             <ul>
-              <li><a href="https://signaturesi.com/about.html">About</a></li>
-              <li><a href="https://signaturesi.com/contact.html">Contact</a></li>
-              <li><a href="https://signaturesi.com/status.html">Status</a></li>
-              <li><a href="https://signaturesi.com/latest.html">Latest</a></li>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/research">Research</a></li>
             </ul>
           </nav>
           <nav aria-labelledby="f-legal">
             <h2 id="f-legal">Legal</h2>
             <ul>
-              <li><a href="https://signaturesi.com/privacy.html">Privacy</a></li>
-              <li><a href="https://signaturesi.com/terms.html">Terms</a></li>
-              <li><a href="https://signaturesi.com/acceptable-use.html">Acceptable Use</a></li>
-              <li><a href="https://signaturesi.com/cookies.html">Cookies</a></li>
-              <li><a href="https://signaturesi.com/security.html">Security</a></li>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/acceptable-use">Acceptable Use</a></li>
+              <li><a href="/cookies">Cookies</a></li>
+              <li><a href="/security">Security</a></li>
             </ul>
           </nav>
         </div>
@@ -378,19 +293,6 @@
       </div>
     </footer>
 
-    <script>
-      (function () {
-        var btn = document.querySelector(".nav__toggle");
-        var menu = document.getElementById("menu");
-        function set(open) {
-          btn.setAttribute("aria-expanded", String(open));
-          btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-          menu.hidden = !open;
-        }
-        btn.addEventListener("click", function () { set(menu.hidden); });
-        menu.addEventListener("click", function (e) { if (e.target.closest("a")) set(false); });
-        document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menu.hidden) { set(false); btn.focus(); } });
-      })();
-    </script>
+    <script type="module" src="ui.js"></script>
   </body>
 </html>

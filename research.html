@@ -1,301 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Explore Signaturesi research on mobile-first intelligence, Green AI, private memory systems and communication technology.">
-  <meta name="theme-color" content="#ffffff">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Research — Signaturesi</title>
+    <meta name="description" content="Signaturesi research on efficient, mobile-first AI, private memory and messaging. Early work, clearly labeled." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://signaturesi.com/research" />
+    <link rel="icon" type="image/png" href="assets/signaturesi.png" />
+    <link rel="apple-touch-icon" href="assets/signaturesi.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Signaturesi" />
+    <meta property="og:url" content="https://signaturesi.com/research" />
+    <meta property="og:title" content="Research — Signaturesi" />
+    <meta property="og:description" content="Signaturesi research on efficient, mobile-first AI, private memory and messaging. Early work, clearly labeled." />
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
 
-  <title>Research — Signaturesi</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png">
-  <link rel="apple-touch-icon" href="assets/favicon.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="site.css">
-  <style>
-    /* page-only additions; prefixed with "main" so they win over site.css */
-    main .hero + .section { padding-top: 8px; }
-    main .split-top { align-items: start; }
-    main .research-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-    main .filter-button { min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--muted); font-size: 14px; }
-    main .filter-button:hover { color: var(--text); border-color: var(--text); }
-    main .filter-button.active-filter { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-    main .research-card[hidden] { display: none; }
-    main .research-card .card-foot { justify-content: space-between; }
-  </style>
-</head>
-
-<body>
-  <header class="site-header" id="navbar">
-    <div class="container header-inner">
-      <a href="index.html" class="brand" aria-label="Signaturesi home">
-        <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
-        <span>Signaturesi</span>
-      </a>
-
-      <button type="button" class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">
-        <span aria-hidden="true"></span><span aria-hidden="true"></span>
-      </button>
-
-      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
-        <div class="nav-links">
-          <a href="index.html#products">Products</a>
-          <a href="research.html" aria-current="page">Research</a>
-          <a href="latest.html">Latest</a>
-        </div>
-        <div class="nav-actions">
-          <a href="signup.html?mode=login" class="nav-signin">Sign in</a>
-          <a href="signup.html" class="btn btn-sm">Get started</a>
-        </div>
-      </nav>
-    </div>
-  </header>
-
-  <main>
-    <!-- HERO -->
-    <section class="hero">
-      <div class="container">
-        <span class="eyebrow">Signaturesi Research</span>
-        <h1>Building intelligence <span>that requires less.</span></h1>
-        <p class="lede">Research and technical exploration across mobile-first AI, compact architectures, private memory systems and communication technology.</p>
-      </div>
-    </section>
-
-    <!-- RESEARCH PRINCIPLES -->
-    <section class="section">
-      <div class="container">
-        <div class="steps steps-row" data-reveal>
-          <article>
-            <span class="num">01</span>
-            <div><strong>Mobile-first intelligence</strong><p>Exploring systems designed around personal devices, limited compute and low-latency interaction.</p></div>
-          </article>
-          <article>
-            <span class="num">02</span>
-            <div><strong>Energy-efficient AI</strong><p>Investigating how useful intelligence can require less memory, energy and infrastructure.</p></div>
-          </article>
-          <article>
-            <span class="num">03</span>
-            <div><strong>Private personal systems</strong><p>Designing memory and identity systems around controlled access, user ownership and data isolation.</p></div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEATURED REPORT -->
-    <section class="section">
-      <div class="container split" data-reveal>
-        <div>
-          <span class="eyebrow">Featured technical report</span>
-          <h2>NEO L1: A Mobile-First Intelligence Architecture</h2>
-          <p class="muted mt-16">An early technical direction exploring compact language understanding, personal memory and efficient inference designed around a single mobile device.</p>
-          <div class="tags mt-16">
-            <span class="badge">Technical Report</span>
-            <span class="badge"><time datetime="2026-07">July 2026</time></span>
-            <span class="badge">Research preview</span>
-          </div>
-          <div class="actions">
-            <a href="research-article.html" class="btn">Read technical report <span aria-hidden="true">→</span></a>
-          </div>
-        </div>
-
-        <a href="research-article.html" class="card" aria-label="Read NEO L1 technical report">
-          <div class="card-media">
-            <img src="assets/neo.png" alt="" width="160" height="160" draggable="false">
-          </div>
-          <div class="card-meta">
-            <span class="card-title"><img src="assets/neo.png" alt="" width="22" height="22" draggable="false"><span>NEO Research</span></span>
-            <span class="badge">L1</span>
-          </div>
-          <span class="card-foot"><span>Mobile-first intelligence</span><span aria-hidden="true">→</span></span>
-        </a>
-      </div>
-    </section>
-
-    <!-- LIBRARY -->
-    <section class="section">
-      <div class="container">
-        <header class="section-head" data-reveal>
-          <span class="eyebrow">Research library</span>
-          <h2>Technical work and research directions.</h2>
-          <p class="lede">Early concepts are clearly labeled and should not be interpreted as peer-reviewed results.</p>
-        </header>
-
-        <div class="research-filters" role="group" aria-label="Research categories">
-          <button type="button" class="filter-button active-filter" data-filter="all">All</button>
-          <button type="button" class="filter-button" data-filter="ai">AI systems</button>
-          <button type="button" class="filter-button" data-filter="green-ai">Green AI</button>
-          <button type="button" class="filter-button" data-filter="privacy">Privacy</button>
-          <button type="button" class="filter-button" data-filter="communication">Communication</button>
-        </div>
-
-        <div class="grid grid-3">
-          <article class="card research-card" data-category="ai">
-            <div class="card-meta"><span class="badge">Technical Report</span><span class="num">01</span></div>
-            <h3>NEO L1: A Mobile-First Intelligence Architecture</h3>
-            <p>A technical exploration of compact reasoning, personal memory and efficient AI interaction on mobile hardware.</p>
-            <div class="card-meta"><time datetime="2026-07">July 2026</time><span>AI systems</span></div>
-            <a href="research-article.html" class="card-foot text-link" aria-label="Read NEO L1 report"><span>Read report</span><span aria-hidden="true">→</span></a>
-          </article>
-
-          <article class="card research-card" data-category="green-ai">
-            <div class="card-meta"><span class="badge">Research Note</span><span class="num">02</span></div>
-            <h3>Green AI Beyond Parameter Scaling</h3>
-            <p>A research direction examining whether capability can grow through architecture rather than continuous model expansion.</p>
-            <div class="card-meta"><time datetime="2026-07">July 2026</time><span>Green AI</span></div>
-            <a href="research-article.html" class="card-foot text-link" aria-label="Read Green AI research note"><span>Read note</span><span aria-hidden="true">→</span></a>
-          </article>
-
-          <article class="card research-card" data-category="privacy">
-            <div class="card-meta"><span class="badge">Architecture Note</span><span class="num">03</span></div>
-            <h3>Private Memory Systems for Personal AI</h3>
-            <p>A system design note covering user-specific memory, controlled retrieval and account-level isolation.</p>
-            <div class="card-meta"><span>Upcoming</span><span>Privacy</span></div>
-            <span class="card-foot muted">In preparation</span>
-          </article>
-
-          <article class="card research-card" data-category="communication">
-            <div class="card-meta"><span class="badge">Technical Note</span><span class="num">04</span></div>
-            <h3>Identity and Presence Across Bean</h3>
-            <p>An early examination of unified identity, availability signals and communication state across Bean.</p>
-            <div class="card-meta"><span>Upcoming</span><span>Communication</span></div>
-            <span class="card-foot muted">In preparation</span>
-          </article>
-
-          <article class="card research-card" data-category="ai">
-            <div class="card-meta"><span class="badge">Research Note</span><span class="num">05</span></div>
-            <h3>Roman Urdu Understanding for Personal AI</h3>
-            <p>Exploring flexible language understanding for informal, multilingual and mixed-script user communication.</p>
-            <div class="card-meta"><span>Planned</span><span>AI systems</span></div>
-            <span class="card-foot muted">Planned research</span>
-          </article>
-
-          <article class="card research-card" data-category="green-ai">
-            <div class="card-meta"><span class="badge">Benchmark Plan</span><span class="num">06</span></div>
-            <h3>Measuring Useful Intelligence per Watt</h3>
-            <p>A proposed benchmark framework for measuring capability, latency, memory usage and energy efficiency together.</p>
-            <div class="card-meta"><span>Planned</span><span>Green AI</span></div>
-            <span class="card-foot muted">Planned benchmark</span>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- TRANSPARENCY -->
-    <section class="section">
-      <div class="container split split-top" data-reveal>
-        <div>
-          <span class="eyebrow">Research transparency</span>
-          <h2>Clear labels. Honest limitations.</h2>
-        </div>
-        <div class="stack muted">
-          <p>Signaturesi distinguishes technical reports, research notes, architecture notes, benchmark reports and peer-reviewed papers.</p>
-          <p>Early research directions may describe proposed systems that have not yet been fully implemented, independently validated or peer reviewed.</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-about">
-          <a href="index.html" class="brand">
-            <img src="assets/signaturesi.png" alt="" width="28" height="28" draggable="false">
+    <header class="nav">
+      <div class="wrap">
+        <div class="nav__in">
+          <a class="brand" href="/" aria-label="Signaturesi home">
+            <img src="assets/signaturesi.png" alt="" width="26" height="26" />
             <span>Signaturesi</span>
           </a>
-          <p>A focused ecosystem for intelligence and communication.</p>
-          <div class="footer-socials">
-            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
-            </a>
-            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 20 20"></path><path d="M20 4 4 20"></path></svg>
-            </a>
-            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12s0-3-1-5c-.5-1-1.5-1.5-2.5-1.7C16.5 5 12 5 12 5s-4.5 0-6.5.3C4.5 5.5 3.5 6 3 7c-1 2-1 5-1 5s0 3 1 5c.5 1 1.5 1.5 2.5 1.7C7.5 19 12 19 12 19s4.5 0 6.5-.3c1-.2 2-.7 2.5-1.7 1-2 1-5 1-5Z"></path><path d="m10 9 5 3-5 3Z"></path></svg>
-            </a>
-            <a href="bean.html" aria-label="Bean">
-              <img src="assets/bean.png" alt="" width="18" height="18" loading="lazy" decoding="async" draggable="false">
-            </a>
+          <nav class="nav__links" aria-label="Primary">
+            <a href="/#products">Products</a>
+            <a href="https://neyo.signaturesi.com/">NEYO</a>
+            <a href="https://bean.signaturesi.com/">Bean</a>
+            <a href="https://uasset.signaturesi.com/">UAsset</a>
+            <a href="/research" aria-current="page">Research</a>
+          </nav>
+          <div class="nav__right">
+            <a class="nav__signin" href="/signup?mode=login">Sign in</a>
+            <a class="btn btn--primary btn--sm" href="/signup">Get started</a>
+            <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 7h14M3 13h14" /></svg>
+            </button>
           </div>
         </div>
-
-        <div class="footer-cols">
-          <div>
-            <h3>Products</h3>
-            <a href="https://neyo.signaturesi.com/">NEO</a>
-            <a href="bean.html">Bean</a>
-            <a href="signup.html">Bean ID</a>
-            <a href="latest.html">Personalities</a>
-          </div>
-          <div>
-            <h3>Research</h3>
-            <a href="research.html">Research library</a>
-            <a href="research-article.html">NEO L1 report</a>
-            <a href="research.html">Green AI</a>
-            <a href="security.html">Safety</a>
-          </div>
-          <div>
-            <h3>Company</h3>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
-            <a href="status.html">System status</a>
-            <a href="latest.html">News</a>
-          </div>
-          <div>
-            <h3>Legal</h3>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms of Use</a>
-            <a href="acceptable-use.html">Acceptable Use</a>
-            <a href="cookies.html">Cookie Policy</a>
-            <a href="security.html">Security</a>
-          </div>
-          <div>
-            <h3>Connect</h3>
-            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="https://x.com/" target="_blank" rel="noopener noreferrer">X</a>
-            <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>
-            <a href="bean.html">Bean</a>
-          </div>
-        </div>
+        <nav class="nav__menu" id="menu" aria-label="Mobile" hidden>
+          <ul>
+            <li><a href="/#products">Products</a></li>
+            <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+            <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+            <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+            <li><a href="/research" aria-current="page">Research</a></li>
+          </ul>
+        </nav>
       </div>
+    </header>
 
-      <div class="footer-bottom">
-        <p>© 2026 Signaturesi</p>
-        <div class="footer-meta">
-          <span>Designed by Leo</span>
-          <a href="status.html">System status</a>
-          <button type="button" aria-label="Current language: English">English</button>
+    <main id="main">
+      <header class="page">
+        <div class="wrap">
+          <p class="label">Signaturesi Research</p>
+          <h1>Research</h1>
+          <p class="lead">Notes and reports on smaller, more efficient AI, private memory and messaging. All of it is early work and none of it is peer reviewed.</p>
         </div>
+      </header>
+
+      <section class="sec" aria-labelledby="focus-h" style="padding-top:48px">
+        <div class="wrap">
+          <div class="sec-head">
+            <p class="label">Focus</p>
+            <h2 class="h2" id="focus-h">What we study</h2>
+          </div>
+          <ul class="list">
+            <li><strong>Mobile-first AI</strong><p>Models that run on personal devices with limited compute.</p></li>
+            <li><strong>Efficient AI</strong><p>Useful results with less memory, energy and infrastructure.</p></li>
+            <li><strong>Private systems</strong><p>Memory and identity with controlled access and per-account isolation.</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="lib-h">
+        <div class="wrap">
+          <div class="sec-head">
+            <p class="label">Library</p>
+            <h2 class="h2" id="lib-h">Reports and notes</h2>
+          </div>
+          <div class="grid3">
+            <article class="card">
+              <div class="card__top"><span class="label">01 · Technical report</span><span class="tag tag--live">Preview</span></div>
+              <h3>NEO L1: A Mobile-First Intelligence Architecture</h3>
+              <p>Compact reasoning, personal memory and efficient AI on mobile hardware.</p>
+              <p style="font-size:13px">July 2026</p>
+              <a class="card__foot tlink" href="/research-article" style="align-self:flex-start">Read report →</a>
+            </article>
+            <article class="card">
+              <div class="card__top"><span class="label">02 · Research note</span><span class="tag tag--live">In NEO L1 report</span></div>
+              <h3>Green AI Beyond Parameter Scaling</h3>
+              <p>Can capability grow through better architecture instead of bigger models?</p>
+              <p style="font-size:13px">July 2026</p>
+              <a class="card__foot tlink" href="/research-article" style="align-self:flex-start">Read in report →</a>
+            </article>
+            <article class="card">
+              <div class="card__top"><span class="label">03 · Architecture note</span><span class="tag">In preparation</span></div>
+              <h3>Private Memory Systems for Personal AI</h3>
+              <p>User-specific memory, controlled retrieval and per-account isolation.</p>
+              <p style="font-size:13px"></p>
+              <span class="card__foot muted">Not published yet</span>
+            </article>
+            <article class="card">
+              <div class="card__top"><span class="label">04 · Technical note</span><span class="tag">In preparation</span></div>
+              <h3>Identity and Presence Across Bean</h3>
+              <p>One identity, availability signals and conversation state in Bean.</p>
+              <p style="font-size:13px"></p>
+              <span class="card__foot muted">Not published yet</span>
+            </article>
+            <article class="card">
+              <div class="card__top"><span class="label">05 · Research note</span><span class="tag">Planned</span></div>
+              <h3>Roman Urdu Understanding for Personal AI</h3>
+              <p>Understanding informal, mixed-language and mixed-script messages.</p>
+              <p style="font-size:13px"></p>
+              <span class="card__foot muted">Not published yet</span>
+            </article>
+            <article class="card">
+              <div class="card__top"><span class="label">06 · Benchmark plan</span><span class="tag">Planned</span></div>
+              <h3>Measuring Useful Intelligence per Watt</h3>
+              <p>Measuring capability, latency, memory and energy use together.</p>
+              <p style="font-size:13px"></p>
+              <span class="card__foot muted">Not published yet</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="labels-h">
+        <div class="wrap">
+          <div class="sec-head" style="margin-bottom:0">
+            <p class="label">Labels</p>
+            <h2 class="h2" id="labels-h">How we label work</h2>
+            <p class="lead">We separate technical reports, research notes, architecture notes and benchmark plans. Early work may describe systems that are not yet built, tested or reviewed.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="brand" href="/" aria-label="Signaturesi home">
+              <img src="assets/signaturesi.png" alt="" width="26" height="26" loading="lazy" />
+              <span>Signaturesi</span>
+            </a>
+          </div>
+          <nav aria-labelledby="f-products">
+            <h2 id="f-products">Products</h2>
+            <ul>
+              <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+              <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+              <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+              <li><a href="/signup">Bean ID</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-company">
+            <h2 id="f-company">Company</h2>
+            <ul>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/research" aria-current="page">Research</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-legal">
+            <h2 id="f-legal">Legal</h2>
+            <ul>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/acceptable-use">Acceptable Use</a></li>
+              <li><a href="/cookies">Cookies</a></li>
+              <li><a href="/security">Security</a></li>
+            </ul>
+          </nav>
+        </div>
+        <p class="foot__bottom">© 2026 Signaturesi</p>
       </div>
-    </div>
-  </footer>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const filterButtons = document.querySelectorAll(".filter-button");
-      const researchCards = document.querySelectorAll(".research-card");
-
-      filterButtons.forEach(button => {
-        button.addEventListener("click", () => {
-          const selectedFilter = button.dataset.filter;
-          filterButtons.forEach(item => {
-            item.classList.remove("active-filter");
-            item.setAttribute("aria-pressed", "false");
-          });
-          button.classList.add("active-filter");
-          button.setAttribute("aria-pressed", "true");
-          researchCards.forEach(card => {
-            card.hidden = !(selectedFilter === "all" || selectedFilter === card.dataset.category);
-          });
-        });
-      });
-    });
-  </script>
-  <script src="/site.js" defer></script>
-  <script src="/premium-ui.js" defer></script>
-</body>
+    </footer>
+    <script type="module" src="ui.js"></script>
+  </body>
 </html>

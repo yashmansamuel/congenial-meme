@@ -42,12 +42,6 @@
       ]
     }
   ],
-  "rewrites": [
-    {
-      "source": "/bean",
-      "destination": "/bean.html"
-    }
-  ],
   "redirects": [
     {
       "source": "/neo",
@@ -62,6 +56,36 @@
     {
       "source": "/neo/:path*",
       "destination": "https://neyo.signaturesi.com/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/bean",
+      "destination": "https://bean.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/bean.html",
+      "destination": "https://bean.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/latest",
+      "destination": "https://neyo.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/latest.html",
+      "destination": "https://neyo.signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/status",
+      "destination": "https://signaturesi.com/",
+      "permanent": false
+    },
+    {
+      "source": "/status.html",
+      "destination": "https://signaturesi.com/",
       "permanent": false
     }
   ]
