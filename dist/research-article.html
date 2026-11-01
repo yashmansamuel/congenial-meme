@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NEO L1: A Mobile-First Intelligence Architecture — Signaturesi Research</title>
+    <meta name="description" content="NEO L1: A Mobile-First Intelligence Architecture — a Signaturesi technical research preview." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://signaturesi.com/research-article" />
+    <link rel="icon" type="image/png" href="/assets/signaturesi-wabQuV5f.png" />
+    <link rel="apple-touch-icon" href="/assets/signaturesi-wabQuV5f.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Signaturesi" />
+    <meta property="og:url" content="https://signaturesi.com/research-article" />
+    <meta property="og:title" content="NEO L1: A Mobile-First Intelligence Architecture — Signaturesi Research" />
+    <meta property="og:description" content="NEO L1: A Mobile-First Intelligence Architecture — a Signaturesi technical research preview." />
+    <script type="module" crossorigin src="/assets/ui-DV7wTb7-.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/ui-BUPLz7dF.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap">
+        <div class="nav__in">
+          <a class="brand" href="/" aria-label="Signaturesi home">
+            <img src="/assets/signaturesi-wabQuV5f.png" alt="" width="26" height="26" />
+            <span>Signaturesi</span>
+          </a>
+          <nav class="nav__links" aria-label="Primary">
+            <a href="/#products">Products</a>
+            <a href="https://neyo.signaturesi.com/">NEYO</a>
+            <a href="https://bean.signaturesi.com/">Bean</a>
+            <a href="https://uasset.signaturesi.com/">UAsset</a>
+            <a href="/research" aria-current="page">Research</a>
+          </nav>
+          <div class="nav__right">
+            <a class="nav__signin" href="https://accounts.signaturesi.com/?mode=login">Sign in</a>
+            <a class="btn btn--primary btn--sm" href="https://accounts.signaturesi.com/?mode=login">Get started</a>
+            <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 7h14M3 13h14" /></svg>
+            </button>
+          </div>
+        </div>
+        <nav class="nav__menu" id="menu" aria-label="Mobile" hidden>
+          <ul>
+            <li><a href="/#products">Products</a></li>
+            <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+            <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+            <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+            <li><a href="/research" aria-current="page">Research</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <header class="doc-head">
+        <div class="wrap">
+          <div class="inner">
+            <a class="tlink" href="/research">← Research</a>
+            <p class="doc-meta" style="margin-top:24px"><span class="tag">Technical report</span><span class="tag">Preview, not peer reviewed</span></p>
+            <h1>NEO L1: A Mobile-First Intelligence Architecture</h1>
+            <p class="lead">An early technical direction exploring compact language understanding, private memory and efficient AI interaction designed around a single mobile device.</p>
+            <p class="doc-meta"><span><b>Signaturesi Research</b> · NEO Architecture Group</span><span>Published July 2026</span><span>12 min read</span><span>Version 0.1</span></p>
+            <div class="doc-actions">
+              <button class="btn" id="copyCitationButton" type="button">Copy citation</button>
+              <button class="btn" id="shareArticleButton" type="button">Share</button>
+              <a class="btn" href="#download">PDF status</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="doc">
+        <div class="wrap">
+        <aside class="toc" aria-label="On this page">
+          <div class="toc__in">
+            <details open>
+              <summary>On this page</summary>
+              <ol>
+                <li><a href="#abstract">Abstract</a></li>
+                <li><a href="#problem">Problem statement</a></li>
+                <li><a href="#principles">Design principles</a></li>
+                <li><a href="#architecture">Proposed architecture</a></li>
+                <li><a href="#memory">Private memory</a></li>
+                <li><a href="#language">Language understanding</a></li>
+                <li><a href="#methodology">Evaluation methodology</a></li>
+                <li><a href="#findings">Current hypotheses</a></li>
+                <li><a href="#limitations">Limitations</a></li>
+                <li><a href="#safety">Safety considerations</a></li>
+                <li><a href="#future">Future work</a></li>
+                <li><a href="#references">References</a></li>
+              </ol>
+            </details>
+          </div>
+        </aside>
+        <article class="prose doc-body">
+<!-- ABSTRACT -->
+<section id="abstract">
+<p class="eyebrow"><span class="num">00</span>Abstract</p>
+<p class="quote">NEO L1 is a proposed mobile-first intelligence architecture focused on useful interaction under constrained compute, memory and energy conditions. The research direction combines compact language processing, user-specific memory, selective retrieval and modular execution. This document describes the intended architecture, research questions and evaluation plan. It does not present a completed model or independently verified benchmark result.</p>
+</section>
+<!-- NOTICE -->
+<aside class="note">
+<strong>Research status</strong>
+<p>This is an early technical report describing a proposed research direction. It is not a peer-reviewed paper and does not claim production-ready performance.</p>
+</aside>
+<!-- PROBLEM -->
+<section id="problem">
+<p class="eyebrow"><span class="num">01</span>Problem statement</p>
+<h2>Useful intelligence should not depend entirely on continuous model expansion.</h2>
+<p>Modern AI systems often improve through larger models, increased compute and substantial infrastructure. That approach can produce strong capability, but it also creates significant memory, latency, energy and deployment costs.</p>
+<p>For personal AI, these costs can become a structural limitation. A system designed for one user may not need every capability active at the same time. It may instead benefit from a smaller active core supported by memory, retrieval and specialized modules.</p>
+<div class="note">
+<p class="eyebrow">Core research question</p>
+<strong>Can a mobile-first architecture preserve useful quality by activating only the knowledge and computation required for the current task?</strong>
+</div>
+</section>
+<!-- PRINCIPLES -->
+<section id="principles">
+<p class="eyebrow"><span class="num">02</span>Design principles</p>
+<h2>NEO L1 is organized around four research principles.</h2>
+<div class="grid grid-2">
+<article class="card"><span class="num">01</span><h3>Compact active core</h3><p>Keep the continuously active reasoning layer as small as possible while delegating specialized work to optional modules.</p></article>
+<article class="card"><span class="num">02</span><h3>Memory before repetition</h3><p>Reuse user-specific context and indexed knowledge instead of repeatedly reconstructing the same information.</p></article>
+<article class="card"><span class="num">03</span><h3>Selective computation</h3><p>Activate only the components relevant to the current request, device state and required response quality.</p></article>
+<article class="card"><span class="num">04</span><h3>Personal-device priority</h3><p>Design the architecture around realistic mobile memory, battery, thermal and latency constraints.</p></article>
+</div>
+</section>
+<!-- ARCHITECTURE -->
+<section id="architecture">
+<p class="eyebrow"><span class="num">03</span>Proposed architecture</p>
+<h2>A modular system centered on a compact coordination layer.</h2>
+<p>The proposed NEO L1 architecture separates continuous coordination from optional intelligence modules. The core interprets a request, determines the required capability and routes work to memory, language, retrieval or generation components.</p>
+<div aria-label="Proposed NEO L1 architecture diagram" class="diagram" role="img">
+<div class="diagram-head">
+<span class="card-title"><img alt="" height="28" src="/assets/neo-BMhWMASc.png" width="28"/><span>NEO L1 architecture</span></span>
+<span class="badge">Proposed</span>
+</div>
+<div class="diagram-flow">
+<div class="node"><span>User input</span></div>
+<div aria-hidden="true" class="arrow">↓</div>
+<div class="node"><strong>NEO Core</strong><span>Intent · routing · response control</span></div>
+<div aria-hidden="true" class="arrow">↓</div>
+<div class="row">
+<div class="node"><strong>Memory</strong><span>Personal context</span></div>
+<div class="node"><strong>Language</strong><span>Understanding</span></div>
+<div class="node"><strong>Retrieval</strong><span>Relevant knowledge</span></div>
+</div>
+<div aria-hidden="true" class="arrow">↓</div>
+<div class="node"><span>Response</span></div>
+</div>
+<div class="diagram-foot"><span>Conceptual architecture · not a production benchmark</span></div>
+</div>
+<h3>Core coordination layer</h3>
+<p>The coordination layer would remain active throughout the interaction. It would classify intent, determine memory requirements, estimate task difficulty and select the smallest sufficient execution path.</p>
+<h3>Optional capability modules</h3>
+<p>Higher-cost modules would remain inactive unless required. A simple message may use only the compact core and local memory, while research or complex planning may activate retrieval and deeper reasoning components.</p>
+</section>
+<!-- MEMORY -->
+<section id="memory">
+<p class="eyebrow"><span class="num">04</span>Private memory</p>
+<h2>Personal memory should improve usefulness without becoming uncontrolled storage.</h2>
+<p>NEO L1 proposes a memory system that separates immediate conversation state, durable user preferences and indexed project knowledge. Each memory type would have different retention, retrieval and deletion rules.</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Memory layer</th><th>Intended purpose</th><th>Expected retention</th></tr>
+</thead>
+<tbody>
+<tr><td>Session context</td><td>Maintain coherence during the active conversation</td><td>Temporary</td></tr>
+<tr><td>Personal preferences</td><td>Preserve explicitly approved user preferences</td><td>User-controlled</td></tr>
+<tr><td>Project memory</td><td>Index documents, decisions and active work</td><td>Until removed</td></tr>
+<tr><td>Sensitive memory</td><td>Restricted information requiring stronger controls</td><td>Minimal or disabled</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- LANGUAGE -->
+<section id="language">
+<p class="eyebrow"><span class="num">05</span>Language understanding</p>
+<h2>Informal multilingual communication is a first-class research requirement.</h2>
+<p>Personal AI often receives mixed-language, abbreviated and conversational input. For users in Pakistan and similar multilingual environments, this can include English, Urdu, Roman Urdu and code-switched phrases in a single message.</p>
+<p>NEO L1 research therefore treats informal language understanding as a core architectural concern rather than a later localization feature.</p>
+<div class="example">
+<div class="note"><span>Example input</span><p>“yr isko simple karo magar important cheez miss na ho”</p></div>
+<div class="note"><span>Intended interpretation</span><p>Simplify the explanation while preserving the important information.</p></div>
+</div>
+</section>
+<!-- METHODOLOGY -->
+<section id="methodology">
+<p class="eyebrow"><span class="num">06</span>Evaluation methodology</p>
+<h2>Capability must be measured together with resource cost.</h2>
+<p>Traditional benchmark scores alone would not be sufficient for NEO L1. The architecture must be evaluated across usefulness, latency, memory, energy and reliability.</p>
+<div class="grid grid-2">
+<article class="card"><span class="num">Quality</span><h3>Task usefulness</h3><p>Human evaluation and task-specific benchmark performance.</p></article>
+<article class="card"><span class="num">Speed</span><h3>Response latency</h3><p>Time to first output and total completion time.</p></article>
+<article class="card"><span class="num">Memory</span><h3>Active footprint</h3><p>Runtime memory and storage required for active modules.</p></article>
+<article class="card"><span class="num">Energy</span><h3>Power efficiency</h3><p>Energy used per successful task under mobile conditions.</p></article>
+<article class="card"><span class="num">Reliability</span><h3>Error resistance</h3><p>Consistency, factuality and recovery from failed modules.</p></article>
+<article class="card"><span class="num">Privacy</span><h3>Data exposure</h3><p>Amount and sensitivity of information leaving the device.</p></article>
+</div>
+</section>
+<!-- FINDINGS -->
+<section id="findings">
+<p class="eyebrow"><span class="num">07</span>Current hypotheses</p>
+<h2>The project currently has hypotheses, not validated results.</h2>
+<p>The following points define what the research intends to test. They should not be interpreted as confirmed findings.</p>
+<div class="list-rows">
+<article><span>H1</span><p>A compact coordination layer may reduce average compute by avoiding unnecessary activation of expensive modules.</p></article>
+<article><span>H2</span><p>User-specific memory may improve practical usefulness without increasing the active model size.</p></article>
+<article><span>H3</span><p>Selective retrieval may preserve response quality for knowledge-heavy tasks while keeping local storage small.</p></article>
+<article><span>H4</span><p>Mixed-language understanding may improve through specialized normalization and intent representation.</p></article>
+</div>
+</section>
+<!-- LIMITATIONS -->
+<section id="limitations">
+<p class="eyebrow"><span class="num">08</span>Limitations</p>
+<h2>Significant technical uncertainty remains.</h2>
+<ul>
+<li>Compact models may lose reasoning depth, factual coverage or language quality.</li>
+<li>Mobile thermal limits may prevent sustained high-intensity inference.</li>
+<li>Memory retrieval can introduce irrelevant or outdated personal context.</li>
+<li>Strong multilingual performance may require more data and capacity than a minimal architecture can support.</li>
+<li>Cloud-assisted modules may still be necessary for complex research, media generation or large-context tasks.</li>
+<li>No current evidence supports a claim of full frontier-model quality in a megabyte-scale system.</li>
+</ul>
+</section>
+<!-- SAFETY -->
+<section id="safety">
+<p class="eyebrow"><span class="num">09</span>Safety considerations</p>
+<h2>Efficiency must not weaken user control or system safeguards.</h2>
+<p>A mobile-first system can create new risks because more personal information may remain continuously available on the device. NEO L1 therefore requires explicit controls around memory, authentication, data export, deletion and sensitive actions.</p>
+<div class="grid grid-2">
+<article class="card"><h3>User-visible memory</h3><p>Users should be able to inspect, correct and delete durable memory.</p></article>
+<article class="card"><h3>Sensitive-action confirmation</h3><p>Financial, legal, account and communication actions should require clear confirmation.</p></article>
+<article class="card"><h3>Module isolation</h3><p>Optional tools should receive only the minimum data needed for the current task.</p></article>
+<article class="card"><h3>Secure failure</h3><p>When identity or authorization is uncertain, the system should deny access rather than guess.</p></article>
+</div>
+</section>
+<!-- FUTURE -->
+<section id="future">
+<p class="eyebrow"><span class="num">10</span>Future work</p>
+<h2>The next phase is measurement, not additional claims.</h2>
+<div class="list-rows">
+<article><span>Phase 01</span><div><strong>Architecture prototype</strong><p>Build a minimal routing, memory and response-control prototype.</p></div></article>
+<article><span>Phase 02</span><div><strong>Mobile profiling</strong><p>Measure latency, memory, temperature and battery usage on representative devices.</p></div></article>
+<article><span>Phase 03</span><div><strong>Language evaluation</strong><p>Test English, Urdu, Roman Urdu and mixed-language understanding.</p></div></article>
+<article><span>Phase 04</span><div><strong>Comparative benchmark</strong><p>Compare useful task performance against conventional compact models.</p></div></article>
+</div>
+</section>
+<!-- DOWNLOAD -->
+<section class="cta" id="download">
+<div>
+<p class="eyebrow">Download</p>
+<h2>PDF release is not available yet.</h2>
+<p>A downloadable version should be published only after the report content, diagrams and references are finalized.</p>
+</div>
+<button class="btn" disabled="" type="button">PDF in preparation</button>
+</section>
+<!-- REFERENCES -->
+<section id="references">
+<p class="eyebrow"><span class="num">11</span>References</p>
+<h2>Reference framework</h2>
+<p>Formal citations should be added after the technical claims, benchmark methodology and architecture are finalized. The final version should prioritize primary sources, including research papers and official technical documentation.</p>
+<ol>
+<li>Research on efficient neural architectures and conditional computation.</li>
+<li>Primary literature on model compression, quantization and knowledge distillation.</li>
+<li>Mobile inference documentation and hardware profiling research.</li>
+<li>Research on retrieval-augmented generation and external memory systems.</li>
+<li>Privacy and security literature for personal AI systems.</li>
+</ol>
+</section>
+<!-- CITATION -->
+<section>
+<p class="eyebrow">Suggested citation</p>
+<div class="note citation">
+<code id="citationText">Signaturesi Research. “NEO L1: A Mobile-First Intelligence Architecture.” Technical Report Preview, Version 0.1, July 2026.</code>
+<button class="btn btn--sm" id="citationCopyButton" type="button">Copy</button>
+</div>
+</section>
+</article>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="brand" href="/" aria-label="Signaturesi home">
+              <img src="/assets/signaturesi-wabQuV5f.png" alt="" width="26" height="26" loading="lazy" />
+              <span>Signaturesi</span>
+            </a>
+          </div>
+          <nav aria-labelledby="f-products">
+            <h2 id="f-products">Products</h2>
+            <ul>
+              <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+              <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+              <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+              <li><a href="https://accounts.signaturesi.com/?mode=login">Bean ID</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-company">
+            <h2 id="f-company">Company</h2>
+            <ul>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/research" aria-current="page">Research</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-legal">
+            <h2 id="f-legal">Legal</h2>
+            <ul>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/acceptable-use">Acceptable Use</a></li>
+              <li><a href="/cookies">Cookies</a></li>
+              <li><a href="/security">Security</a></li>
+            </ul>
+          </nav>
+        </div>
+        <p class="foot__mark" aria-hidden="true">Signaturesi</p>
+        <p class="foot__bottom">© 2026 Signaturesi</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var toast = document.getElementById("toast");
+        var citation = document.getElementById("citationText");
+        var timer = null;
+        function show(msg) {
+          toast.textContent = msg;
+          toast.classList.add("show-toast");
+          clearTimeout(timer);
+          timer = setTimeout(function () { toast.classList.remove("show-toast"); }, 2200);
+        }
+        async function copyCitation() {
+          try { await navigator.clipboard.writeText(citation.textContent.trim()); show("Citation copied"); }
+          catch (e) { show("Unable to copy citation"); }
+        }
+        document.getElementById("copyCitationButton").addEventListener("click", copyCitation);
+        var inner = document.getElementById("citationCopyButton");
+        if (inner) inner.addEventListener("click", copyCitation);
+        document.getElementById("shareArticleButton").addEventListener("click", async function () {
+          var data = { title: document.title, text: "NEO L1: A Mobile-First Intelligence Architecture", url: location.href };
+          try {
+            if (navigator.share) { await navigator.share(data); return; }
+            await navigator.clipboard.writeText(location.href);
+            show("Article link copied");
+          } catch (e) { show("Unable to share article"); }
+        });
+      })();
+    </script>
+  </body>
+</html>

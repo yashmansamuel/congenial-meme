@@ -20,66 +20,163 @@
     <meta name="twitter:description" content="One Bean ID for NEYO AI, Bean private messaging and UAsset motion icons." />
     <meta name="twitter:image" content="assets/signaturesi.png" />
     <link rel="stylesheet" href="ui.css" />
+    <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin />
     <style>
-      /* homepage only; shared tokens, nav, footer and buttons live in ui.css (prefixed with "main" where ui.css has the same selector) */
-      section { padding: 72px 0; }
-      @media (min-width: 768px) { section { padding: 112px 0; } }
+      /* homepage only */
+      .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+      .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 4px color-mix(in srgb, #16a34a 18%, transparent); }
 
       /* hero */
-      .hero { padding-top: 88px; text-align: center; }
-      @media (min-width: 768px) { .hero { padding-top: 144px; padding-bottom: 128px; } }
-      .hero h1 { margin: 16px auto 0; max-width: 11ch; font-size: clamp(44px, 9vw, 88px); line-height: 0.98; letter-spacing: -0.055em; font-weight: 600; }
-      .hero .lead { margin: 24px auto 0; font-size: clamp(17px, 2vw, 20px); max-width: 30em; }
-      .hero__cta { margin-top: 36px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-      .id-pill { display: inline-flex; align-items: center; gap: 8px; margin-top: 32px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--muted); }
-      .id-pill b { color: var(--fg); font-weight: 500; }
+      .hero { padding: 72px 0 0; }
+      @media (min-width: 900px) { .hero { padding-top: 112px; } }
+      .hero__grid { display: grid; gap: 28px; align-items: end; }
+      @media (min-width: 900px) { .hero__grid { grid-template-columns: 1.35fr 1fr; gap: 64px; } }
+      .hero h1 { margin-top: 20px; font-size: clamp(46px, 8.2vw, 104px); line-height: 0.95; letter-spacing: -0.06em; font-weight: 500; }
+      .hero h1 .serif { letter-spacing: -0.03em; }
+      .hero__side p { font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 26em; }
+      .hero__side p b { color: var(--fg); font-weight: 500; }
+      .hero__cta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; }
+
+      /* stage */
+      .stage { position: relative; margin-top: 64px; padding: 28px 16px 0; border-radius: 22px; background: var(--soft); border: 1px solid var(--line); overflow: hidden; }
+      @media (min-width: 900px) { .stage { margin-top: 88px; padding: 56px 72px 0; } }
+      .stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(color-mix(in srgb, var(--fg) 9%, transparent) 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(to bottom, #000, transparent 75%); pointer-events: none; }
+      .win { position: relative; background: var(--card); border: 1px solid var(--line); border-bottom: 0; border-radius: 14px 14px 0 0; box-shadow: 0 30px 80px -30px rgba(20,20,19,0.28); overflow: hidden; }
+      .win__bar { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--line); }
+      .win__bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+      .win__url { margin: 0 auto; padding: 3px 14px; border-radius: 6px; background: var(--soft); font-size: 12px; color: var(--muted); }
+      .win__body { display: grid; min-height: 380px; }
+      @media (min-width: 760px) { .win__body { grid-template-columns: 210px 1fr; min-height: 440px; } }
+      .side { display: none; padding: 16px 12px; border-right: 1px solid var(--line); font-size: 13px; }
+      @media (min-width: 760px) { .side { display: block; } }
+      .side__h { padding: 0 8px 8px; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+      .side li { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; }
+      .side li.on { background: var(--soft); font-weight: 500; }
+      .side li span { color: var(--muted); font-size: 12px; margin-left: auto; }
+      .av { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; font-size: 11px; font-weight: 600; color: #fff; }
+      .av--n { background: #d6245c; } .av--z { background: #3d5afe; } .av--w { background: #0f9d74; } .av--c { background: #e08a00; }
+      .chat { display: flex; flex-direction: column; gap: 14px; padding: 22px 18px 18px; font-size: 14px; line-height: 1.55; }
+      @media (min-width: 760px) { .chat { padding: 28px 36px 22px; } }
+      .msg { max-width: 34em; }
+      .msg--me { align-self: flex-end; padding: 10px 14px; border-radius: 14px 14px 4px 14px; background: var(--fg); color: var(--bg); }
+      .msg--ai { display: flex; gap: 12px; }
+      .msg--ai p + p { margin-top: 8px; }
+      .msg--ai .muted { font-size: 13px; }
+      .src { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .src span { padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--muted); }
+      .composer { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border: 1px solid var(--line); border-radius: 14px; color: var(--muted); font-size: 14px; }
+      .composer b { margin-left: auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--fg); color: var(--bg); font-weight: 400; }
+      .float { position: absolute; display: none; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 60px -24px rgba(20,20,19,0.35); font-size: 13px; }
+      @media (min-width: 1000px) { .float { display: block; } }
+      .float--bean { right: 28px; bottom: 36px; width: 250px; padding: 14px; }
+      .float--bean .who { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+      .float--bean .who em { margin-left: auto; font-style: normal; font-size: 11px; color: #16a34a; }
+      .float--bean p { margin-top: 10px; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: var(--soft); }
+      .float--ua { right: 40px; top: 30px; display: none; gap: 6px; padding: 10px; }
+      @media (min-width: 1000px) { .float--ua { display: flex; } }
+      .float--ua span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--soft); }
 
       /* products */
-      main .sec-head { margin-bottom: 48px; }
-      main .card { padding: 28px; }
-      main .card__icon--svg { display: grid; place-items: center; }
-      main .card h3 { margin-top: 24px; font-size: 22px; letter-spacing: -0.02em; }
-      main .card .card__line { margin-top: 6px; color: var(--muted); font-size: 16px; }
-      main .card ul { margin: 24px 0 28px; border-top: 1px solid var(--line); }
-      main .card li { padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
-      main .card .btn { margin-top: auto; align-self: flex-start; }
-      .ua-shape { transform-origin: 12px 12px; transition: transform 0.5s var(--ease); }
-      .card:hover .ua-shape, .card:focus-within .ua-shape { transform: rotate(45deg) scale(0.9); }
-      .ua-dot { transition: transform 0.5s var(--ease); transform-origin: 12px 12px; }
-      .card:hover .ua-dot, .card:focus-within .ua-dot { transform: scale(1.6); }
+      .products { padding: 104px 0 24px; }
+      @media (min-width: 900px) { .products { padding-top: 160px; } }
+      .products__head { display: grid; gap: 16px; margin-bottom: 56px; }
+      @media (min-width: 900px) { .products__head { grid-template-columns: 1.35fr 1fr; gap: 64px; align-items: end; margin-bottom: 72px; } }
+      .products__head p { color: var(--muted); font-size: 17px; max-width: 26em; }
+      .prod { display: grid; gap: 32px; padding: 40px 0 72px; border-top: 1px solid var(--line); }
+      @media (min-width: 900px) { .prod { grid-template-columns: 1fr 1.25fr; gap: 72px; align-items: center; padding: 56px 0 96px; } }
+      .prod__meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+      .prod__meta img { width: 28px; height: 28px; border-radius: 8px; }
+      .prod h3 { margin-top: 24px; font-size: clamp(30px, 3.6vw, 42px); line-height: 1.05; letter-spacing: -0.045em; font-weight: 500; }
+      .prod__lead { margin-top: 14px; color: var(--muted); font-size: 17px; max-width: 26em; }
+      .facts { margin: 28px 0 32px; font-size: 15px; }
+      .facts li { display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid var(--line); }
+      .facts li:last-child { border-bottom: 1px solid var(--line); }
+      .facts li span { flex: none; width: 78px; color: var(--muted); }
+      .panel { position: relative; padding: 28px; border-radius: 20px; background: var(--soft); border: 1px solid var(--line); min-height: 340px; display: grid; place-items: center; overflow: hidden; }
+      @media (min-width: 900px) { .panel { padding: 48px; min-height: 420px; } }
+      .sheet { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 60px -30px rgba(20,20,19,0.3); font-size: 14px; }
 
-      /* identity */
-      .two { display: grid; gap: 48px; align-items: center; }
-      @media (min-width: 900px) { .two { grid-template-columns: 1fr 1fr; gap: 64px; } }
-      .two .lead { margin: 16px 0 28px; }
-      .diagram { display: grid; grid-template-columns: auto minmax(40px, 1fr) auto; align-items: center; padding: 32px 24px; border: 1px solid var(--line); border-radius: var(--r); background: var(--soft); }
-      .diagram__pill { padding: 8px 14px; border: 1px solid var(--fg); border-radius: 999px; font-size: 14px; font-weight: 500; background: var(--bg); white-space: nowrap; }
-      .diagram svg { width: 100%; height: 168px; color: var(--line); }
-      .diagram ul { display: grid; gap: 12px; }
-      .diagram li { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 14px; white-space: nowrap; }
-      .diagram li span { color: var(--muted); }
-      @media (max-width: 420px) { .diagram { padding: 24px 14px; } .diagram__pill, .diagram li { font-size: 13px; } .diagram li { padding: 0 10px; } }
+      /* neyo panel */
+      .chars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 14px; }
+      .chars li { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+      .chars li.on { border-color: var(--fg); }
+      .chars li small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+      .research-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+      .research-row b { color: var(--fg); font-weight: 500; }
+      .bar { flex: 1; height: 4px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+      .bar i { display: block; height: 100%; width: 64%; background: var(--fg); border-radius: 4px; animation: grow 3.2s var(--ease) infinite alternate; }
+      @keyframes grow { from { width: 22%; } to { width: 86%; } }
 
-      /* why */
-      .why { display: grid; gap: 40px; }
-      @media (min-width: 900px) { .why { grid-template-columns: repeat(2, 1fr); gap: 48px; } }
-      .why article { padding-top: 20px; border-top: 1px solid var(--fg); }
-      .why .num { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-      .why h3 { margin-top: 16px; font-size: 19px; letter-spacing: -0.015em; font-weight: 600; }
-      .why p { margin-top: 8px; color: var(--muted); font-size: 15px; }
+      /* bean panel */
+      .phone { width: 100%; max-width: 300px; padding: 10px; border-radius: 34px; background: var(--fg); box-shadow: 0 30px 70px -30px rgba(20,20,19,0.5); }
+      .phone__in { border-radius: 26px; background: var(--card); overflow: hidden; font-size: 13px; }
+      .phone__top { display: flex; align-items: center; gap: 10px; padding: 18px 16px 12px; border-bottom: 1px solid var(--line); }
+      .phone__top small { display: block; color: #16a34a; font-size: 11px; }
+      .thread { display: flex; flex-direction: column; gap: 8px; padding: 16px 14px 20px; }
+      .b { max-width: 78%; padding: 8px 12px; border-radius: 16px; line-height: 1.4; }
+      .b--in { background: var(--soft); border-bottom-left-radius: 4px; }
+      .b--out { align-self: flex-end; background: var(--fg); color: var(--bg); border-bottom-right-radius: 4px; }
+      .typing { display: inline-flex; gap: 4px; padding: 11px 12px; background: var(--soft); border-radius: 16px; border-bottom-left-radius: 4px; width: max-content; }
+      .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: dot 1.2s infinite; }
+      .typing i:nth-child(2) { animation-delay: 0.15s; } .typing i:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes dot { 0%, 60%, 100% { opacity: 0.3; transform: none; } 30% { opacity: 1; transform: translateY(-2px); } }
+      .call { display: flex; justify-content: center; gap: 10px; padding: 0 14px 18px; }
+      .call span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); }
+
+      /* uasset panel */
+      .icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border-radius: 16px 16px 0 0; overflow: hidden; }
+      .icons span { display: grid; place-items: center; aspect-ratio: 1; background: var(--card); color: var(--fg); }
+      .icons svg { width: 26px; height: 26px; }
+      .code { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+      .code b { color: var(--fg); font-weight: 400; }
+      .code em { margin-left: auto; font-style: normal; font-family: var(--font); font-size: 12px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+      .tabs { display: flex; gap: 4px; padding: 10px 14px 0; border-top: 1px solid var(--line); font-size: 12px; }
+      .tabs span { padding: 4px 10px; border-radius: 999px; color: var(--muted); }
+      .tabs span.on { background: var(--soft); color: var(--fg); }
+      .i-bell { transform-origin: 12px 4px; animation: swing 2.4s var(--ease) infinite; }
+      @keyframes swing { 0%, 60%, 100% { transform: rotate(0); } 10% { transform: rotate(14deg); } 25% { transform: rotate(-12deg); } 40% { transform: rotate(6deg); } }
+      .i-heart { transform-origin: 12px 13px; animation: beat 1.6s ease-in-out infinite; }
+      @keyframes beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } }
+      .i-spin { transform-origin: 12px 12px; animation: spin 1.4s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .i-check { stroke-dasharray: 20; stroke-dashoffset: 20; animation: draw 2.4s var(--ease) infinite; }
+      @keyframes draw { 0% { stroke-dashoffset: 20; } 40%, 80% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 20; } }
+      .i-arrow { animation: nudge 1.8s var(--ease) infinite; }
+      @keyframes nudge { 0%, 100% { transform: none; } 50% { transform: translateX(3px); } }
+      .i-search { transform-origin: 11px 11px; animation: look 3s var(--ease) infinite; }
+      @keyframes look { 0%, 100% { transform: none; } 30% { transform: translate(-2px, -1px); } 60% { transform: translate(2px, 1px); } }
+      .i-up { animation: up 1.8s var(--ease) infinite; }
+      @keyframes up { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
+      .i-sun { transform-origin: 12px 12px; animation: spin 8s linear infinite; }
+
+      /* id band */
+      .band { margin-top: 32px; padding: 96px 0; background: var(--fg); color: var(--bg); }
+      @media (min-width: 900px) { .band { padding: 140px 0; } }
+      .band__grid { display: grid; gap: 40px; }
+      @media (min-width: 900px) { .band__grid { grid-template-columns: 1.35fr 1fr; gap: 64px; align-items: end; } }
+      .band h2 { font-size: clamp(44px, 8vw, 104px); line-height: 0.95; letter-spacing: -0.06em; font-weight: 500; }
+      .band p { color: color-mix(in srgb, var(--bg) 62%, transparent); font-size: 18px; max-width: 24em; }
+      .band .btn--primary { margin-top: 28px; background: var(--bg); color: var(--fg); border-color: var(--bg); }
+      .band__apps { display: flex; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
+      .band__apps span { padding: 6px 14px; border: 1px solid color-mix(in srgb, var(--bg) 22%, transparent); border-radius: 999px; font-size: 14px; }
 
       /* research */
-      main .research { padding: 28px 0; }
-      .research__in { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; font-size: 15px; }
-      .research__in p { color: var(--muted); margin-right: auto; }
-      .research__in p b { color: var(--fg); font-weight: 600; }
-      .research__in a { display: inline-flex; align-items: center; min-height: 44px; }
+      .rsch { padding: 104px 0; }
+      .rsch .wrap > a { display: grid; gap: 16px; padding: 36px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      @media (min-width: 900px) { .rsch .wrap > a { grid-template-columns: 1.35fr 1fr auto; gap: 64px; align-items: center; } }
+      .rsch h2 { font-size: clamp(26px, 3.4vw, 40px); line-height: 1.08; letter-spacing: -0.04em; font-weight: 500; }
+      .rsch p { color: var(--muted); }
+      .rsch .go { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); transition: background-color 0.2s var(--ease), color 0.2s var(--ease); }
+      .rsch .wrap > a:hover .go { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
-      /* final cta */
-      .final { text-align: center; }
-      .final .h2 { font-size: clamp(32px, 5vw, 56px); }
-      .final .btn { margin-top: 32px; }
+      /* reveal */
+      @media (prefers-reduced-motion: no-preference) {
+        .js .rv { opacity: 0; transform: translateY(18px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+        .js .rv.in { opacity: 1; transform: none; }
+      }
     </style>
+    <script>document.documentElement.classList.add("js");</script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -92,11 +189,11 @@
             <span>Signaturesi</span>
           </a>
           <nav class="nav__links" aria-label="Primary">
-            <a href="#products">Products</a>
             <a href="https://neyo.signaturesi.com/">NEYO</a>
             <a href="https://bean.signaturesi.com/">Bean</a>
             <a href="https://uasset.signaturesi.com/">UAsset</a>
             <a href="/research">Research</a>
+            <a href="/about">About</a>
           </nav>
           <div class="nav__right">
             <a class="nav__signin" href="https://accounts.signaturesi.com/?mode=login">Sign in</a>
@@ -108,146 +205,195 @@
         </div>
         <nav class="nav__menu" id="menu" aria-label="Mobile" hidden>
           <ul>
-            <li><a href="#products">Products</a></li>
             <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
             <li><a href="https://bean.signaturesi.com/">Bean</a></li>
             <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
             <li><a href="/research">Research</a></li>
+            <li><a href="/about">About</a></li>
           </ul>
         </nav>
       </div>
     </header>
 
-
     <main id="main">
       <section class="hero">
         <div class="wrap">
-          <p class="label">Signaturesi</p>
-          <h1>Three tools. One identity.</h1>
-          <p class="lead">Think with NEYO. Talk on Bean. Build with UAsset. All connected through one Bean ID.</p>
-          <div class="hero__cta">
-            <a class="btn btn--primary" href="https://accounts.signaturesi.com/?mode=login">Create Bean ID</a>
-            <a class="btn" href="#products">Explore products</a>
+          <div class="hero__grid">
+            <div>
+              <p class="eyebrow"><i></i>NEYO, Bean and UAsset are live</p>
+              <h1>Software for <span class="serif">thinking,</span> talking and making.</h1>
+            </div>
+            <div class="hero__side">
+              <p>Signaturesi makes three small products: <b>NEYO</b> for AI work, <b>Bean</b> for messaging and <b>UAsset</b> for icons. One Bean ID signs you into all of them.</p>
+              <div class="hero__cta">
+                <a class="btn btn--primary" href="https://accounts.signaturesi.com/?mode=login">Create Bean ID <span class="arr">→</span></a>
+                <a class="btn" href="#products">See products</a>
+              </div>
+            </div>
           </div>
-          <p class="id-pill"><b>yourname@bean</b> · one account for everything</p>
+
+          <div class="stage rv" aria-hidden="true">
+            <div class="win">
+              <div class="win__bar"><i></i><i></i><i></i><span class="win__url">neyo.signaturesi.com</span></div>
+              <div class="win__body">
+                <aside class="side">
+                  <p class="side__h">Characters</p>
+                  <ul>
+                    <li class="on"><span class="av av--n">N</span>Neyo<span>Default</span></li>
+                    <li><span class="av av--z">Z</span>Zadi</li>
+                    <li><span class="av av--w">W</span>Wizi</li>
+                    <li><span class="av av--c">C</span>Crony</li>
+                  </ul>
+                  <p class="side__h" style="margin-top: 20px">Workspace</p>
+                  <ul>
+                    <li>Launch notes</li>
+                    <li>Market research</li>
+                    <li>Shared files</li>
+                  </ul>
+                </aside>
+                <div class="chat">
+                  <p class="msg msg--me">Summarise these three files and draft a short launch note.</p>
+                  <div class="msg msg--ai">
+                    <span class="av av--n">N</span>
+                    <div>
+                      <p>Here is a short launch note based on your files. I kept it under 120 words and left the pricing for you to confirm.</p>
+                      <p class="muted">Read 3 files · 42 seconds</p>
+                      <div class="src"><span>brief.pdf</span><span>notes.docx</span><span>pricing.xlsx</span></div>
+                    </div>
+                  </div>
+                  <div class="composer">Ask Neyo anything<b>↑</b></div>
+                </div>
+              </div>
+            </div>
+            <div class="float float--ua">
+              <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="i-bell"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></g></svg></span>
+              <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="i-heart" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg></span>
+              <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="i-spin" d="M12 3a9 9 0 1 0 9 9" /></svg></span>
+            </div>
+            <div class="float float--bean">
+              <p class="who"><img src="assets/bean.png" alt="" width="22" height="22" style="border-radius: 6px" />Bean<em>● online</em></p>
+              <p>Saw the launch note. Looks good, send it.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="rule" id="products" aria-labelledby="products-h">
+      <section class="products" id="products" aria-labelledby="products-h">
         <div class="wrap">
-          <div class="sec-head">
-            <p class="label">Products</p>
-            <h2 class="h2" id="products-h">Pick a tool. Your ID comes with you.</h2>
+          <div class="products__head">
+            <h2 class="h2" id="products-h">Three products. <span class="serif">Each does one job.</span></h2>
+            <p>Use one, or all three. Your Bean ID, plan and settings come with you.</p>
           </div>
-          <div class="grid3">
-            <article class="card">
-              <div class="card__top">
-                <img class="card__icon" src="assets/neo.png" alt="" width="40" height="40" loading="lazy" />
-                <span class="tag tag--live">Available</span>
-              </div>
-              <h3>NEYO</h3>
-              <p class="card__line">Your AI workspace for writing, research and ideas.</p>
-              <ul>
-                <li>Four characters: Neyo, Zadi, Wizi, Crony</li>
-                <li>Deep Research, files and shared workspaces</li>
-                <li>Free plan, or Smart at Rs 1299/month</li>
+
+          <article class="prod rv">
+            <div>
+              <p class="prod__meta"><img src="assets/neo.png" alt="" width="28" height="28" loading="lazy" />01 · NEYO <span class="tag tag--live">Available</span></p>
+              <h3>An AI workspace for writing, research and ideas.</h3>
+              <ul class="facts">
+                <li><span>Characters</span>Neyo, Zadi, Wizi and Crony</li>
+                <li><span>Tools</span>Deep Research, files, shared workspaces</li>
+                <li><span>Price</span>Free, or Smart at Rs 1299/month</li>
               </ul>
-              <a class="btn" href="https://neyo.signaturesi.com/">Open NEYO →</a>
-            </article>
-            <article class="card">
-              <div class="card__top">
-                <img class="card__icon" src="assets/bean.png" alt="" width="40" height="40" loading="lazy" />
-                <span class="tag">Private beta</span>
+              <a class="btn btn--primary" href="https://neyo.signaturesi.com/">Open NEYO <span class="arr">→</span></a>
+            </div>
+            <div class="panel" aria-hidden="true">
+              <div class="sheet">
+                <ul class="chars">
+                  <li class="on"><span class="av av--n">N</span><div>Neyo<small>Everyday help</small></div></li>
+                  <li><span class="av av--z">Z</span><div>Zadi<small>Character</small></div></li>
+                  <li><span class="av av--w">W</span><div>Wizi<small>Character</small></div></li>
+                  <li><span class="av av--c">C</span><div>Crony<small>Character</small></div></li>
+                </ul>
+                <div class="research-row"><b>Deep Research</b><span class="bar"><i></i></span>Reading sources</div>
               </div>
-              <h3>Bean</h3>
-              <p class="card__line">Private messaging, presence and calling. Calm by design.</p>
-              <ul>
-                <li>Sign in with your Bean ID</li>
-                <li>Messenger for your NEYO workspaces and team</li>
-                <li>Minimal, distraction-free</li>
+            </div>
+          </article>
+
+          <article class="prod rv">
+            <div>
+              <p class="prod__meta"><img src="assets/bean.png" alt="" width="28" height="28" loading="lazy" />02 · Bean <span class="tag">Private beta</span></p>
+              <h3>Private messaging, presence and calling.</h3>
+              <ul class="facts">
+                <li><span>Sign in</span>With your Bean ID</li>
+                <li><span>For</span>Your NEYO workspaces and team</li>
+                <li><span>Feel</span>Minimal and distraction-free</li>
               </ul>
-              <a class="btn" href="https://bean.signaturesi.com/">Open Bean →</a>
-            </article>
-            <article class="card">
-              <div class="card__top">
-                <span class="card__icon card__icon--svg" aria-hidden="true">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect class="ua-shape" x="5" y="5" width="14" height="14" rx="3" />
-                    <circle class="ua-dot" cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                  </svg>
-                </span>
-                <span class="tag">Free</span>
+              <a class="btn btn--primary" href="https://bean.signaturesi.com/">Open Bean <span class="arr">→</span></a>
+            </div>
+            <div class="panel" aria-hidden="true">
+              <div class="phone">
+                <div class="phone__in">
+                  <div class="phone__top"><span class="av av--z">Z</span><div>Zara<small>● online</small></div></div>
+                  <div class="thread">
+                    <p class="b b--in">Are we still on for 4?</p>
+                    <p class="b b--out">Yes. Sharing the file now.</p>
+                    <p class="b b--in">Got it, thanks.</p>
+                    <span class="typing"><i></i><i></i><i></i></span>
+                  </div>
+                  <div class="call">
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg></span>
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2" /><path d="M16 10l5-3v10l-5-3" /></svg></span>
+                  </div>
+                </div>
               </div>
-              <h3>UAsset</h3>
-              <p class="card__line">5,000+ free motion icons for modern products.</p>
-              <ul>
-                <li>Line, Tint and Solid styles</li>
-                <li>Copy SVG, React or CDN in one click</li>
-                <li>MIT license, free for commercial use. Pro $9/month</li>
+            </div>
+          </article>
+
+          <article class="prod rv">
+            <div>
+              <p class="prod__meta">
+                <span class="card__icon card__icon--svg" style="width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="14" height="14" rx="3" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></svg></span>
+                03 · UAsset <span class="tag">Free</span>
+              </p>
+              <h3>5,000+ motion icons, free to use.</h3>
+              <ul class="facts">
+                <li><span>Styles</span>Line, Tint and Solid</li>
+                <li><span>Copy as</span>SVG, React or CDN</li>
+                <li><span>License</span>MIT, commercial use. Pro $9/month</li>
               </ul>
-              <a class="btn" href="https://uasset.signaturesi.com/">Browse icons →</a>
-            </article>
-          </div>
+              <a class="btn btn--primary" href="https://uasset.signaturesi.com/">Browse icons <span class="arr">→</span></a>
+            </div>
+            <div class="panel" aria-hidden="true">
+              <div class="sheet">
+                <div class="icons">
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="i-bell"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></g></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="i-heart" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" opacity=".25" /><path class="i-spin" d="M12 3a9 9 0 0 1 9 9" /></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path class="i-check" d="M8 12.5l2.8 2.8L16.5 9.5" /></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="i-arrow"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></g></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="i-search"><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></g></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2" /><g class="i-up"><path d="M12 15V4" /><path d="M7 9l5-5 5 5" /></g></svg></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><g class="i-sun"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></g></svg></span>
+                </div>
+                <div class="tabs"><span class="on">SVG</span><span>React</span><span>CDN</span></div>
+                <div class="code"><span>&lt;<b>svg</b> … /&gt;</span><em>Copy</em></div>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section class="rule" aria-labelledby="id-h">
-        <div class="wrap two">
+      <section class="band" aria-labelledby="id-h">
+        <div class="wrap band__grid">
           <div>
-            <p class="label">Bean ID</p>
-            <h2 class="h2" id="id-h" style="margin-top: 12px">One Bean ID. Every product.</h2>
-            <p class="lead">Create it once and use it across NEYO, Bean and UAsset. Your plans and settings follow your account.</p>
-            <a class="btn btn--primary" href="https://accounts.signaturesi.com/?mode=login">Create your Bean ID →</a>
+            <h2 id="id-h">yourname<span class="serif">@bean</span></h2>
+            <div class="band__apps"><span>NEYO</span><span>Bean</span><span>UAsset</span></div>
           </div>
-          <div class="diagram" role="img" aria-label="yourname@bean connects to NEYO, Bean and UAsset">
-            <span class="diagram__pill">yourname@bean</span>
-            <svg viewBox="0 0 100 168" preserveAspectRatio="none" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M0 84 C50 84 50 24 100 24" vector-effect="non-scaling-stroke" stroke-width="1" />
-              <path d="M0 84 H100" vector-effect="non-scaling-stroke" stroke-width="1" />
-              <path d="M0 84 C50 84 50 144 100 144" vector-effect="non-scaling-stroke" stroke-width="1" />
-            </svg>
-            <ul>
-              <li>NEYO <span>· AI workspace</span></li>
-              <li>Bean <span>· Messaging</span></li>
-              <li>UAsset <span>· Icons</span></li>
-            </ul>
+          <div>
+            <p>One Bean ID for every Signaturesi product. Create it once. Your plans and settings follow your account.</p>
+            <a class="btn btn--primary" href="https://accounts.signaturesi.com/?mode=login">Create Bean ID <span class="arr">→</span></a>
           </div>
         </div>
       </section>
 
-      <section class="rule" aria-labelledby="why-h">
+      <section class="rsch" aria-label="Research">
         <div class="wrap">
-          <div class="sec-head">
-            <p class="label">Why Signaturesi</p>
-            <h2 class="h2" id="why-h" style="margin-top: 12px">Made to stay out of your way.</h2>
-          </div>
-          <div class="why">
-            <article>
-              <p class="num">01</p>
-              <h3>Simple by default</h3>
-              <p>Fewer screens, clear navigation, no clutter.</p>
-            </article>
-            <article>
-              <p class="num">02</p>
-              <h3>Private by design</h3>
-              <p>Sensitive details hidden from AI, account-level data isolation.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="rule research" aria-label="Research">
-        <div class="wrap research__in">
-          <p><b>Signaturesi Research</b> — building intelligence that requires less.</p>
-          <a class="tlink" href="/research-article">Read the NEO L1 report →</a>
-          <a class="tlink" href="/research">Research library →</a>
-        </div>
-      </section>
-
-      <section class="rule final" aria-labelledby="final-h">
-        <div class="wrap">
-          <h2 class="h2" id="final-h">Start with one identity.</h2>
-          <a class="btn btn--primary" href="https://accounts.signaturesi.com/?mode=login">Create Bean ID</a>
+          <a href="/research-article">
+            <h2>NEO L1 <span class="serif">research report</span></h2>
+            <p>Signaturesi Research: building intelligence that requires less.</p>
+            <span class="go" aria-hidden="true">→</span>
+          </a>
+          <p style="margin-top: 20px; font-size: 15px"><a class="tlink" href="/research">All research</a></p>
         </div>
       </section>
     </main>
@@ -289,6 +435,7 @@
             </ul>
           </nav>
         </div>
+        <p class="foot__mark" aria-hidden="true">Signaturesi</p>
         <p class="foot__bottom">© 2026 Signaturesi</p>
       </div>
     </footer>

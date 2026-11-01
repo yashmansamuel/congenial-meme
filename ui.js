@@ -42,4 +42,13 @@
       t.setAttribute("aria-pressed", String(t.getAttribute("aria-pressed") !== "true"));
     });
   });
+  var rv = document.querySelectorAll(".rv");
+  if (rv.length) {
+    if ("IntersectionObserver" in window) {
+      var ro = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); ro.unobserve(e.target); } });
+      }, { rootMargin: "0px 0px -8% 0px" });
+      rv.forEach(function (el) { ro.observe(el); });
+    } else { rv.forEach(function (el) { el.classList.add("in"); }); }
+  }
 })();

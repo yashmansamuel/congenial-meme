@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bean ID — Signaturesi</title>
+    <meta name="description" content="Create your Bean ID or sign in. One account for NEYO, Bean and UAsset." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://signaturesi.com/signup" />
+    <link rel="icon" type="image/png" href="/assets/signaturesi-wabQuV5f.png" />
+    <link rel="apple-touch-icon" href="/assets/signaturesi-wabQuV5f.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Signaturesi" />
+    <meta property="og:url" content="https://signaturesi.com/signup" />
+    <meta property="og:title" content="Bean ID — Signaturesi" />
+    <meta property="og:description" content="Create your Bean ID or sign in. One account for NEYO, Bean and UAsset." />
+    <script>
+      try { if (localStorage.getItem("neo_theme") === "light") document.documentElement.classList.add("force-light"); } catch (e) {}
+    </script>
+    <style>
+      /* Signup page only. Class hooks used by the auth script: .step-panel.active, .login-form.active,
+         .step-dot.active/.completed, .strength-bar.active, .availability.{checking,success,error},
+         .message-box.show.{error,success}, .primary-button.loading, .password-toggle.is-visible,
+         .session-overlay.hidden, body.dark-mode. */
+      html.force-light body:not(.dark-mode) { --bg: #ffffff; --fg: #0a0a0a; --muted: #636363; --line: #e6e6e6; --soft: #fafafa; color-scheme: light; }
+      body.dark-mode { --bg: #0a0a0a; --fg: #f5f5f5; --muted: #a3a3a3; --line: #262626; --soft: #111111; color-scheme: dark; }
+
+      .theme-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+      .theme-button:hover { color: var(--fg); }
+      .theme-button svg { width: 18px; height: 18px; }
+      .theme-button .icon-moon, body.dark-mode .theme-button .icon-sun { display: none; }
+      body.dark-mode .theme-button .icon-moon { display: block; }
+      .nav__signin:disabled { opacity: .5; cursor: not-allowed; }
+
+      .auth-main { padding: 56px 0 88px; }
+      @media (min-width: 768px) { .auth-main { padding: 96px 0 120px; } }
+      .auth-grid { display: grid; gap: 40px; align-items: center; }
+      @media (min-width: 900px) { .auth-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 64px; } }
+      .intro-panel h1 { margin-top: 12px; font-size: clamp(36px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.045em; font-weight: 600; }
+      .intro-panel .lead { margin-top: 16px; }
+      .identity-preview { display: inline-flex; align-items: center; gap: 8px; margin-top: 28px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--muted); }
+      .identity-preview b { color: var(--fg); font-weight: 500; }
+
+      .auth-card { padding: 28px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); }
+      @media (max-width: 480px) { .auth-card { padding: 22px 18px; } }
+      .card-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+      .card-eyebrow { font-size: 13px; font-weight: 500; color: var(--muted); }
+      .step-indicator { display: flex; gap: 6px; }
+      .step-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--line); transition: width .2s ease, background .2s ease; }
+      .step-dot.completed { background: var(--muted); }
+      .step-dot.active { width: 18px; background: var(--fg); }
+      .auth-title { font-size: 22px; letter-spacing: -0.02em; font-weight: 600; }
+      .auth-subtitle { margin-top: 6px; color: var(--muted); font-size: 15px; }
+      #signupForm, .login-form { margin-top: 24px; }
+      .step-panel { display: none; }
+      .step-panel.active { display: block; }
+      .login-form { display: none; }
+      .login-form.active { display: block; }
+
+      .field-group + .field-group { margin-top: 18px; }
+      .field-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+      .bean-id-field, .auth-input { display: flex; align-items: center; width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); transition: border-color .15s ease; }
+      .bean-id-field:focus-within, .auth-input:focus { border-color: var(--fg); }
+      .bean-id-input, .auth-input { font: inherit; font-size: 16px; color: var(--fg); }
+      .bean-id-input:focus-visible { outline: none; }
+      .bean-id-input { flex: 1; min-width: 0; height: 44px; padding: 0 0 0 14px; border: 0; outline: 0; background: none; }
+      .bean-suffix { padding: 0 14px 0 4px; color: var(--muted); }
+      .auth-input { padding: 0 48px 0 14px; outline: 0; }
+      .auth-input.no-icon { padding-right: 14px; }
+      .input-wrapper { position: relative; }
+      .password-toggle { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+      .password-toggle:hover { color: var(--fg); }
+      .password-toggle svg { width: 18px; height: 18px; }
+      .password-toggle .eye-off, .password-toggle.is-visible .eye { display: none; }
+      .password-toggle.is-visible .eye-off { display: block; }
+      .field-note { margin-top: 8px; font-size: 13px; color: var(--muted); }
+      .availability { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+      .availability:empty { display: none; }
+      .availability.success { color: #16865c; }
+      .availability.error { color: #dc2626; }
+      .availability-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+      .password-strength { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 10px; }
+      .strength-bar { height: 3px; border-radius: 999px; background: var(--line); }
+      .strength-bar.active { background: var(--fg); }
+      .message-box { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+      .message-box.show { display: block; }
+      .message-box.error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+      .message-box.success { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
+      @media (prefers-color-scheme: dark) {
+        html:not(.force-light) .message-box.error { color: #fca5a5; background: #2a1515; border-color: #4a2020; }
+        html:not(.force-light) .message-box.success { color: #86efac; background: #132a1c; border-color: #1f4a2e; }
+      }
+      body.dark-mode .message-box.error { color: #fca5a5; background: #2a1515; border-color: #4a2020; }
+      body.dark-mode .message-box.success { color: #86efac; background: #132a1c; border-color: #1f4a2e; }
+
+      .review-box { padding: 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--soft); }
+      .review-label { font-size: 13px; color: var(--muted); }
+      .review-id { margin-top: 4px; font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+      .review-copy { margin-top: 8px; font-size: 14px; color: var(--muted); }
+
+      .card-actions { display: flex; gap: 10px; margin-top: 24px; }
+      .card-actions .btn { flex: 1; }
+      .card-actions .secondary-button { flex: 0 0 auto; }
+      .btn.primary-button { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+      .btn.primary-button:hover { opacity: .86; border-color: var(--fg); }
+      .btn:disabled { opacity: .4; cursor: not-allowed; }
+      .button-spinner { display: none; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 999px; animation: auth-spin .7s linear infinite; }
+      .primary-button.loading .button-spinner { display: inline-block; }
+      .primary-button.loading .button-icon { display: none; }
+      .auth-footer { margin-top: 20px; font-size: 13px; color: var(--muted); text-align: center; }
+      .auth-footer a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; }
+
+      .session-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: opacity .2s ease, visibility .2s ease; }
+      .session-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+      .session-spinner { width: 24px; height: 24px; border: 2px solid var(--line); border-top-color: var(--fg); border-radius: 999px; animation: auth-spin .7s linear infinite; }
+      @keyframes auth-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .button-spinner, .session-spinner { animation: auth-spin 1.6s linear infinite !important; }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/ui-DV7wTb7-.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/ui-BUPLz7dF.css">
+  </head>
+  <body>
+  <div class="session-overlay" id="sessionOverlay">
+    <div class="session-spinner" aria-label="Checking session"></div>
+  </div>
+
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap">
+        <div class="nav__in">
+          <a class="brand" href="/" aria-label="Signaturesi home">
+            <img src="/assets/signaturesi-wabQuV5f.png" alt="" width="26" height="26" />
+            <span>Signaturesi</span>
+          </a>
+          <nav class="nav__links" aria-label="Primary">
+            <a href="/#products">Products</a>
+            <a href="https://neyo.signaturesi.com/">NEYO</a>
+            <a href="https://bean.signaturesi.com/">Bean</a>
+            <a href="https://uasset.signaturesi.com/">UAsset</a>
+            <a href="/research">Research</a>
+          </nav>
+          <div class="nav__right">
+            <button type="button" class="nav__signin mode-link" id="topModeButton">Log in</button>
+            <button type="button" class="theme-button" id="themeButton" aria-label="Use dark mode">
+              <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path><path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.42 1.42"></path><path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path><path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+              </svg>
+              <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
+            <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 7h14M3 13h14" /></svg>
+            </button>
+          </div>
+        </div>
+        <nav class="nav__menu" id="menu" aria-label="Mobile" hidden>
+          <ul>
+            <li><a href="/#products">Products</a></li>
+            <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+            <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+            <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+            <li><a href="/research">Research</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="auth-main">
+      <div class="wrap auth-grid">
+        <section class="intro-panel">
+          <p class="label">Bean ID</p>
+          <h1 class="intro-title">Create your Bean ID</h1>
+          <p class="lead intro-description">One account for NEYO, Bean and UAsset.</p>
+          <p class="identity-preview"><b>yourname@bean</b> · one account for everything</p>
+        </section>
+
+        <section class="auth-area">
+          <div class="auth-card">
+            <div class="card-topline">
+              <span class="card-eyebrow" id="cardEyebrow">Create Bean ID</span>
+
+              <div class="step-indicator" id="stepIndicator" aria-label="Signup progress">
+                <span class="step-dot active"></span>
+                <span class="step-dot"></span>
+                <span class="step-dot"></span>
+              </div>
+            </div>
+
+            <h2 class="auth-title" id="authTitle">Choose your identity</h2>
+            <p class="auth-subtitle" id="authSubtitle">Your Bean ID will be used across Signaturesi.</p>
+
+            <form id="signupForm" novalidate autocomplete="on">
+              <section class="step-panel active" data-step="1">
+                <div class="field-group">
+                  <label class="field-label" for="signupUsername">Bean ID</label>
+
+                  <div class="bean-id-field">
+                    <input
+                      type="text"
+                      class="bean-id-input"
+                      id="signupUsername"
+                      name="bean_id"
+                      placeholder="username"
+                      minlength="3"
+                      maxlength="20"
+                      autocomplete="one-time-code"
+                      autocapitalize="none"
+                      inputmode="text"
+                      spellcheck="false"
+                      required
+                    >
+                    <span class="bean-suffix">@bean</span>
+                  </div>
+
+                  <div class="availability" id="usernameAvailability" aria-live="polite"></div>
+
+                  <p class="field-note">3–20 lowercase letters, numbers or underscores.</p>
+
+                  <div class="message-box" id="signupMessage" role="alert" aria-live="polite"></div>
+                </div>
+
+                <div class="card-actions">
+                  <button type="button" class="btn primary-button" id="stepOneNext" disabled>
+                    Continue <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="step-panel" data-step="2">
+                <div class="field-group">
+                  <label class="field-label" for="signupPassword">Password</label>
+
+                  <div class="input-wrapper">
+                    <input
+                      type="password"
+                      class="auth-input"
+                      id="signupPassword"
+                      name="password"
+                      placeholder="Create a secure password"
+                      minlength="8"
+                      maxlength="100"
+                      autocomplete="new-password"
+                      required
+                    >
+                    <button type="button" class="password-toggle" id="signupPasswordToggle" aria-label="Show password">
+                      <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path><path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path></svg>
+                    </button>
+                  </div>
+
+                  <div class="password-strength" id="passwordStrength">
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="confirmPassword">Confirm password</label>
+                  <input
+                    type="password"
+                    class="auth-input no-icon"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Enter password again"
+                    minlength="8"
+                    maxlength="100"
+                    autocomplete="new-password"
+                    required
+                  >
+                </div>
+
+                <div class="card-actions">
+                  <button type="button" class="btn btn-outline secondary-button" id="stepTwoBack">Back</button>
+                  <button type="button" class="btn primary-button" id="stepTwoNext">
+                    Review ID <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="step-panel" data-step="3">
+                <div class="review-box">
+                  <div class="review-label">Your new Bean ID</div>
+                  <div class="review-id" id="reviewBeanId">username@bean</div>
+                  <p class="review-copy">You will use this ID to sign in to NEYO, Bean and UAsset.</p>
+                </div>
+
+                <div class="card-actions">
+                  <button type="button" class="btn btn-outline secondary-button" id="stepThreeBack">Back</button>
+                  <button type="submit" class="btn primary-button" id="signupSubmitButton">
+                    <span class="button-spinner"></span>
+                    <span>Create Bean ID</span>
+                    <span class="button-icon" aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+            </form>
+
+            <form id="loginForm" class="login-form" novalidate autocomplete="on">
+              <div class="field-group">
+                <label class="field-label" for="loginUsername">Bean ID</label>
+                <div class="bean-id-field">
+                  <input
+                    type="text"
+                    class="bean-id-input"
+                    id="loginUsername"
+                    name="username"
+                    placeholder="username"
+                    minlength="3"
+                    maxlength="20"
+                    autocomplete="username"
+                    autocapitalize="none"
+                    inputmode="text"
+                    spellcheck="false"
+                    required
+                  >
+                  <span class="bean-suffix">@bean</span>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="loginPassword">Password</label>
+                <div class="input-wrapper">
+                  <input
+                    type="password"
+                    class="auth-input"
+                    id="loginPassword"
+                    name="password"
+                    placeholder="Enter your password"
+                    minlength="8"
+                    maxlength="100"
+                    autocomplete="current-password"
+                    required
+                  >
+                  <button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Show password">
+                    <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.1 12s3.6-7 9.9-7 9.9 7 9.9 7-3.6 7-9.9 7-9.9-7-9.9-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.3 0 9.9 8 9.9 8a17.8 17.8 0 0 1-3 4.1"></path><path d="M6.6 6.6A17 17 0 0 0 2.1 12s3.6 8 9.9 8a10.4 10.4 0 0 0 4.1-.8"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="message-box" id="loginMessage" role="alert" aria-live="polite"></div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn primary-button" id="loginSubmitButton">
+                  <span class="button-spinner"></span>
+                  <span>Sign in</span>
+                  <span class="button-icon" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </form>
+
+            <p class="auth-footer">
+              By continuing, you accept the Signaturesi
+              <a href="/terms">Terms</a>
+              and
+              <a href="/privacy">Privacy Policy</a>.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="brand" href="/" aria-label="Signaturesi home">
+              <img src="/assets/signaturesi-wabQuV5f.png" alt="" width="26" height="26" loading="lazy" />
+              <span>Signaturesi</span>
+            </a>
+          </div>
+          <nav aria-labelledby="f-products">
+            <h2 id="f-products">Products</h2>
+            <ul>
+              <li><a href="https://neyo.signaturesi.com/">NEYO</a></li>
+              <li><a href="https://bean.signaturesi.com/">Bean</a></li>
+              <li><a href="https://uasset.signaturesi.com/">UAsset</a></li>
+              <li><a href="/signup" aria-current="page">Bean ID</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-company">
+            <h2 id="f-company">Company</h2>
+            <ul>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/research">Research</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-legal">
+            <h2 id="f-legal">Legal</h2>
+            <ul>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/acceptable-use">Acceptable Use</a></li>
+              <li><a href="/cookies">Cookies</a></li>
+              <li><a href="/security">Security</a></li>
+            </ul>
+          </nav>
+        </div>
+        <p class="foot__mark" aria-hidden="true">Signaturesi</p>
+        <p class="foot__bottom">© 2026 Signaturesi</p>
+      </div>
+    </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const sessionOverlay =
+        document.getElementById("sessionOverlay");
+
+      const themeButton =
+        document.getElementById("themeButton");
+
+      const topModeButton =
+        document.getElementById("topModeButton");
+
+      const cardEyebrow =
+        document.getElementById("cardEyebrow");
+
+      const authTitle =
+        document.getElementById("authTitle");
+
+      const authSubtitle =
+        document.getElementById("authSubtitle");
+
+      const stepIndicator =
+        document.getElementById("stepIndicator");
+
+      const signupForm =
+        document.getElementById("signupForm");
+
+      const loginForm =
+        document.getElementById("loginForm");
+
+      const signupUsername =
+        document.getElementById("signupUsername");
+
+      const signupPassword =
+        document.getElementById("signupPassword");
+
+      const confirmPassword =
+        document.getElementById("confirmPassword");
+
+      const loginUsername =
+        document.getElementById("loginUsername");
+
+      const loginPassword =
+        document.getElementById("loginPassword");
+
+      const reviewBeanId =
+        document.getElementById("reviewBeanId");
+
+      const usernameAvailability =
+        document.getElementById("usernameAvailability");
+
+      const signupMessage =
+        document.getElementById("signupMessage");
+
+      const loginMessage =
+        document.getElementById("loginMessage");
+
+      const stepOneNext =
+        document.getElementById("stepOneNext");
+
+      const signupSubmitButton =
+        document.getElementById("signupSubmitButton");
+
+      const loginSubmitButton =
+        document.getElementById("loginSubmitButton");
+
+      const passwordStrength =
+        document.getElementById("passwordStrength");
+
+      let activeMode = "signup";
+      let currentStep = 1;
+      let isSubmitting = false;
+      let availabilityState = "idle";
+      let availabilityTimer = null;
+      let availabilityRequestId = 0;
+
+      function normalizeUsername(value) {
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/^@/, "")
+          .replace(/@bean$/i, "");
+      }
+
+      function isValidUsername(value) {
+        return /^[a-z0-9_]{3,20}$/.test(value);
+      }
+
+      function clearLegacyStorage() {
+        localStorage.removeItem("signaturesi_user");
+        localStorage.removeItem("bean_user");
+        localStorage.removeItem("user");
+        localStorage.removeItem("userData");
+      }
+
+      function showMessage(element, text, type = "error") {
+        element.textContent = text;
+        element.className = `message-box show ${type}`;
+      }
+
+      function clearMessage(element) {
+        element.textContent = "";
+        element.className = "message-box";
+      }
+
+      function setAvailability(state, text = "") {
+        availabilityState = state;
+
+        usernameAvailability.className =
+          state === "idle"
+            ? "availability"
+            : `availability ${state}`;
+
+        usernameAvailability.innerHTML =
+          text
+            ? `<span class="availability-dot"></span><span>${text}</span>`
+            : "";
+
+        stepOneNext.disabled =
+          state !== "success" || isSubmitting;
+      }
+
+      function updateThemeButton() {
+        const isDark =
+          document.body.classList.contains("dark-mode");
+
+        themeButton.setAttribute(
+          "aria-label",
+          isDark ? "Use light mode" : "Use dark mode"
+        );
+      }
+
+      function initializeTheme() {
+        const theme =
+          localStorage.getItem("neo_theme");
+
+        document.body.classList.toggle(
+          "dark-mode",
+          theme === "dark"
+        );
+
+        updateThemeButton();
+      }
+
+      function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+
+        const isDark =
+          document.body.classList.contains("dark-mode");
+
+        localStorage.setItem(
+          "neo_theme",
+          isDark ? "dark" : "light"
+        );
+
+        updateThemeButton();
+      }
+
+      function updateStepIndicator() {
+        const dots =
+          stepIndicator.querySelectorAll(".step-dot");
+
+        dots.forEach((dot, index) => {
+          const stepNumber = index + 1;
+
+          dot.classList.toggle(
+            "active",
+            stepNumber === currentStep
+          );
+
+          dot.classList.toggle(
+            "completed",
+            stepNumber < currentStep
+          );
+        });
+      }
+
+      function updateSignupHeader() {
+        const headers = {
+          1: {
+            eyebrow: "Step 1 of 3",
+            title: "Choose your identity",
+            subtitle:
+              "Create a private ID for the Signaturesi ecosystem."
+          },
+          2: {
+            eyebrow: "Step 2 of 3",
+            title: "Secure your account",
+            subtitle:
+              "Use a password with at least eight characters."
+          },
+          3: {
+            eyebrow: "Step 3 of 3",
+            title: "Confirm your Bean ID",
+            subtitle:
+              "Review your identity before creating the account."
+          }
+        };
+
+        const content = headers[currentStep];
+
+        cardEyebrow.textContent = content.eyebrow;
+        authTitle.textContent = content.title;
+        authSubtitle.textContent = content.subtitle;
+      }
+
+      function showStep(step) {
+        currentStep = Math.max(1, Math.min(3, step));
+
+        document
+          .querySelectorAll(".step-panel")
+          .forEach(panel => {
+            panel.classList.toggle(
+              "active",
+              Number(panel.dataset.step) === currentStep
+            );
+          });
+
+        updateStepIndicator();
+        updateSignupHeader();
+
+        if (currentStep === 1) {
+          signupUsername.focus();
+        }
+
+        if (currentStep === 2) {
+          signupPassword.focus();
+        }
+
+        if (currentStep === 3) {
+          reviewBeanId.textContent =
+            `${normalizeUsername(signupUsername.value)}@bean`;
+        }
+      }
+
+      function setMode(mode) {
+        if (isSubmitting) {
+          return;
+        }
+
+        activeMode =
+          mode === "login" ? "login" : "signup";
+
+        const isSignup =
+          activeMode === "signup";
+
+        signupForm.style.display =
+          isSignup ? "block" : "none";
+
+        loginForm.classList.toggle(
+          "active",
+          !isSignup
+        );
+
+        stepIndicator.style.display =
+          isSignup ? "flex" : "none";
+
+        topModeButton.textContent =
+          isSignup ? "Log in" : "Create Bean ID";
+
+        clearMessage(signupMessage);
+        clearMessage(loginMessage);
+
+        if (isSignup) {
+          showStep(currentStep);
+          return;
+        }
+
+        cardEyebrow.textContent = "Secure access";
+        authTitle.textContent = "Welcome back";
+        authSubtitle.textContent =
+          "Enter your Bean ID to continue to NEO.";
+
+        window.setTimeout(() => {
+          loginUsername.focus();
+        }, 50);
+      }
+
+      function evaluatePasswordStrength(password) {
+        let score = 0;
+
+        if (password.length >= 8) score += 1;
+        if (password.length >= 12) score += 1;
+
+        if (
+          /[A-Z]/.test(password) ||
+          /[0-9]/.test(password)
+        ) {
+          score += 1;
+        }
+
+        if (/[^A-Za-z0-9]/.test(password)) {
+          score += 1;
+        }
+
+        passwordStrength
+          .querySelectorAll(".strength-bar")
+          .forEach((bar, index) => {
+            bar.classList.toggle(
+              "active",
+              index < score
+            );
+          });
+      }
+
+      async function parseResponse(response) {
+        const data =
+          await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const error =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ||
+                "The request failed.";
+
+          throw new Error(error);
+        }
+
+        return data;
+      }
+
+      async function sendAuthRequest(
+        action,
+        username,
+        password
+      ) {
+        const body = {
+          action,
+          username
+        };
+
+        if (typeof password === "string") {
+          body.password = password;
+        }
+
+        const response =
+          await fetch("/api/auth", {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+            },
+            body: JSON.stringify(body)
+          });
+
+        return parseResponse(response);
+      }
+
+      async function checkUsernameAvailability(
+        username,
+        requestId
+      ) {
+        setAvailability(
+          "checking",
+          "Checking Bean ID…"
+        );
+
+        try {
+          const data =
+            await sendAuthRequest(
+              "check_username",
+              username
+            );
+
+          if (requestId !== availabilityRequestId) {
+            return false;
+          }
+
+          if (data.available === true) {
+            setAvailability(
+              "success",
+              `${username}@bean is available.`
+            );
+
+            return true;
+          }
+
+          setAvailability(
+            "error",
+            `${username}@bean is already taken.`
+          );
+
+          return false;
+        } catch (error) {
+          if (requestId !== availabilityRequestId) {
+            return false;
+          }
+
+          setAvailability(
+            "error",
+            error.message ||
+              "Unable to check Bean ID."
+          );
+
+          return false;
+        }
+      }
+
+      function scheduleAvailabilityCheck() {
+        window.clearTimeout(availabilityTimer);
+        availabilityRequestId += 1;
+
+        const requestId = availabilityRequestId;
+        const username =
+          normalizeUsername(signupUsername.value);
+
+        clearMessage(signupMessage);
+
+        if (!username) {
+          setAvailability("idle");
+          return;
+        }
+
+        if (!isValidUsername(username)) {
+          setAvailability(
+            "error",
+            "Use 3–20 lowercase letters, numbers or underscores."
+          );
+
+          return;
+        }
+
+        setAvailability(
+          "checking",
+          "Checking Bean ID…"
+        );
+
+        availabilityTimer =
+          window.setTimeout(() => {
+            checkUsernameAvailability(
+              username,
+              requestId
+            );
+          }, 550);
+      }
+
+      async function validateStepOne() {
+        const username =
+          normalizeUsername(signupUsername.value);
+
+        signupUsername.value = username;
+
+        if (!isValidUsername(username)) {
+          setAvailability(
+            "error",
+            "Use 3–20 lowercase letters, numbers or underscores."
+          );
+
+          signupUsername.focus();
+          return false;
+        }
+
+        if (availabilityState === "success") {
+          return true;
+        }
+
+        availabilityRequestId += 1;
+
+        return checkUsernameAvailability(
+          username,
+          availabilityRequestId
+        );
+      }
+
+      function validateStepTwo() {
+        const password =
+          signupPassword.value;
+
+        const confirmation =
+          confirmPassword.value;
+
+        if (
+          password.length < 8 ||
+          password.length > 100
+        ) {
+          showMessage(
+            signupMessage,
+            "Password must contain 8–100 characters."
+          );
+
+          signupPassword.focus();
+          return false;
+        }
+
+        if (password !== confirmation) {
+          showMessage(
+            signupMessage,
+            "Passwords do not match."
+          );
+
+          confirmPassword.focus();
+          return false;
+        }
+
+        clearMessage(signupMessage);
+        return true;
+      }
+
+      function setLoading(button, active) {
+        isSubmitting = active;
+
+        signupSubmitButton.disabled = active;
+        loginSubmitButton.disabled = active;
+        topModeButton.disabled = active;
+
+        button.classList.toggle("loading", active);
+
+        const activeInputs =
+          activeMode === "signup"
+            ? [
+                signupUsername,
+                signupPassword,
+                confirmPassword
+              ]
+            : [
+                loginUsername,
+                loginPassword
+              ];
+
+        activeInputs.forEach(input => {
+          input.disabled = active;
+        });
+
+        if (!active && activeMode === "signup") {
+          stepOneNext.disabled =
+            availabilityState !== "success";
+        }
+      }
+
+      async function createAccount(event) {
+        event.preventDefault();
+
+        if (
+          isSubmitting ||
+          !validateStepTwo()
+        ) {
+          return;
+        }
+
+        const username =
+          normalizeUsername(signupUsername.value);
+
+        if (!isValidUsername(username)) {
+          showStep(1);
+          setAvailability(
+            "error",
+            "Enter a valid Bean ID."
+          );
+          return;
+        }
+
+        clearMessage(signupMessage);
+        setLoading(signupSubmitButton, true);
+
+        try {
+          const data =
+            await sendAuthRequest(
+              "signup",
+              username,
+              signupPassword.value
+            );
+
+          if (
+            !data.authenticated ||
+            !data.user
+          ) {
+            throw new Error(
+              "The secure account session could not be created."
+            );
+          }
+
+          clearLegacyStorage();
+
+          localStorage.setItem(
+            "signaturesi_user",
+            JSON.stringify({
+              id: data.user.id,
+              username: data.user.username
+            })
+          );
+
+          showMessage(
+            signupMessage,
+            `${username}@bean is ready. Opening NEO…`,
+            "success"
+          );
+
+          window.setTimeout(() => {
+            window.location.replace("neo.html");
+          }, 450);
+        } catch (error) {
+          if (
+            error.message &&
+            error.message.toLowerCase().includes("already taken")
+          ) {
+            showStep(1);
+
+            setAvailability(
+              "error",
+              error.message
+            );
+
+            setLoading(
+              signupSubmitButton,
+              false
+            );
+
+            return;
+          }
+
+          showMessage(
+            signupMessage,
+            error.message ||
+              "Unable to create your Bean ID."
+          );
+
+          setLoading(
+            signupSubmitButton,
+            false
+          );
+        }
+      }
+
+      async function loginAccount(event) {
+        event.preventDefault();
+
+        if (isSubmitting) {
+          return;
+        }
+
+        const username =
+          normalizeUsername(loginUsername.value);
+
+        const password =
+          loginPassword.value;
+
+        loginUsername.value = username;
+        clearMessage(loginMessage);
+
+        if (!isValidUsername(username)) {
+          showMessage(
+            loginMessage,
+            "Enter a valid Bean ID."
+          );
+
+          loginUsername.focus();
+          return;
+        }
+
+        if (
+          password.length < 1 ||
+          password.length > 100
+        ) {
+          showMessage(
+            loginMessage,
+            "Invalid username or password."
+          );
+
+          loginPassword.focus();
+          return;
+        }
+
+        setLoading(loginSubmitButton, true);
+
+        try {
+          const data =
+            await sendAuthRequest(
+              "login",
+              username,
+              password
+            );
+
+          if (
+            !data.authenticated ||
+            !data.user
+          ) {
+            throw new Error(
+              "The secure login session could not be created."
+            );
+          }
+
+          clearLegacyStorage();
+
+          localStorage.setItem(
+            "signaturesi_user",
+            JSON.stringify({
+              id: data.user.id,
+              username: data.user.username
+            })
+          );
+
+          showMessage(
+            loginMessage,
+            "Login successful. Opening NEO…",
+            "success"
+          );
+
+          window.setTimeout(() => {
+            window.location.replace("neo.html");
+          }, 350);
+        } catch (error) {
+          showMessage(
+            loginMessage,
+            error.message ||
+              "Invalid username or password."
+          );
+
+          setLoading(
+            loginSubmitButton,
+            false
+          );
+        }
+      }
+
+      function setupPasswordToggle(
+        button,
+        input
+      ) {
+        button.addEventListener("click", () => {
+          const show =
+            input.type === "password";
+
+          input.type =
+            show ? "text" : "password";
+
+          button.classList.toggle(
+            "is-visible",
+            show
+          );
+
+          button.setAttribute(
+            "aria-label",
+            show
+              ? "Hide password"
+              : "Show password"
+          );
+        });
+      }
+
+      async function checkExistingSession() {
+        try {
+          const response =
+            await fetch("/api/auth", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                Accept: "application/json"
+              }
+            });
+
+          const data =
+            await response.json().catch(() => ({}));
+
+          if (
+            response.ok &&
+            data.authenticated &&
+            data.user
+          ) {
+            window.location.replace("neo.html");
+            return;
+          }
+        } catch (error) {
+          console.warn(
+            "Session check failed:",
+            error
+          );
+        }
+
+        sessionOverlay.classList.add("hidden");
+        signupUsername.focus();
+      }
+
+      stepOneNext.addEventListener(
+        "click",
+        async () => {
+          if (await validateStepOne()) {
+            showStep(2);
+          }
+        }
+      );
+
+      document
+        .getElementById("stepTwoBack")
+        .addEventListener(
+          "click",
+          () => showStep(1)
+        );
+
+      document
+        .getElementById("stepTwoNext")
+        .addEventListener(
+          "click",
+          () => {
+            if (validateStepTwo()) {
+              showStep(3);
+            }
+          }
+        );
+
+      document
+        .getElementById("stepThreeBack")
+        .addEventListener(
+          "click",
+          () => showStep(2)
+        );
+
+      topModeButton.addEventListener(
+        "click",
+        () => {
+          setMode(
+            activeMode === "signup"
+              ? "login"
+              : "signup"
+          );
+        }
+      );
+
+      themeButton.addEventListener(
+        "click",
+        toggleTheme
+      );
+
+      signupUsername.addEventListener(
+        "input",
+        () => {
+          signupUsername.value =
+            normalizeUsername(signupUsername.value)
+              .replace(/[^a-z0-9_]/g, "")
+              .slice(0, 20);
+
+          setAvailability("idle");
+          scheduleAvailabilityCheck();
+        }
+      );
+
+      loginUsername.addEventListener(
+        "input",
+        () => {
+          loginUsername.value =
+            normalizeUsername(loginUsername.value)
+              .replace(/[^a-z0-9_]/g, "")
+              .slice(0, 20);
+
+          clearMessage(loginMessage);
+        }
+      );
+
+      signupPassword.addEventListener(
+        "input",
+        () => {
+          evaluatePasswordStrength(
+            signupPassword.value
+          );
+
+          clearMessage(signupMessage);
+        }
+      );
+
+      confirmPassword.addEventListener(
+        "input",
+        () => clearMessage(signupMessage)
+      );
+
+      loginPassword.addEventListener(
+        "input",
+        () => clearMessage(loginMessage)
+      );
+
+      signupUsername.addEventListener(
+        "keydown",
+        async event => {
+          if (event.key !== "Enter") {
+            return;
+          }
+
+          event.preventDefault();
+
+          if (await validateStepOne()) {
+            showStep(2);
+          }
+        }
+      );
+
+      signupPassword.addEventListener(
+        "keydown",
+        event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            confirmPassword.focus();
+          }
+        }
+      );
+
+      confirmPassword.addEventListener(
+        "keydown",
+        event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+
+            if (validateStepTwo()) {
+              showStep(3);
+            }
+          }
+        }
+      );
+
+      signupForm.addEventListener(
+        "submit",
+        createAccount
+      );
+
+      loginForm.addEventListener(
+        "submit",
+        loginAccount
+      );
+
+      setupPasswordToggle(
+        document.getElementById(
+          "signupPasswordToggle"
+        ),
+        signupPassword
+      );
+
+      setupPasswordToggle(
+        document.getElementById(
+          "loginPasswordToggle"
+        ),
+        loginPassword
+      );
+
+      document.addEventListener(
+        "DOMContentLoaded",
+        async () => {
+          initializeTheme();
+          setAvailability("idle");
+          showStep(1);
+          setMode("signup");
+          await checkExistingSession();
+        }
+      );
+    })();
+  </script>
+  <script>
+    /* Additive helpers; the auth script above is unchanged.
+       1) /signup?mode=login opens the sign-in form.
+       2) Keeps the light/dark choice in sync with the system-dark default. */
+    document.addEventListener("DOMContentLoaded", function () {
+      var modeButton = document.getElementById("topModeButton");
+      var themeButton = document.getElementById("themeButton");
+      try {
+        if (new URLSearchParams(location.search).get("mode") === "login" && modeButton) modeButton.click();
+      } catch (e) {}
+      if (themeButton) themeButton.addEventListener("click", function () {
+        document.documentElement.classList.toggle("force-light", !document.body.classList.contains("dark-mode"));
+      });
+    });
+  </script>
+  </body>
+</html>
