@@ -52,7 +52,8 @@
       .side__h { padding: 0 8px 8px; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
       .side li { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; }
       .side li.on { background: var(--soft); font-weight: 500; }
-      .side li span { color: var(--muted); font-size: 12px; margin-left: auto; }
+      .side li { min-height: 36px; }
+      .side li > span:not(.av) { color: var(--muted); font-size: 12px; margin-left: auto; }
       .av { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; font-size: 11px; font-weight: 600; color: #fff; }
       .av--n { background: #d6245c; } .av--z { background: #3d5afe; } .av--w { background: #0f9d74; } .av--c { background: #e08a00; }
       .chat { display: flex; flex-direction: column; gap: 14px; padding: 22px 18px 18px; font-size: 14px; line-height: 1.55; }
@@ -68,13 +69,13 @@
       .composer b { margin-left: auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--fg); color: var(--bg); font-weight: 400; }
       .float { position: absolute; display: none; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 60px -24px rgba(20,20,19,0.35); font-size: 13px; }
       @media (min-width: 1000px) { .float { display: block; } }
-      .float--bean { right: 28px; bottom: 36px; width: 250px; padding: 14px; }
+      .float--bean { left: 28px; bottom: 28px; width: 240px; padding: 14px; }
       .float--bean .who { display: flex; align-items: center; gap: 8px; font-weight: 500; }
       .float--bean .who em { margin-left: auto; font-style: normal; font-size: 11px; color: #16a34a; }
       .float--bean p { margin-top: 10px; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: var(--soft); }
-      .float--ua { right: 40px; top: 30px; display: none; gap: 6px; padding: 10px; }
+      .float--ua { right: 96px; top: 10px; display: none; gap: 6px; padding: 8px; z-index: 2; }
       @media (min-width: 1000px) { .float--ua { display: flex; } }
-      .float--ua span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--soft); }
+      .float--ua span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--soft); }
 
       /* products */
       .products { padding: 104px 0 24px; }
@@ -269,7 +270,7 @@
             <div class="float float--ua">
               <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="i-bell"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></g></svg></span>
               <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="i-heart" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg></span>
-              <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="i-spin" d="M12 3a9 9 0 1 0 9 9" /></svg></span>
+              <span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path class="i-check" d="M8 12.5l2.8 2.8L16.5 9.5" /></svg></span>
             </div>
             <div class="float float--bean">
               <p class="who"><img src="/assets/bean-B6JOHs_8.png" alt="" width="22" height="22" style="border-radius: 6px" />Bean<em>● online</em></p>
