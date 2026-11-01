@@ -66,8 +66,7 @@ button { font: inherit; color: inherit; }
 .nav { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--line); }
 .nav__in { display: flex; align-items: center; gap: 28px; height: 64px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; min-height: 44px; }
-.brand img { width: 24px; height: 24px; object-fit: contain; filter: brightness(0); }
-@media (prefers-color-scheme: dark) { .brand img { filter: brightness(0) invert(1); } }
+.brand .brand-mark { width: 26px; height: 26px; flex: none; overflow: visible; color: var(--fg); }
 .nav__links { display: none; gap: 4px; }
 .nav__links a, .nav__signin { white-space: nowrap; display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 14px; color: var(--muted); background: none; border: 0; cursor: pointer; transition: color 0.15s var(--ease); }
 .nav__links a:hover, .nav__signin:hover, .nav__links a[aria-current="page"] { color: var(--fg); }
