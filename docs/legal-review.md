@@ -4,7 +4,7 @@ This branch is a review draft, not a verified account of all production practice
 
 Required owner decisions:
 - Legal operator name, contact/address requirements, applicable jurisdiction and user age rules.
-- An actively monitored privacy/security contact; existing /contact emails are unverified.
+- Owner confirmed signaturesi@bean as the official contact. Direct-link format /u/<username> is supported by Bean src/components/invite.js. An account-recovery contact outside Bean remains to be supplied for users unable to sign in.
 - Subscription renewal, cancellation and refund rules. No refund promise or refusal has been invented.
 - Actual collection, retention/deletion periods, processors, processing countries and transfer safeguards.
 - Analytics/advertising inventory, consent controls and AI training/retention practices. The NEYO source includes Monetag verification; do not assume no advertising or tracking.
