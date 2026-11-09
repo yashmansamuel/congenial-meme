@@ -44,6 +44,26 @@
   ],
   "redirects": [
     {
+      "source": "/cookies",
+      "destination": "/privacy#cookies",
+      "permanent": false
+    },
+    {
+      "source": "/cookies.html",
+      "destination": "/privacy#cookies",
+      "permanent": false
+    },
+    {
+      "source": "/acceptable-use",
+      "destination": "/terms#acceptable-use",
+      "permanent": false
+    },
+    {
+      "source": "/acceptable-use.html",
+      "destination": "/terms#acceptable-use",
+      "permanent": false
+    },
+    {
       "source": "/neo",
       "destination": "https://neyo.signaturesi.com/",
       "permanent": false
